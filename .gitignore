@@ -1,0 +1,59 @@
+# IDE and various other developer tools
+.idea
+
+*.swp
+
+# Misc
+!.gitkeep
+*.orig
+.docker.env
+.vscode/*.log
+coverage.xml
+.coverage.*
+
+# Packaging
+build/
+dist/
+reports/
+
+# Python
+.env
+.venv
+venv
+*.pyc
+__pycache__
+.mypy_cache
+**/.pytest_cache/
+.python-version
+.coverage
+.coverage-out/
+
+# certs/keys/pems
+*.crt
+*.csr
+*.key
+*.pem
+*.pfx
+*.srl*
+*.csr.cfg
+*id_rsa*
+
+# mailbox passwords etc.
+secrets.json
+
+# Big binaries
+*.bz2
+*.gz
+*.jar
+*.tar.gz
+*.tgz
+*.zip
+
+# java client
+java_mesh_client
+*.keystore
+
+# test resources
+resources/
+test_data/
+java_mesh_client/

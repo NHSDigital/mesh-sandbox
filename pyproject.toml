@@ -1,0 +1,169 @@
+[tool.poetry]
+name = "mesh-sandbox"
+version = "0.1.0"
+description = ""
+authors = ["spinecore"]
+license = "MIT"
+packages = [
+    { include = "mesh_sandbox", from = "src" },
+]
+
+[tool.poetry.dependencies]
+# core dependencies
+python = "^3.9"
+fastapi = "^0.75.0"
+uvicorn = "^0.15.0"
+gunicorn = "^20.1.0"
+types-python-dateutil = "^2.8.9"
+cryptography = "^38.0.3"
+
+
+[tool.poetry.group.api.dependencies]
+# api runtime specific dependencies
+fastapi = "^0.75.0"
+uvicorn = "^0.15.0"
+gunicorn = "^20.1.0"
+
+
+[tool.poetry.group.mesh_client.dependencies]
+Mesh-Client = "^1.5.0"
+
+[tool.poetry.group.test.dependencies]
+# ci / testing dependencies
+petname = "^2.6"
+black = "^22.3.0"
+isort = "^5.10.1"
+pylint = "^2.11.1"
+pytest-asyncio = "^0.16.0"
+
+
+[tool.poetry.group.ipython.dependencies]
+ipython = "^7.31.1"
+ipykernel = "^6.5.0"
+ipython_genutils = "^0.2.0"
+
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.2.0"
+
+[tool.black]
+line-length = 120
+target-version = ['py37', 'py38', 'py39', 'py310']
+include = '\.pyi?$'
+#extend-exclude = '''
+#/(
+#  # The following are specific to Black, you probably don't want those.
+#  | blib2to3
+#  | tests/data
+#  | profiling
+#)/
+#'''
+
+[tool.coverage.run]
+branch = true
+omit = [
+    ".venv/lib/*",
+]
+source = [
+    "."
+]
+
+
+[tool.coverage.report]
+# Regexes for lines to exclude from consideration
+exclude_lines = [
+    "pragma: no cover",
+    "from .*",
+    "import .*"
+]
+omit = [
+    "*/conftest.py",
+]
+sort = "-cover"
+ignore_errors = true
+precision = 2
+fail_under = 85
+show_missing = true
+
+[tool.coverage.xml]
+output = "reports/coverage.xml"
+
+
+[tool.pytest.ini_options]
+python_classes = "NoTestClassesPlease"
+python_files = "*_tests.py test_*.py"
+norecursedirs = ".git .venv .eggs build dist terraform features"
+
+
+[tool.pylint.main]
+ignore-paths = [
+    '.*/?\.venv/.*',
+    '.*/?\.git/.*',
+    'resources/.*',
+    'reports/.*',
+    '.*/?(build|dist|ansible)/.*',
+]
+py-version = "3.9"
+recursive = true
+extension-pkg-whitelist="lxml"
+
+[tool.pylint.basic]
+good-names = [
+    "_",
+    "a",
+    "e",
+    "f",
+    "i",
+    "j",
+    "ix",
+    "sk",
+    "pk",
+    "ex",
+    "s3",
+    "T",
+]
+
+[tool.pylint.messages_control]
+max-line-length = 120
+max-module-lines = 1000
+max-public-methods = 25
+max-args = 8
+min-similarity-lines = 30
+max-returns = 10
+max-branches = 15
+max-attributes = 15
+disable = [
+    "fixme",
+    "missing-class-docstring",
+    "missing-module-docstring",
+    "missing-function-docstring",
+    "too-few-public-methods",
+    "duplicate-code"
+]
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+show_error_codes = true
+
+[[tool.mypy.overrides]]
+module = "behave.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "mesh_client.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "parse"
+ignore_missing_imports = true
+
+[tool.isort]
+profile = "black"
+known_third_party = ["fastapi", "pydantic", "starlette"]
+
+[build-system]
+requires = ["poetry>=1.1"]
+build-backend = "poetry.masonry.api"

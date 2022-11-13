@@ -1,0 +1,376 @@
+import gzip
+from datetime import datetime, tzinfo
+from typing import Any, Callable, Optional, cast
+
+from dateutil.parser import isoparse
+from dateutil.relativedelta import relativedelta
+from dateutil.tz import tzutc
+from fastapi import Depends, HTTPException, Response, status
+from starlette.responses import JSONResponse
+
+from ..common import MESH_MEDIA_TYPES, EnvConfig, exclude_none_json_encoder, index_of
+from ..common.constants import Headers
+from ..common.fernet import FernetHelper
+from ..common.handler_helpers import get_handler_uri
+from ..dependencies import get_env_config, get_fernet, get_store
+from ..models.mailbox import AuthorisedMailbox, Mailbox
+from ..models.message import Message, MessageDeliveryStatus, MessageStatus, MessageType
+from ..store.base import Store
+from ..views.inbox import InboxV1, InboxV2, get_rich_inbox_view
+
+HTTP_DATETIME_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
+DEFAULT_MAX_RESULTS = 500
+
+
+def to_http_datetime(maybe_naive_dt: datetime, as_timezone: Optional[tzinfo] = None) -> str:
+    if maybe_naive_dt.tzinfo:
+        return maybe_naive_dt.strftime(HTTP_DATETIME_FORMAT)
+    as_timezone = as_timezone or tzutc()
+    maybe_naive_dt = maybe_naive_dt.astimezone(tz=as_timezone)
+    return maybe_naive_dt.strftime(HTTP_DATETIME_FORMAT)
+
+
+class InboxHandler:
+    def __init__(
+        self,
+        config: EnvConfig = Depends(get_env_config),
+        store: Store = Depends(get_store),
+        fernet: FernetHelper = Depends(get_fernet),
+    ):
+        self.config = config
+        self.store = store
+        self.fernet = fernet
+
+    @staticmethod
+    def _get_status_headers(message: Message) -> dict[str, Optional[str]]:
+
+        status_timestamp = (
+            message.status_timestamp(MessageStatus.ACCEPTED, MessageStatus.ERROR) or datetime.utcnow()
+        ).strftime("%Y%m%d%H%M%S")
+
+        error_event = message.error_event
+
+        if message.message_type == MessageType.DATA and not error_event:
+
+            return {
+                Headers.Mex_StatusCode: "00",
+                Headers.Mex_StatusEvent: "TRANSFER",
+                Headers.Mex_StatusDescription: "Transferred to recipient mailbox",
+                Headers.Mex_StatusSuccess: MessageDeliveryStatus.SUCCESS,
+                Headers.Mex_StatusTimestamp: status_timestamp,
+            }
+
+        if not error_event:
+            return {
+                Headers.Mex_StatusSuccess: MessageDeliveryStatus.ERROR,
+                Headers.Mex_StatusTimestamp: status_timestamp,
+            }
+
+        return {
+            Headers.Mex_StatusCode: error_event.code,
+            Headers.Mex_StatusEvent: error_event.event,
+            Headers.Mex_StatusDescription: error_event.description,
+            Headers.Mex_StatusSuccess: MessageDeliveryStatus.ERROR,
+            Headers.Mex_StatusTimestamp: status_timestamp,
+        }
+
+    @staticmethod
+    def _get_response_headers(message: Message, chunk_number: int):
+
+        headers = {
+            Headers.Mex_From: message.sender.mailbox_id,
+            Headers.Mex_To: message.recipient.mailbox_id,
+            Headers.Mex_WorkflowID: message.workflow_id,
+            Headers.Mex_Chunk_Range: f"{chunk_number}:{message.total_chunks}",
+            Headers.Mex_AddressType: "ALL",  # todo: remove?
+            Headers.Mex_LocalID: message.metadata.local_id,
+            Headers.Mex_PartnerID: message.metadata.partner_id,
+            Headers.Mex_FileName: message.metadata.file_name,
+            Headers.Mex_Subject: message.metadata.subject,
+            Headers.Mex_Version: "1.0",
+            Headers.Mex_MessageType: message.message_type,
+            Headers.Mex_MessageID: message.message_id,
+            Headers.Content_Encoding: message.metadata.content_encoding,
+            **InboxHandler._get_status_headers(message),
+            Headers.Mex_Content_Compressed: "Y" if message.metadata.is_compressed else None,
+            Headers.Mex_Content_Encrypted: "Y" if message.metadata.encrypted else None,
+        }
+
+        if message.message_type == MessageType.REPORT:
+            linked_event = message.find_status_event(lambda ev: ev.status == MessageStatus.ERROR)
+            if linked_event and linked_event.linked_message_id:
+                headers[Headers.Mex_LinkedMsgId] = linked_event.linked_message_id
+            headers.pop(Headers.Content_Encoding)
+
+        if message.last_event and message.last_event.timestamp:
+            headers[Headers.Last_Modified] = to_http_datetime(message.last_event.timestamp)
+
+        # filter empty headers ( as per existing API )
+        return {h: v for h, v in headers.items() if v}
+
+    async def head_message(self, mailbox: AuthorisedMailbox, message_id: str):
+
+        message = await self.store.get_message(message_id)
+
+        if not message:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        is_recipient_query = message.recipient.mailbox_id == mailbox.mailbox_id
+        is_sender_query = message.sender and message.sender.mailbox_id == mailbox.mailbox_id
+        allow_access = is_recipient_query or is_sender_query
+
+        if not allow_access:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        allowed_statuses = (
+            (MessageStatus.ACCEPTED, MessageStatus.ACKNOWLEDGED) if is_recipient_query else MessageStatus.VALID_VALUES
+        )
+
+        if message.status not in allowed_statuses:
+            raise HTTPException(status_code=status.HTTP_410_GONE)
+
+        headers = self._get_response_headers(message, 1)
+        return Response(headers=headers)
+
+    async def retrieve_message(self, mailbox: AuthorisedMailbox, message_id: str, accept_encoding: str):
+        return await self._retrieve_message_or_chunk(
+            mailbox=mailbox, message_id=message_id, accept_encoding=accept_encoding
+        )
+
+    async def retrieve_chunk(
+        self, mailbox: AuthorisedMailbox, message_id: str, accept_encoding: str, chunk_number: int
+    ):
+        return await self._retrieve_message_or_chunk(
+            mailbox=mailbox, message_id=message_id, accept_encoding=accept_encoding, chunk_number=chunk_number
+        )
+
+    async def _retrieve_message_or_chunk(
+        self, mailbox: Mailbox, message_id: str, accept_encoding: str, chunk_number: int = 1
+    ):
+        message = await self.store.get_message(message_id)
+
+        if not message:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        if message.recipient.mailbox_id != mailbox.mailbox_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+        if message.status not in (MessageStatus.ACCEPTED, MessageStatus.ACKNOWLEDGED):
+            raise HTTPException(status_code=status.HTTP_410_GONE)
+
+        headers = self._get_response_headers(message, chunk_number)
+
+        if message.message_type != MessageType.DATA:
+            return Response(headers=headers, content="")
+
+        if chunk_number < 1 or chunk_number > message.total_chunks:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        status_code = status.HTTP_200_OK if chunk_number >= message.total_chunks else status.HTTP_206_PARTIAL_CONTENT
+
+        chunk = await self.store.retrieve_chunk(message.message_id, chunk_number)
+
+        if chunk is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Message does not exist",
+            )
+
+        headers[Headers.Content_Length] = str(len(chunk))
+        content_encoding = headers.get(Headers.Content_Encoding, "")
+        if content_encoding == "gzip" and "gzip" not in accept_encoding:
+            headers.pop(Headers.Content_Encoding)
+            headers.pop(Headers.Content_Length)
+            chunk = gzip.decompress(chunk)
+
+        if headers.get(Headers.Content_Encoding) == "gzip":
+            headers[Headers.Mex_Content_Compressed] = "Y"
+
+        return Response(
+            status_code=status_code,
+            content=chunk,
+            headers=headers,
+            media_type="application/octet-stream",
+        )
+
+    async def acknowledge_message(self, mailbox: AuthorisedMailbox, message_id: str, accepts_api_version: int = 1):
+
+        message = await self.store.get_message(message_id)
+        if not message:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        if message.recipient.mailbox_id != mailbox.mailbox_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
+
+        def response():
+            if accepts_api_version < 2:
+                # current format compatibility
+                return {"messageId": message.message_id}
+            return None
+
+        if message.status != MessageStatus.ACCEPTED:
+            return response()
+
+        await self.store.acknowledge_message(message)
+
+        return response()
+
+    async def _get_inbox_messages(
+        self,
+        mailbox: AuthorisedMailbox,
+        max_results: int = DEFAULT_MAX_RESULTS,
+        last_key: Optional[dict] = None,
+        message_filter: Optional[Callable[[Message], bool]] = None,
+    ) -> tuple[list[Message], Optional[dict]]:
+
+        messages = await self.store.get_inbox(mailbox.mailbox_id)
+
+        if message_filter:
+            messages = filter(message_filter, messages)
+
+        if last_key:
+            ix = index_of(messages, lambda msg: msg.message_id == last_key["message_id"])
+            if ix > -1:
+                messages = messages[ix + 1 :]
+
+        last_key = None
+
+        if len(messages) > max_results:
+            messages = messages[:max_results]
+            if messages:
+                last_key = dict(message_id=messages[-1].message_id)
+
+        return messages, last_key
+
+    @staticmethod
+    def _get_workflow_filter(workflow_filter: str) -> Optional[Callable[[Message], bool]]:
+
+        workflow_filter = (workflow_filter or "").strip()
+        if not workflow_filter:
+            return None
+
+        is_not = workflow_filter.startswith("!")
+        if is_not:
+            workflow_filter = workflow_filter[1:]
+
+        is_contains = workflow_filter.startswith("*")
+        if is_contains:
+            workflow_filter = workflow_filter[1:-1]
+
+        is_begins_with = workflow_filter.endswith("*")
+        if is_begins_with:
+            workflow_filter = workflow_filter[:-1]
+
+        if not is_not and not is_contains and not is_begins_with:
+
+            def _is_exact(message: Message) -> bool:
+                return message.workflow_id == workflow_filter
+
+            return _is_exact
+
+        if not is_contains and not is_begins_with:
+
+            def _is_not_exact(message: Message) -> bool:
+                return message.workflow_id != workflow_filter
+
+            return _is_not_exact
+
+        if is_begins_with:
+
+            def _begins_with(message: Message) -> bool:
+                return message.workflow_id.startswith(workflow_filter)
+
+            def _not_begins_with(message: Message) -> bool:
+                return not message.workflow_id.startswith(workflow_filter)
+
+            if is_not:
+                return _not_begins_with
+            return _begins_with
+
+        def _contains(message: Message) -> bool:
+            return workflow_filter in message.workflow_id
+
+        def _not_contains(message: Message) -> bool:
+            return workflow_filter not in message.workflow_id
+
+        if is_not:
+            return _not_contains
+        return _contains
+
+    async def list_messages(
+        self,
+        mailbox: AuthorisedMailbox,
+        accepts_api_version: int = 1,
+        max_results: int = DEFAULT_MAX_RESULTS,
+        continue_from: str = None,
+        workflow_filter: str = None,
+    ) -> Response:
+
+        last_key: Optional[dict] = None
+
+        if continue_from:
+            if accepts_api_version < 2:
+                last_key = dict(message_id=continue_from)
+            else:
+                last_key = self.fernet.decode_dict(continue_from)
+
+        message_filter = self._get_workflow_filter(workflow_filter)
+
+        messages, last_key = await self._get_inbox_messages(mailbox, max_results, last_key, message_filter)
+
+        if accepts_api_version < 2:
+            return JSONResponse(
+                content=exclude_none_json_encoder(InboxV1(messages=[msg.message_id for msg in messages])),
+                media_type=MESH_MEDIA_TYPES[1],
+            )
+
+        response = {"messages": [msg.message_id for msg in messages]}
+
+        uri_query_args = {
+            "max_results": max_results if max_results != DEFAULT_MAX_RESULTS else None,
+            "workflow_filter": workflow_filter,
+        }
+
+        links: dict[str, str] = dict(self=get_handler_uri([mailbox.mailbox_id], "{0}/inbox", **uri_query_args))
+
+        result: dict[str, Any] = dict(
+            messages=cast(list[str], response.get("messages", [])), approx_inbox_count=mailbox.inbox_count, links=links
+        )
+
+        if last_key:
+            uri_query_args["continue_from"] = self.fernet.encode_dict(last_key)
+            links["next"] = get_handler_uri([mailbox.mailbox_id], "{0}/inbox", **uri_query_args)
+
+        return JSONResponse(content=exclude_none_json_encoder(InboxV2(**result)), media_type=MESH_MEDIA_TYPES[2])
+
+    async def rich_inbox(
+        self,
+        mailbox: AuthorisedMailbox,
+        start_time: Optional[str],
+        continue_from: Optional[str],
+        max_results: int = 100,
+    ) -> JSONResponse:
+
+        last_key: Optional[dict] = None
+        if continue_from:
+            last_key = self.fernet.decode_dict(continue_from)
+
+        from_date = datetime.utcnow() + relativedelta(days=-30) if start_time is None else isoparse(start_time)
+
+        def message_filter(message: Message) -> bool:
+            return message.created_timestamp > from_date
+
+        messages, last_key = await self._get_inbox_messages(mailbox, max_results, last_key, message_filter)
+
+        url_template = "{0}/inbox/rich"
+        links: dict[str, str] = dict(
+            self=get_handler_uri([mailbox.mailbox_id], url_template=url_template, start_time=from_date)
+        )
+        if last_key:
+            links["next"] = get_handler_uri(
+                [mailbox.mailbox_id],
+                url_template=url_template,
+                start_time=from_date,
+                continue_from=self.fernet.encode_dict(last_key),
+            )
+        return get_rich_inbox_view(messages, links)
