@@ -206,7 +206,7 @@ class InboxHandler:
             if accepts_api_version < 2:
                 # current format compatibility
                 return {"messageId": message.message_id}
-            return None
+            return Response()
 
         if message.status != MessageStatus.ACCEPTED:
             return response()

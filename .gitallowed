@@ -1,0 +1,4 @@
+
+token: \$\{\{ secrets.GITHUB_TOKEN \}\}
+password: str = field\(default=""\)
+"password": "password"
