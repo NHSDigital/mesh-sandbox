@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from ..common import APP_V1_JSON, APP_V2_JSON
 from ..common.constants import Headers
+from ..models.message import MessageStatus
 from .helpers import generate_auth_token, send_message
 
 _CANNED_MAILBOX1 = "X26ABC1"
@@ -75,6 +76,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
     )
 
     assert res.status_code == 200
+    assert res.json()["status"] == MessageStatus.ACCEPTED
 
     res = app.get(
         f"/messageexchange/{sender}/outbox/tracking/{local_id}",
@@ -82,3 +84,39 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
     )
 
     assert res.status_code == 200
+    assert res.json()["status"] == MessageStatus.ACCEPTED
+
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox",
+        headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
+    )
+
+    list_inbox_response = res.json()
+    assert list_inbox_response["messages"] == [message_id]
+
+    res = app.put(
+        f"/messageexchange/{recipient}/inbox/{message_id}/status/acknowledged",
+        headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
+    )
+
+    assert res.status_code == 200
+
+    if accept == APP_V1_JSON:
+        assert res.json()["messageId"] == message_id
+    else:
+        assert res.text == ""
+
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox",
+        headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
+    )
+
+    list_inbox_response = res.json()
+    assert list_inbox_response["messages"] == []
+
+    res = app.get(
+        f"/messageexchange/{sender}/outbox/tracking?messageID={message_id}",
+        headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
+    )
+    assert res.status_code == 200
+    assert res.json()["status"] == MessageStatus.ACKNOWLEDGED

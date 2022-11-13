@@ -14,7 +14,6 @@ guard-%:
 		exit 1; \
 	fi
 
-
 ########################################################################################################################
 ##
 ## Makefile for this project things
@@ -43,12 +42,15 @@ delete-hooks:
 
 refresh-hooks: delete-hooks .git/hooks/pre-commit .git/hooks/commit-msg
 
-
 install:
 	poetry install --sync
 
 install-ci:
-	poetry install --without local,ipython --sync
+	poetry install --without local --sync
+
+install-poetry:
+	python3 -m pip install --user --upgrade pip && \
+	python3 -m pip install --user poetry
 
 update:
 	poetry update
@@ -63,7 +65,6 @@ down: .docker.env
 up-ci:
 up:
 	$(BUILDKIT_ARGS) poetry run docker-compose --env-file .docker.env up -d --remove-orphans
-
 
 docker-build:
 	$(BUILDKIT_ARGS) poetry run docker-compose build
@@ -96,14 +97,12 @@ clean:
 	find . -type d -name '__pycache__' | xargs rm -rf || true
 	find . -type f -name '.coverage' | xargs rm -rf || true
 
-
 purge: clean
 	rm -rf .venv || true
 	find . -type f -name '.lock-hash' | xargs rm
 	make -C devops purge
 	make -C docker purge
 	make -C lambda purge
-
 
 black-check:
 	poetry run black . --check
@@ -115,6 +114,28 @@ black:
 	poetry run isort .
 	poetry run black .
 
-
 run-local:
 	poetry run uvicorn src.mesh_sandbox.api:app --reload --port 5201 --proxy-headers
+
+coverage-cleanup:
+	rm -f .coverage* || true
+
+coverage-ci-test:
+	poetry run coverage run -m pytest --color=yes -v --junit-xml=./reports/junit/mesh.xml
+
+coverage-report:
+	@poetry run coverage report; \
+	poetry run coverage xml;
+
+coverage: coverage-cleanup coverage-test coverage-report
+
+coverage-test:
+	poetry run coverage run -m pytest
+
+coverage-ci: coverage-cleanup coverage-ci-test coverage-report
+
+check-secrets:
+	scripts/check-secrets.sh
+
+check-secrets-all:
+	scripts/check-secrets.sh unstaged
