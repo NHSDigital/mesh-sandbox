@@ -164,5 +164,5 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    async def retrieve_chunk(self, message_id: str, chunk_number: int) -> Optional[bytes]:
+    async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
         pass

@@ -168,7 +168,7 @@ class InboxHandler:
 
         status_code = status.HTTP_200_OK if chunk_number >= message.total_chunks else status.HTTP_206_PARTIAL_CONTENT
 
-        chunk = await self.store.retrieve_chunk(message.message_id, chunk_number)
+        chunk = await self.store.retrieve_chunk(message, chunk_number)
 
         if chunk is None:
             raise HTTPException(

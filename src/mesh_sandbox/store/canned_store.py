@@ -118,8 +118,8 @@ class CannedStore(Store):
     async def get_by_local_id(self, mailbox_id: str, local_id: str) -> list[Message]:
         return self.local_ids.get(mailbox_id, {}).get(local_id, [])
 
-    async def retrieve_chunk(self, message_id: str, chunk_number: int) -> Optional[bytes]:
-        parts = self.message_parts.get(message_id, [])
+    async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
+        parts = self.message_parts.get(message.message_id, [])
         if not parts or len(parts) < chunk_number:
             return None
         return parts[chunk_number - 1]
