@@ -120,9 +120,9 @@ jobs:
           check_name: junit reports
           report_paths: reports/junit/*.xml
 
-      - name: stop docker containers
-        if: success() || failure()
-        run: make down
+#      - name: stop docker containers
+#        if: success() || failure()
+#        run: make down
 
   lint:
     runs-on: ubuntu-latest
@@ -181,12 +181,12 @@ jobs:
       - name: mypy
         run: make mypy
 
-      - name: hadolint
-        uses: hadolint/hadolint-action@master
-        with:
-          dockerfile: "Dockerfile"
-          recursive: true
-          config: ./docker/hadolint.yml
+#      - name: hadolint
+#        uses: hadolint/hadolint-action@master
+#        with:
+#          dockerfile: "Dockerfile"
+#          recursive: true
+#          config: ./docker/hadolint.yml
 
       - name: shellcheck
         uses: ludeeus/action-shellcheck@master
@@ -195,6 +195,3 @@ jobs:
           ignore_names: git-secrets
         env:
           SHELLCHECK_OPTS: -f gcc -e SC1090,SC1091
-
-      - name: ansible lint
-        run: make ansible-lint

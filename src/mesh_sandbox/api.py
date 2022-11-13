@@ -1,6 +1,5 @@
 from typing import cast
 
-import uvicorn  # type: ignore[import]
 from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse
@@ -46,11 +45,13 @@ async def exception_handler(request: Request, exception: Exception):  # pylint: 
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exception: HTTPException):
+async def http_exception_handler(request: Request, exception: HTTPException):  # pylint: disable=unused-argument
     return JSONResponse(status_code=exception.status_code, content=exception.detail)
 
 
-def global_validation_exception_handler(request: Request, exc: RequestValidationError) -> Response:
+def global_validation_exception_handler(
+    request: Request, exc: RequestValidationError  # pylint: disable=unused-argument
+) -> Response:
     for err in exc.errors():
         if err["loc"][0] == "header" and cast(str, err["loc"][1]).lower() == Headers.Authorization.lower():
             return Response(status_code=status.HTTP_403_FORBIDDEN)

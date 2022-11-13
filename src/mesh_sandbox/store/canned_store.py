@@ -77,13 +77,15 @@ class CannedStore(Store):
             }
 
     @staticmethod
-    def _load_parts() -> dict[str, Message]:
+    def _load_parts() -> dict[str, list[Optional[bytes]]]:
 
-        with open(os.path.join(os.path.dirname(__file__), "data/messages.jsonl"), "r", encoding="utf-8") as f:
-            return {
-                mailbox.message_id: mailbox
-                for mailbox in (Message(**json.loads(line)) for line in f.readlines() if line.strip())
-            }
+        return {}
+
+        # with open(os.path.join(os.path.dirname(__file__), "data/messages.jsonl"), "r", encoding="utf-8") as f:
+        #     return {
+        #         mailbox.message_id: mailbox
+        #         for mailbox in (Message(**json.loads(line)) for line in f.readlines() if line.strip())
+        #     }
 
     async def get_authorised_mailbox(self, mailbox_id: str) -> Optional[AuthorisedMailbox]:
         mailbox = await self.get_mailbox(mailbox_id)
@@ -115,11 +117,14 @@ class CannedStore(Store):
     async def get_inbox(self, mailbox_id: str) -> list[Message]:
         return self.inboxes[mailbox_id]
 
+    async def get_outbox(self, mailbox_id: str) -> list[Message]:
+        return self.outboxes[mailbox_id]
+
     async def get_by_local_id(self, mailbox_id: str, local_id: str) -> list[Message]:
         return self.local_ids.get(mailbox_id, {}).get(local_id, [])
 
     async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
-        parts = self.message_parts.get(message.message_id, [])
+        parts: list[Optional[bytes]] = self.message_parts.get(message.message_id, [])
         if not parts or len(parts) < chunk_number:
             return None
         return parts[chunk_number - 1]

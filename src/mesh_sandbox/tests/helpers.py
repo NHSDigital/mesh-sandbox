@@ -14,14 +14,14 @@ def generate_auth_token(
     mailbox_id: str,
     mailbox_password: str = "password",
     secret_key: str = "TestKey",
-    timestamp: str = None,
-    nonce: str = None,
+    timestamp: Optional[datetime] = None,
+    nonce: Optional[str] = None,
     nonce_count: str = "1",
 ) -> str:
     nonce = nonce or uuid4().hex
-    timestamp = (timestamp or datetime.now()).strftime("%Y%m%d%H%M")
-    public_auth_data = f"{mailbox_id}:{nonce}:{nonce_count}:{timestamp}"
-    cipher_text = generate_cipher_text(secret_key, mailbox_id, mailbox_password, timestamp, nonce, nonce_count)
+    timestamp_string = (timestamp or datetime.now()).strftime("%Y%m%d%H%M")
+    public_auth_data = f"{mailbox_id}:{nonce}:{nonce_count}:{timestamp_string}"
+    cipher_text = generate_cipher_text(secret_key, mailbox_id, mailbox_password, timestamp_string, nonce, nonce_count)
     return f"{MESH_AUTH_SCHEME} {public_auth_data}:{cipher_text}"
 
 
@@ -48,9 +48,9 @@ def send_message(
     app: TestClient,
     sender_mailbox_id: str,
     recipient_mailbox_id: str,
-    workflow_id: str = None,
-    message_data: bytes = None,
-    extra_headers: dict = None,
+    workflow_id: Optional[str] = None,
+    message_data: Optional[bytes] = None,
+    extra_headers: Optional[dict] = None,
     test_empty_payload: bool = False,
     file_name: Optional[str] = None,
 ):

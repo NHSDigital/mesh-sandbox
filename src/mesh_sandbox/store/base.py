@@ -73,11 +73,11 @@ class Store(ABC):
         self.config = config
 
     @abstractmethod
-    async def get_authorised_mailbox(self, mailbox_id: str) -> AuthorisedMailbox:
+    async def get_authorised_mailbox(self, mailbox_id: str) -> Optional[AuthorisedMailbox]:
         pass
 
     @abstractmethod
-    async def get_mailbox(self, mailbox_id: str) -> Mailbox:
+    async def get_mailbox(self, mailbox_id: str) -> Optional[Mailbox]:
         pass
 
     async def _validate_auth_token(self, mailbox_id: str, authorization: str) -> Optional[AuthorisedMailbox]:
@@ -92,6 +92,10 @@ class Store(ABC):
             )
 
         header_parts = try_parse_authorisation_token(authorization)
+        if not header_parts:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading from Authorization header"
+            )
 
         if header_parts.mailbox_id != mailbox_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Mailbox id does not match token")
@@ -126,7 +130,7 @@ class Store(ABC):
 
         return mailbox
 
-    async def authorise_mailbox(self, mailbox_id: str, authorization: str) -> AuthorisedMailbox:
+    async def authorise_mailbox(self, mailbox_id: str, authorization: str) -> Optional[AuthorisedMailbox]:
 
         mailbox = await self._validate_auth_token(mailbox_id, authorization)
 
@@ -157,6 +161,10 @@ class Store(ABC):
 
     @abstractmethod
     async def get_inbox(self, mailbox_id: str) -> list[Message]:
+        pass
+
+    @abstractmethod
+    async def get_outbox(self, mailbox_id: str) -> list[Message]:
         pass
 
     @abstractmethod

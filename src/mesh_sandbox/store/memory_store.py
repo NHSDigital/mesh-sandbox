@@ -17,16 +17,24 @@ class MemoryStore(CannedStore):
 
         async with self.lock:
             parts: list[Optional[bytes]] = [None for _ in range(message.total_chunks)]
-            parts[0] = body
+
             self.messages[message.message_id] = message
             self.message_parts[message.message_id] = parts
+
+            await self.receive_chunk(message, 1, body)
+
             if message.status != MessageStatus.ACCEPTED:
                 return
+
             self.inboxes[message.recipient.mailbox_id].append(message)
-            if message.sender.mailbox_id:
-                self.outboxes[message.sender.mailbox_id].insert(0, message)
-                if message.metadata.local_id:
-                    self.local_ids[message.sender.mailbox_id][message.metadata.local_id].insert(0, message)
+            if not message.sender.mailbox_id:
+                return
+
+            self.outboxes[message.sender.mailbox_id].insert(0, message)
+            if not message.metadata.local_id:
+                return
+
+            self.local_ids[message.sender.mailbox_id][message.metadata.local_id].insert(0, message)
 
     async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes):
         self.message_parts[message.message_id][chunk_number - 1] = chunk
@@ -41,8 +49,8 @@ class MemoryStore(CannedStore):
             message.events.insert(0, MessageEvent(status=MessageStatus.ACKNOWLEDGED))
             inbox = self.inboxes[message.recipient.mailbox_id]
 
-            for i in range(len(inbox)):
-                if inbox[i].message_id != message.message_id:
+            for ix, inbox_message in enumerate(inbox):
+                if inbox_message.message_id != message.message_id:
                     continue
-                inbox.pop(i)
+                inbox.pop(ix)
                 break

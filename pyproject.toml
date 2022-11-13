@@ -16,6 +16,7 @@ uvicorn = "^0.15.0"
 gunicorn = "^20.1.0"
 types-python-dateutil = "^2.8.9"
 cryptography = "^38.0.3"
+python-dateutil = "^2.8.2"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -54,7 +55,7 @@ include = '\.pyi?$'
 [tool.coverage.run]
 branch = true
 omit = [
-    ".venv/lib/*",
+    ".venv/*",
 ]
 source = [
     "."
@@ -89,7 +90,7 @@ norecursedirs = ".git .venv .eggs build dist terraform features"
 
 [tool.pylint.main]
 ignore-paths = [
-    '.*/?\.venv/.*',
+    '.venv/.*',
     '.*/?\.git/.*',
     'resources/.*',
     'reports/.*',

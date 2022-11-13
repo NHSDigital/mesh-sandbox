@@ -94,7 +94,7 @@ class Message:  # pylint: disable=too-many-public-methods,too-many-instance-attr
 
     metadata: MessageMetadata = field(default_factory=MessageMetadata)
 
-    workflow_id: Optional[str] = field(default=None)
+    workflow_id: str = field(default="UNDEFINED")
     message_type: Optional[str] = field(default=None)
     visible_to_sender: bool = field(default=True)
 

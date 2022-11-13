@@ -8,6 +8,7 @@ from .common.constants import Headers
 from .common.fernet import FernetHelper
 from .store.base import Store
 from .store.canned_store import CannedStore
+from .store.file_store import FileStore
 from .store.memory_store import MemoryStore
 
 _ACCEPTABLE_ACCEPTS = re.compile(r"^application/vnd\.mesh\.v(\d+)\+json$")
@@ -86,7 +87,10 @@ def get_store() -> Store:
     if config.store_mode == "memory":
         return MemoryStore(config)
 
-    raise NotImplementedError()
+    if config.store_mode == "file":
+        return FileStore(config)
+
+    raise ValueError(f"unrecognised store mode {config.store_mode}")
 
 
 @lru_cache()

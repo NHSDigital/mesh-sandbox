@@ -57,7 +57,12 @@ def test_handshake_no_auth_mailbox_does_not_exist(app: TestClient, accepts: str)
     with temp_env_vars(AUTH_MODE="none"):
         res = app.get(
             f"/messageexchange/{uuid4().hex}",
-            headers={Headers.Mex_ClientVersion: "1.0", Headers.Mex_OSName: "bob", Headers.Mex_OSVersion: "latest"},
+            headers={
+                Headers.Mex_ClientVersion: "1.0",
+                Headers.Mex_OSName: "bob",
+                Headers.Mex_OSVersion: "latest",
+                Headers.Accept: accepts,
+            },
         )
 
         assert res.status_code == 403

@@ -226,10 +226,11 @@ class InboxHandler:
         messages = await self.store.get_inbox(mailbox.mailbox_id)
 
         if message_filter:
-            messages = filter(message_filter, messages)
+            messages = list(filter(message_filter, messages))
 
         if last_key:
-            ix = index_of(messages, lambda msg: msg.message_id == last_key["message_id"])
+            last_message_id = last_key["message_id"]
+            ix = index_of(messages, lambda msg: bool(msg.message_id == last_message_id))
             if ix > -1:
                 messages = messages[ix + 1 :]
 
@@ -243,55 +244,55 @@ class InboxHandler:
         return messages, last_key
 
     @staticmethod
-    def _get_workflow_filter(workflow_filter: str) -> Optional[Callable[[Message], bool]]:
+    def _get_workflow_filter(workflow_filter: Optional[str]) -> Optional[Callable[[Message], bool]]:
 
-        workflow_filter = (workflow_filter or "").strip()
-        if not workflow_filter:
+        workflow_id_filter = (workflow_filter or "").strip()
+        if not workflow_id_filter:
             return None
 
-        is_not = workflow_filter.startswith("!")
+        is_not = workflow_id_filter.startswith("!")
         if is_not:
-            workflow_filter = workflow_filter[1:]
+            workflow_id_filter = workflow_id_filter[1:]
 
-        is_contains = workflow_filter.startswith("*")
+        is_contains = workflow_id_filter.startswith("*")
         if is_contains:
-            workflow_filter = workflow_filter[1:-1]
+            workflow_id_filter = workflow_id_filter[1:-1]
 
-        is_begins_with = workflow_filter.endswith("*")
+        is_begins_with = workflow_id_filter.endswith("*")
         if is_begins_with:
-            workflow_filter = workflow_filter[:-1]
+            workflow_id_filter = workflow_id_filter[:-1]
 
         if not is_not and not is_contains and not is_begins_with:
 
             def _is_exact(message: Message) -> bool:
-                return message.workflow_id == workflow_filter
+                return message.workflow_id == workflow_id_filter
 
             return _is_exact
 
         if not is_contains and not is_begins_with:
 
             def _is_not_exact(message: Message) -> bool:
-                return message.workflow_id != workflow_filter
+                return message.workflow_id != workflow_id_filter
 
             return _is_not_exact
 
         if is_begins_with:
 
             def _begins_with(message: Message) -> bool:
-                return message.workflow_id.startswith(workflow_filter)
+                return message.workflow_id.startswith(workflow_id_filter)
 
             def _not_begins_with(message: Message) -> bool:
-                return not message.workflow_id.startswith(workflow_filter)
+                return not message.workflow_id.startswith(workflow_id_filter)
 
             if is_not:
                 return _not_begins_with
             return _begins_with
 
         def _contains(message: Message) -> bool:
-            return workflow_filter in message.workflow_id
+            return workflow_id_filter in message.workflow_id
 
         def _not_contains(message: Message) -> bool:
-            return workflow_filter not in message.workflow_id
+            return workflow_id_filter not in message.workflow_id
 
         if is_not:
             return _not_contains
@@ -302,8 +303,8 @@ class InboxHandler:
         mailbox: AuthorisedMailbox,
         accepts_api_version: int = 1,
         max_results: int = DEFAULT_MAX_RESULTS,
-        continue_from: str = None,
-        workflow_filter: str = None,
+        continue_from: Optional[str] = None,
+        workflow_filter: Optional[str] = None,
     ) -> Response:
 
         last_key: Optional[dict] = None
