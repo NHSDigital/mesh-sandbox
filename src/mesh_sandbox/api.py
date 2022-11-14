@@ -7,15 +7,14 @@ from starlette.responses import JSONResponse
 from .common import exclude_none_json_encoder
 from .common.constants import Headers
 from .routers import (
-    endpoint_lookup,
     handshake,
     inbox,
     inbox_count,
+    lookup,
     outbox,
     simple,
     tracking,
     update,
-    workflow_search,
 )
 
 app = FastAPI(
@@ -37,7 +36,7 @@ app = FastAPI(
 
 
 @app.exception_handler(Exception)
-async def exception_handler(request: Request, exception: Exception):  # pylint: disable=unused-argument
+async def exception_handler(_request: Request, _exception: Exception):  # pylint: disable=unused-argument
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={"message": "An internal error occurred.\n\nPlease contact support."},
@@ -45,13 +44,13 @@ async def exception_handler(request: Request, exception: Exception):  # pylint: 
 
 
 @app.exception_handler(HTTPException)
-async def http_exception_handler(request: Request, exception: HTTPException):  # pylint: disable=unused-argument
+async def http_exception_handler(_request: Request, exception: HTTPException):  # pylint: disable=unused-argument
     return JSONResponse(status_code=exception.status_code, content=exception.detail)
 
 
-def global_validation_exception_handler(
-    request: Request, exc: RequestValidationError  # pylint: disable=unused-argument
-) -> Response:
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_request: Request, exc: RequestValidationError):
+
     for err in exc.errors():
         if err["loc"][0] == "header" and cast(str, err["loc"][1]).lower() == Headers.Authorization.lower():
             return Response(status_code=status.HTTP_403_FORBIDDEN)
@@ -60,11 +59,6 @@ def global_validation_exception_handler(
         status_code=status.HTTP_400_BAD_REQUEST,
         content=exclude_none_json_encoder({"detail": exc.errors(), "body": exc.body}),
     )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    return global_validation_exception_handler(request, exc)
 
 
 app.include_router(simple.router)
@@ -109,15 +103,8 @@ app.include_router(
 )
 
 app.include_router(
-    endpoint_lookup.router,
-    prefix="/messageexchange/endpointlookup",
-    tags=["Lookup"],
-    responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
-)
-
-app.include_router(
-    workflow_search.router,
-    prefix="/messageexchange/workflowsearch",
+    lookup.router,
+    prefix="/messageexchange",
     tags=["Lookup"],
     responses={status.HTTP_400_BAD_REQUEST: {"description": "Bad request"}},
 )

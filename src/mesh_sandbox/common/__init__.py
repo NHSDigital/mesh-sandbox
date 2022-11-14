@@ -1,4 +1,5 @@
 import hmac
+import logging.config
 import os
 from dataclasses import dataclass, field
 from functools import partial
@@ -6,6 +7,7 @@ from hashlib import sha256
 from typing import Any, Callable, Final, Optional, TypeVar
 
 from fastapi.encoders import jsonable_encoder
+from pydantic import BaseModel  # pylint: disable=no-name-in-module
 
 APP_JSON = "application/json"
 APP_V1_JSON = "application/vnd.mesh.v1+json"
@@ -72,3 +74,36 @@ def index_of(items: list[T], find: Callable[[T], bool]) -> int:
             return index
 
     return -1
+
+
+class LogConfig(BaseModel):
+    """Logging configuration to be set for the server"""
+
+    LOGGER_NAME: str = "mesh-sandbox"
+    LOG_FORMAT: str = "%(levelprefix)s | %(asctime)s | %(message)s"
+    LOG_LEVEL: str = "DEBUG"
+
+    # Logging config
+    version = 1
+    disable_existing_loggers = False
+    formatters = {
+        "default": {
+            "()": "uvicorn.logging.DefaultFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+    }
+    handlers = {
+        "default": {
+            "formatter": "default",
+            "class": "logging.StreamHandler",
+            "stream": "ext://sys.stderr",
+        },
+    }
+    loggers = {
+        "mesh-sandbox": {"handlers": ["default"], "level": LOG_LEVEL},
+    }
+
+
+logging.config.dictConfig(LogConfig().dict())
+logger = logging.getLogger("mesh-sandbox")

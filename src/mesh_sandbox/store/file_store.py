@@ -7,6 +7,9 @@ from .memory_store import MemoryStore
 
 
 class FileStore(MemoryStore):
+
+    """file based store, will store the message payloads in the filesystem"""
+
     def __init__(self, config: EnvConfig):
         super().__init__(config)
         self._base_dir = config.file_store_dir

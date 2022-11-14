@@ -15,13 +15,6 @@ class Mailbox:
     org_name: str = field(default="")
     password: str = field(default="")
 
-    def __post_init__(self):
-
-        self.mailbox_id = self.mailbox_id.upper()
-
-
-class AuthorisedMailbox(Mailbox):
-
     _last_accessed: Optional[datetime] = None
     _inbox_count: Optional[int] = None
 
@@ -40,3 +33,7 @@ class AuthorisedMailbox(Mailbox):
     @inbox_count.setter
     def inbox_count(self, inbox_count: Optional[int]):
         self._inbox_count = inbox_count
+
+    def __post_init__(self):
+
+        self.mailbox_id = self.mailbox_id.upper()

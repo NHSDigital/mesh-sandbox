@@ -3,24 +3,28 @@ import json
 import os
 import threading
 from collections import defaultdict
-from dataclasses import asdict
 from datetime import datetime
 from typing import Optional
 
 from ..common import EnvConfig
-from ..models.mailbox import AuthorisedMailbox, Mailbox
+from ..models.mailbox import Mailbox
 from ..models.message import Message
 from .base import Store
 
 
 class CannedStore(Store):
+    """
+    pre canned messages or mailboxes not editable
+    """
+
     def __init__(self, config: EnvConfig, load_messages: bool = True):
         super().__init__(config)
         self._sync_lock = threading.Lock()
         self._lock = None
         self.mailboxes = self._load_mailboxes()
+        self.endpoints = self._load_endpoints()
         self.messages = self._load_messages() if load_messages else {}
-        self.message_parts = self._load_parts() if load_messages else {}
+        self.chunks = self._load_chunks() if load_messages else {}
         self.inboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.outboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.local_ids: dict[str, dict[str, list[Message]]] = {
@@ -58,6 +62,28 @@ class CannedStore(Store):
                     continue
                 self.local_ids[mailbox_id][message.metadata.local_id].append(message)
 
+    def _load_endpoints(self) -> dict[str, list[Mailbox]]:
+
+        with open(os.path.join(os.path.dirname(__file__), "data/workflows.jsonl"), "r", encoding="utf-8") as f:
+            workflows = [json.loads(line) for line in f.readlines() if line.strip()]
+            endpoints = defaultdict(list)
+            for workflow in workflows:
+                workflow_id = (workflow["workflow_id"] or "").strip()
+                receivers = workflow.get("receivers", [])
+                for receiver in receivers:
+                    receiver = (receiver or "").strip().upper()
+                    mailbox = self.mailboxes.get(receiver)
+                    if not mailbox:
+                        continue
+
+                    endpoints[workflow_id].append(mailbox)
+                    ods_code = (mailbox.ods_code or "").strip().upper()
+                    if not ods_code:
+                        continue
+                    endpoints[f"{ods_code}/{workflow_id}"].append(mailbox)
+
+            return endpoints
+
     @staticmethod
     def _load_mailboxes() -> dict[str, Mailbox]:
 
@@ -77,7 +103,7 @@ class CannedStore(Store):
             }
 
     @staticmethod
-    def _load_parts() -> dict[str, list[Optional[bytes]]]:
+    def _load_chunks() -> dict[str, list[Optional[bytes]]]:
 
         return {}
 
@@ -87,17 +113,15 @@ class CannedStore(Store):
         #         for mailbox in (Message(**json.loads(line)) for line in f.readlines() if line.strip())
         #     }
 
-    async def get_authorised_mailbox(self, mailbox_id: str) -> Optional[AuthorisedMailbox]:
-        mailbox = await self.get_mailbox(mailbox_id)
+    async def get_mailbox(self, mailbox_id: str, accessed: bool = False) -> Optional[Mailbox]:
+        mailbox = self.mailboxes.get(mailbox_id)
         if not mailbox:
             return None
-        authorised_mailbox = AuthorisedMailbox(**asdict(mailbox))
-        authorised_mailbox.inbox_count = len(self.inboxes[mailbox_id])
-        authorised_mailbox.last_accessed = datetime.utcnow()
-        return authorised_mailbox
 
-    async def get_mailbox(self, mailbox_id: str) -> Optional[Mailbox]:
-        return self.mailboxes.get(mailbox_id)
+        mailbox.inbox_count = len(self.inboxes[mailbox_id])
+        if accessed:
+            mailbox.last_accessed = datetime.utcnow()
+        return mailbox
 
     async def send_message(self, message: Message, body: bytes):
         pass
@@ -124,7 +148,13 @@ class CannedStore(Store):
         return self.local_ids.get(mailbox_id, {}).get(local_id, [])
 
     async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
-        parts: list[Optional[bytes]] = self.message_parts.get(message.message_id, [])
+        parts: list[Optional[bytes]] = self.chunks.get(message.message_id, [])
         if not parts or len(parts) < chunk_number:
             return None
         return parts[chunk_number - 1]
+
+    async def lookup_by_ods_code_and_workflow_id(self, ods_code: str, workflow_id: str) -> list[Mailbox]:
+        return self.endpoints.get(f"{ods_code}/{workflow_id}", [])
+
+    async def lookup_by_workflow_id(self, workflow_id: str) -> list[Mailbox]:
+        return self.endpoints.get(workflow_id, [])

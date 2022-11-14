@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends, Request, Response
 from starlette.responses import JSONResponse
 
 from ..common import MESH_MEDIA_TYPES, exclude_none_json_encoder
-from ..dependencies import authorised_mailbox
-from ..models.mailbox import AuthorisedMailbox
+from ..dependencies import authorised_mailbox, get_accepts_api_version
+from ..models.mailbox import Mailbox
 from ..views.inbox import InboxCountV1, InboxCountV2
 from .request_logging import RequestLoggingRoute
 
@@ -35,10 +35,16 @@ router = APIRouter(
     response_model_exclude_none=True,
     openapi_extra={"spec_order": 290},
 )
-async def count_messages_in_inbox(request: Request):
-    mailbox = cast(AuthorisedMailbox, request.state.authorised_mailbox)
-    return JSONResponse(
-        content=exclude_none_json_encoder(
-            InboxCountV1(count=mailbox.inbox_count, internalID=uuid4().hex, allResultsIncluded=True)
-        )
+async def count_messages_in_inbox(
+    request: Request,
+    accepts_api_version: int = Depends(get_accepts_api_version),
+):
+    mailbox = cast(Mailbox, request.state.authorised_mailbox)
+
+    response = (
+        InboxCountV1(count=mailbox.inbox_count, internalID=uuid4().hex, allResultsIncluded=True)
+        if accepts_api_version < 2
+        else InboxCountV2(count=mailbox.inbox_count)
     )
+
+    return JSONResponse(content=exclude_none_json_encoder(response))

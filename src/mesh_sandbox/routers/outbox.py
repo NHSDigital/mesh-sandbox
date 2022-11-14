@@ -11,7 +11,7 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.outbox import OutboxHandler
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 from ..views.outbox import RichOutboxView, SendMessageV1, SendMessageV2
 from .request_logging import RequestLoggingRoute
 
@@ -52,7 +52,7 @@ async def send_message(
 ):
     return await handler.send_message(
         request=request,
-        sender_mailbox=cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         mex_headers=mex_headers,
         content_encoding=content_encoding,
         accepts_api_version=accepts_api_version,
@@ -80,7 +80,7 @@ async def send_chunk(
 ):
     return await handler.send_chunk(
         request=request,
-        sender_mailbox=cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         message_id=message_id,
         chunk_number=chunk_number,
         mex_chunk_range=mex_chunk_range,
@@ -127,8 +127,17 @@ async def rich_outbox(
         max_length=1000,
         include_in_schema=False,
     ),
+    max_results: int = Query(
+        default=100,
+        title="Max results",
+        description="maximum results to return when using accept: application/vnd.mesh.v2+json "
+        "if more results exist, 'links.next' will be populated",
+        example="100",
+        ge=10,
+        le=5000,
+    ),
     handler: OutboxHandler = Depends(OutboxHandler),
 ):
     return await handler.rich_outbox(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox), start_time, continue_from
+        cast(Mailbox, request.state.authorised_mailbox), start_time, continue_from, max_results
     )

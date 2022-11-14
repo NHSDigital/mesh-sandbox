@@ -10,7 +10,7 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.inbox import DEFAULT_MAX_RESULTS, InboxHandler
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 from ..views.inbox import InboxV1, InboxV2, RichInboxView
 from .request_logging import RequestLoggingRoute
 
@@ -79,7 +79,7 @@ async def list_messages(
     handler: InboxHandler = Depends(InboxHandler),
 ):
     return await handler.list_messages(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        cast(Mailbox, request.state.authorised_mailbox),
         accepts_api_version,
         max_results,
         continue_from,
@@ -104,7 +104,7 @@ async def acknowledge_message(
     handler: InboxHandler = Depends(InboxHandler),
 ):
     return await handler.acknowledge_message(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox), message_id, accepts_api_version
+        cast(Mailbox, request.state.authorised_mailbox), message_id, accepts_api_version
     )
 
 
@@ -127,7 +127,7 @@ async def head_message(
     message_id: str = Depends(normalise_message_id_path),
     handler: InboxHandler = Depends(InboxHandler),
 ):
-    return await handler.head_message(cast(AuthorisedMailbox, request.state.authorised_mailbox), message_id)
+    return await handler.head_message(cast(Mailbox, request.state.authorised_mailbox), message_id)
 
 
 @router.get(
@@ -167,10 +167,19 @@ async def rich_inbox(
         max_length=1000,
         include_in_schema=False,
     ),
+    max_results: int = Query(
+        default=100,
+        title="Max Results",
+        description="max results to retrieve in one go",
+        example="100",
+        le=2000,
+        ge=1,
+        include_in_schema=False,
+    ),
     handler: InboxHandler = Depends(InboxHandler),
 ):
     return await handler.rich_inbox(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox), start_time, continue_from
+        cast(Mailbox, request.state.authorised_mailbox), start_time, continue_from, max_results
     )
 
 
@@ -207,9 +216,7 @@ async def retrieve_message(
     ),
     handler: InboxHandler = Depends(InboxHandler),
 ):
-    return await handler.retrieve_message(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox), message_id, accept_encoding
-    )
+    return await handler.retrieve_message(cast(Mailbox, request.state.authorised_mailbox), message_id, accept_encoding)
 
 
 @router.get(
@@ -244,7 +251,7 @@ async def retrieve_chunk(
     handler: InboxHandler = Depends(InboxHandler),
 ):
     return await handler.retrieve_chunk(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        cast(Mailbox, request.state.authorised_mailbox),
         message_id,
         accept_encoding,
         chunk_number=chunk_number,

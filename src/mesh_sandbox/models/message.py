@@ -101,10 +101,6 @@ class Message:  # pylint: disable=too-many-public-methods,too-many-instance-attr
     total_chunks: int = field(default=1)
     file_size: int = field(default=0)
 
-    ttl: Optional[int] = field(default=None)
-    was_replicated: Optional[bool] = field(default=False)
-    added_to_inbox: Optional[bool] = field(default=False)
-
     inbox_expiry_timestamp: Optional[datetime] = field(default_factory=default_inbox_expiry_time)
     last_modified: datetime = field(default_factory=datetime.utcnow)
     created_timestamp: datetime = field(default_factory=datetime.utcnow)

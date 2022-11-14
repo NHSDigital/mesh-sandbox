@@ -14,7 +14,7 @@ from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..common.mex_headers import MexHeaders
 from ..dependencies import get_env_config, get_fernet, get_store
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
     MessageEvent,
@@ -70,7 +70,7 @@ class OutboxHandler:
     async def send_message(
         self,
         request: Request,
-        sender_mailbox: AuthorisedMailbox,
+        sender_mailbox: Mailbox,
         mex_headers: MexHeaders,
         content_encoding: str,
         accepts_api_version: int = 1,
@@ -142,7 +142,7 @@ class OutboxHandler:
     async def send_chunk(  # pylint: disable=too-many-locals
         self,
         request: Request,
-        sender_mailbox: AuthorisedMailbox,
+        sender_mailbox: Mailbox,
         message_id: str,
         chunk_number: int,
         mex_chunk_range: str,
@@ -191,12 +191,12 @@ class OutboxHandler:
 
     async def rich_outbox(
         self,
-        mailbox: AuthorisedMailbox,
+        mailbox: Mailbox,
         start_time: Optional[str],
         continue_from: Optional[str],
         max_results: int = 100,
     ) -> JSONResponse:
-
+        max_results = max(min(max_results, 100), 0)
         from_date = datetime.utcnow() + relativedelta(days=-30) if start_time is None else isoparse(start_time)
 
         last_key: Optional[dict] = None
@@ -225,13 +225,16 @@ class OutboxHandler:
 
         url_template = "{0}/outbox/rich"
         links: dict[str, str] = dict(
-            self=get_handler_uri([mailbox.mailbox_id], url_template=url_template, start_time=from_date)
+            self=get_handler_uri(
+                [mailbox.mailbox_id], url_template=url_template, start_time=from_date, max_results=max_results
+            )
         )
         if last_key:
             links["next"] = get_handler_uri(
                 [mailbox.mailbox_id],
                 url_template=url_template,
                 start_time=from_date,
+                max_results=max_results,
                 continue_from=self.fernet.encode_dict(last_key),
             )
         return get_rich_outbox_view(messages, links)

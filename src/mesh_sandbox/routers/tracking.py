@@ -10,7 +10,7 @@ from ..dependencies import (
     normalise_message_id_query,
 )
 from ..handlers.tracking import TrackingHandler
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 from ..views.tracking import TrackingV1, TrackingV2
 from .request_logging import RequestLoggingRoute
 
@@ -46,7 +46,7 @@ async def tracking_by_message_id_path(
 ):
     accepts_api_version = max(accepts_api_version, 2)  # this is a v2 endpoint
     return await handler.tracking_by_message_id(
-        sender_mailbox=cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         message_id=message_id,
         accepts_api_version=accepts_api_version,
     )
@@ -78,7 +78,7 @@ async def tracking_by_message_id(
     handler: TrackingHandler = Depends(TrackingHandler),
 ):
     return await handler.tracking_by_message_id(
-        sender_mailbox=cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         message_id=message_id,
         accepts_api_version=accepts_api_version,
     )
@@ -105,5 +105,5 @@ async def tracking_by_local_id(
     handler: TrackingHandler = Depends(TrackingHandler),
 ):
     return await handler.tracking_by_local_id(
-        sender_mailbox=cast(AuthorisedMailbox, request.state.authorised_mailbox), local_id=local_id
+        sender_mailbox=cast(Mailbox, request.state.authorised_mailbox), local_id=local_id
     )

@@ -52,7 +52,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.headers[Headers.Mex_From] == sender
     assert res.headers[Headers.Mex_To] == recipient
     assert res.headers[Headers.Mex_LocalID] == local_id
@@ -63,7 +63,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.headers[Headers.Mex_From] == sender
     assert res.headers[Headers.Mex_To] == recipient
     assert res.headers[Headers.Mex_LocalID] == local_id
@@ -76,7 +76,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.json()["status"] == MessageStatus.ACCEPTED
 
     res = app.get(
@@ -84,7 +84,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(sender)},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.json()["status"] == MessageStatus.ACCEPTED
 
     res = app.get(
@@ -100,7 +100,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
 
     if accept == APP_V1_JSON:
         assert res.json()["messageId"] == message_id
@@ -119,7 +119,7 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         f"/messageexchange/{sender}/outbox/tracking?messageID={message_id}",
         headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
     )
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.json()["status"] == MessageStatus.ACKNOWLEDGED
 
 
@@ -162,7 +162,7 @@ def test_file_send_message_with_local_id(app: TestClient, accept: str, tmp_path:
             headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
         )
 
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         assert res.headers[Headers.Mex_From] == sender
         assert res.headers[Headers.Mex_To] == recipient
         assert res.headers[Headers.Mex_WorkflowID] == workflow_id
@@ -172,7 +172,7 @@ def test_file_send_message_with_local_id(app: TestClient, accept: str, tmp_path:
             headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
         )
 
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
         assert res.headers[Headers.Mex_From] == sender
         assert res.headers[Headers.Mex_To] == recipient
         assert res.headers[Headers.Mex_WorkflowID] == workflow_id
@@ -224,7 +224,7 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.json()["status"] == MessageStatus.UPLOADING
 
     res = app.head(
@@ -232,7 +232,7 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 410
+    assert res.status_code == status.HTTP_410_GONE
 
     res = app.post(
         f"/messageexchange/{sender}/outbox/{message_id}/2",
@@ -243,14 +243,14 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
         },
         data=chunk_2,
     )
-    assert res.status_code == 202, res.text
+    assert res.status_code == status.HTTP_202_ACCEPTED, res.text
 
     res = app.head(
         f"/messageexchange/{recipient}/inbox/{message_id}",
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.headers[Headers.Mex_From] == sender
     assert res.headers[Headers.Mex_To] == recipient
     assert res.headers[Headers.Mex_WorkflowID] == workflow_id
@@ -260,7 +260,7 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 206
+    assert res.status_code == status.HTTP_206_PARTIAL_CONTENT
     assert res.headers[Headers.Mex_From] == sender
     assert res.headers[Headers.Mex_To] == recipient
     assert res.headers[Headers.Mex_WorkflowID] == workflow_id
@@ -272,5 +272,181 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
     )
 
-    assert res.status_code == 200
+    assert res.status_code == status.HTTP_200_OK
     assert res.content == chunk_2
+
+    res = app.get(
+        f"/messageexchange/{sender}/outbox/rich",
+        headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
+    )
+
+    assert res.status_code == status.HTTP_200_OK
+    messages = res.json()["messages"]
+    assert len(messages) == 1
+    assert messages[0]["message_id"] == message_id
+    assert messages[0]["status"] == MessageStatus.ACCEPTED
+
+    res = app.put(
+        f"/messageexchange/{recipient}/inbox/{message_id}/status/acknowledged",
+        headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
+    )
+
+    assert res.status_code == status.HTTP_200_OK
+
+    res = app.get(
+        f"/messageexchange/{sender}/outbox/rich",
+        headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
+    )
+
+    assert res.status_code == status.HTTP_200_OK
+    messages = res.json()["messages"]
+    assert len(messages) == 1
+    assert messages[0]["message_id"] == message_id
+    assert messages[0]["status"] == MessageStatus.ACKNOWLEDGED
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "Y",
+        "y",
+        "YES",
+        "yes",
+        "N",
+        "n",
+        "NO",
+        "no",
+        "1",
+        "0",
+        "TRUE",
+        "true",
+        "FALSE",
+        "false",
+        "T",
+        "F",
+        "ON",
+        "on",
+        "OFF",
+        "off",
+        ".#!,",
+        "N/A",
+        "n/a",
+    ],
+)
+def test_mex_content_compress_validation(app: TestClient, value: str):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+
+    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Compress: value})
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "Y",
+        "y",
+        "YES",
+        "yes",
+        "N",
+        "n",
+        "NO",
+        "no",
+        "1",
+        "0",
+        "TRUE",
+        "true",
+        "FALSE",
+        "false",
+        "T",
+        "F",
+        "ON",
+        "on",
+        "OFF",
+        "off",
+        ".#!,",
+        "N/A",
+        "n/a",
+    ],
+)
+def test_mex_content_encrypted_validation(app: TestClient, value: str):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+
+    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Encrypted: value})
+
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "Y",
+        "y",
+        "YES",
+        "yes",
+        "N",
+        "n",
+        "NO",
+        "no",
+        "1",
+        "0",
+        "TRUE",
+        "true",
+        "FALSE",
+        "false",
+        "T",
+        "F",
+        "ON",
+        "on",
+        "OFF",
+        "off",
+        ".#!,",
+        "N/A",
+        "n/a",
+    ],
+)
+def test_mex_content_compressed_validation(app: TestClient, value: str):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+
+    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Compressed: value})
+    assert response.status_code == status.HTTP_202_ACCEPTED
+
+
+@pytest.mark.parametrize(
+    "mex_content_checksum, expected_response_status",
+    [
+        ("", status.HTTP_202_ACCEPTED),
+        ("b10a8db164e0754105b7a99be72e3fe5", status.HTTP_202_ACCEPTED),
+        ("sha256:b10a8db164e0754105b7a99be72e3fe5", status.HTTP_202_ACCEPTED),
+        ("sha256: b10a8db164e0754105b7a99be72e3fe5", status.HTTP_202_ACCEPTED),
+        ("sha256 - b10a8db164e0754105b7a99be72e3fe5", status.HTTP_202_ACCEPTED),
+        ("sha256/b10a8db164e0754105b7a99be72e3fe5", status.HTTP_202_ACCEPTED),
+        ("`#!@+&=*,|~;._", status.HTTP_400_BAD_REQUEST),
+    ],
+)
+def test_mex_content_checksum_validation(app: TestClient, mex_content_checksum: str, expected_response_status: int):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+
+    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Checksum: mex_content_checksum})
+
+    assert response.status_code == expected_response_status
+
+
+def test_mex_local_id_validation(app: TestClient):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+
+    response = send_message(
+        app, sender, recipient, extra_headers={Headers.Mex_LocalID: "test#TEST", Headers.Mex_WorkflowID: "test TEST"}
+    )
+
+    assert response.status_code == status.HTTP_202_ACCEPTED

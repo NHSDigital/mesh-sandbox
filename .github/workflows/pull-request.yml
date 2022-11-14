@@ -88,8 +88,6 @@ jobs:
           wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
           unzip -q ./sonar-scanner.zip
           mv ./sonar-scanner-${SONAR_VERSION} ./sonar-scanner
-          provider_version=$(sed -e '/^provider "registry.terraform.io\/hashicorp\/aws" {/,/^}/!d;/\s*version/!d;s/\s//g;s/version=//;s/"//g' terraform/stacks/account/.terraform.lock.hcl)
-          echo "sonar.terraform.provider.aws.version=${provider_version}" >> sonar-project.properties
           scripts/sonar_tests.py
 
       - name: run sonar scan

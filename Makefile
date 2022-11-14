@@ -70,7 +70,7 @@ docker-build:
 	$(BUILDKIT_ARGS) poetry run docker-compose build
 
 mypy:
-	poetry run mypy . --exclude '(^|/)(build|dist)/.*\.py'
+	poetry run mypy . --exclude '(^|/)(build|dist|scripts)/.*\.py'
 
 pylint:
 	poetry run pylint .

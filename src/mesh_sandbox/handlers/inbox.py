@@ -13,7 +13,7 @@ from ..common.constants import Headers
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..dependencies import get_env_config, get_fernet, get_store
-from ..models.mailbox import AuthorisedMailbox, Mailbox
+from ..models.mailbox import Mailbox
 from ..models.message import Message, MessageDeliveryStatus, MessageStatus, MessageType
 from ..store.base import Store
 from ..views.inbox import InboxV1, InboxV2, get_rich_inbox_view
@@ -108,7 +108,7 @@ class InboxHandler:
         # filter empty headers ( as per existing API )
         return {h: v for h, v in headers.items() if v}
 
-    async def head_message(self, mailbox: AuthorisedMailbox, message_id: str):
+    async def head_message(self, mailbox: Mailbox, message_id: str):
 
         message = await self.store.get_message(message_id)
 
@@ -132,14 +132,12 @@ class InboxHandler:
         headers = self._get_response_headers(message, 1)
         return Response(headers=headers)
 
-    async def retrieve_message(self, mailbox: AuthorisedMailbox, message_id: str, accept_encoding: str):
+    async def retrieve_message(self, mailbox: Mailbox, message_id: str, accept_encoding: str):
         return await self._retrieve_message_or_chunk(
             mailbox=mailbox, message_id=message_id, accept_encoding=accept_encoding
         )
 
-    async def retrieve_chunk(
-        self, mailbox: AuthorisedMailbox, message_id: str, accept_encoding: str, chunk_number: int
-    ):
+    async def retrieve_chunk(self, mailbox: Mailbox, message_id: str, accept_encoding: str, chunk_number: int):
         return await self._retrieve_message_or_chunk(
             mailbox=mailbox, message_id=message_id, accept_encoding=accept_encoding, chunk_number=chunk_number
         )
@@ -193,7 +191,7 @@ class InboxHandler:
             media_type="application/octet-stream",
         )
 
-    async def acknowledge_message(self, mailbox: AuthorisedMailbox, message_id: str, accepts_api_version: int = 1):
+    async def acknowledge_message(self, mailbox: Mailbox, message_id: str, accepts_api_version: int = 1):
 
         message = await self.store.get_message(message_id)
         if not message:
@@ -217,7 +215,7 @@ class InboxHandler:
 
     async def _get_inbox_messages(
         self,
-        mailbox: AuthorisedMailbox,
+        mailbox: Mailbox,
         max_results: int = DEFAULT_MAX_RESULTS,
         last_key: Optional[dict] = None,
         message_filter: Optional[Callable[[Message], bool]] = None,
@@ -300,7 +298,7 @@ class InboxHandler:
 
     async def list_messages(
         self,
-        mailbox: AuthorisedMailbox,
+        mailbox: Mailbox,
         accepts_api_version: int = 1,
         max_results: int = DEFAULT_MAX_RESULTS,
         continue_from: Optional[str] = None,
@@ -346,7 +344,7 @@ class InboxHandler:
 
     async def rich_inbox(
         self,
-        mailbox: AuthorisedMailbox,
+        mailbox: Mailbox,
         start_time: Optional[str],
         continue_from: Optional[str],
         max_results: int = 100,
@@ -365,13 +363,16 @@ class InboxHandler:
 
         url_template = "{0}/inbox/rich"
         links: dict[str, str] = dict(
-            self=get_handler_uri([mailbox.mailbox_id], url_template=url_template, start_time=from_date)
+            self=get_handler_uri(
+                [mailbox.mailbox_id], url_template=url_template, start_time=from_date, max_results=max_results
+            )
         )
         if last_key:
             links["next"] = get_handler_uri(
                 [mailbox.mailbox_id],
                 url_template=url_template,
                 start_time=from_date,
+                max_results=max_results,
                 continue_from=self.fernet.encode_dict(last_key),
             )
         return get_rich_inbox_view(messages, links)

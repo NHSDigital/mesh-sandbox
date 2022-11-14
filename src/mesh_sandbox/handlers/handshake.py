@@ -2,7 +2,7 @@
 
 from fastapi import Request, Response
 
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 
 
 class HandshakeHandler:
@@ -10,7 +10,7 @@ class HandshakeHandler:
     # pylint: disable=too-many-arguments
     async def handshake(
         self,
-        mailbox: AuthorisedMailbox,
+        mailbox: Mailbox,
         request: Request,
         user_agent: str,
         mex_clientversion: str,

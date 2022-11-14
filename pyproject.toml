@@ -72,6 +72,7 @@ exclude_lines = [
 omit = [
     "*/conftest.py",
     "src/mesh_sandbox/store/base.py",
+    "scripts/*.py"
 ]
 sort = "-cover"
 ignore_errors = true
@@ -84,8 +85,8 @@ output = "reports/coverage.xml"
 
 
 [tool.pytest.ini_options]
-python_classes = "NoTestClassesPlease"
-python_files = "*_tests.py test_*.py"
+python_classes = "NoToTestClasses"
+python_files = "src/mesh_sandbox/tests/*.py"
 norecursedirs = ".git .venv .eggs build dist terraform features"
 
 

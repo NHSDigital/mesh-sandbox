@@ -1,7 +1,10 @@
+from time import time
 from typing import Callable
 
-from fastapi import Request, Response
+from fastapi import HTTPException, Request, Response
 from fastapi.routing import APIRoute
+
+from ..common import logger
 
 
 class RequestLoggingRoute(APIRoute):
@@ -14,6 +17,19 @@ class RequestLoggingRoute(APIRoute):
 
         async def _request_logging_route_handler(request: Request) -> Response:
             request.state.router_name = router_name
-            return await original_route_handler(request)
+            # pylint: disable=logging-fstring-interpolation
+            logger.info(f"begin {router_name} {request.url}")
+
+            start = time()
+            try:
+                result = await original_route_handler(request)
+                logger.info(f"end {router_name} {request.url} {result.status_code} {round(time()-start, 5)}")
+                return result
+            except HTTPException as http_err:
+                logger.warning(f"end {router_name} {request.url} {http_err.status_code} {round(time()-start, 5)}")
+                raise
+            except Exception as err:
+                logger.exception(f"end {router_name} {request.url} {time()-start} {round(time()-start, 5)} - {err}")
+                raise
 
         return _request_logging_route_handler
