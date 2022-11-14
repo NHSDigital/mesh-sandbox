@@ -4,12 +4,14 @@ import os
 import threading
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional
+from typing import Optional, cast
 
 from ..common import EnvConfig
 from ..models.mailbox import Mailbox
 from ..models.message import Message
+from ..models.workflow import Workflow
 from .base import Store
+from .serialisation import deserialise_model
 
 
 class CannedStore(Store):
@@ -65,22 +67,24 @@ class CannedStore(Store):
     def _load_endpoints(self) -> dict[str, list[Mailbox]]:
 
         with open(os.path.join(os.path.dirname(__file__), "data/workflows.jsonl"), "r", encoding="utf-8") as f:
-            workflows = [json.loads(line) for line in f.readlines() if line.strip()]
+            workflows = list(
+                cast(Workflow, deserialise_model(json.loads(line), Workflow)) for line in f.readlines() if line.strip()
+            )
             endpoints = defaultdict(list)
             for workflow in workflows:
-                workflow_id = (workflow["workflow_id"] or "").strip()
-                receivers = workflow.get("receivers", [])
+
+                receivers = workflow.receivers
                 for receiver in receivers:
                     receiver = (receiver or "").strip().upper()
                     mailbox = self.mailboxes.get(receiver)
                     if not mailbox:
                         continue
 
-                    endpoints[workflow_id].append(mailbox)
+                    endpoints[workflow.workflow_id].append(mailbox)
                     ods_code = (mailbox.ods_code or "").strip().upper()
                     if not ods_code:
                         continue
-                    endpoints[f"{ods_code}/{workflow_id}"].append(mailbox)
+                    endpoints[f"{ods_code}/{workflow.workflow_id}"].append(mailbox)
 
             return endpoints
 
@@ -90,7 +94,11 @@ class CannedStore(Store):
         with open(os.path.join(os.path.dirname(__file__), "data/mailboxes.jsonl"), "r", encoding="utf-8") as f:
             return {
                 mailbox.mailbox_id: mailbox
-                for mailbox in (Mailbox(**json.loads(line)) for line in f.readlines() if line.strip())
+                for mailbox in (
+                    cast(Mailbox, deserialise_model(json.loads(line), Mailbox))
+                    for line in f.readlines()
+                    if line.strip()
+                )
             }
 
     @staticmethod
@@ -98,8 +106,12 @@ class CannedStore(Store):
 
         with open(os.path.join(os.path.dirname(__file__), "data/messages.jsonl"), "r", encoding="utf-8") as f:
             return {
-                mailbox.message_id: mailbox
-                for mailbox in (Message(**json.loads(line)) for line in f.readlines() if line.strip())
+                message.message_id: message
+                for message in (
+                    cast(Message, deserialise_model(json.loads(line), Message))
+                    for line in f.readlines()
+                    if line.strip()
+                )
             }
 
     @staticmethod

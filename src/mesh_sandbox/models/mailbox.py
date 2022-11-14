@@ -4,7 +4,6 @@ from typing import Optional
 
 
 @dataclass
-# pylint: disable=too-many-instance-attributes
 class Mailbox:
 
     mailbox_id: str
