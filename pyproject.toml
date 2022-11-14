@@ -71,6 +71,7 @@ exclude_lines = [
 ]
 omit = [
     "*/conftest.py",
+    "src/mesh_sandbox/store/base.py",
 ]
 sort = "-cover"
 ignore_errors = true
