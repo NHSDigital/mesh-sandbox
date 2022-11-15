@@ -1,0 +1,3 @@
+{"workflow_id": "TEST_WORKFLOW", "senders":  ["X26ABC1"], "receivers":  ["X26ABC2"]}
+{"workflow_id": "TEST_WORKFLOW_ACK", "senders":  ["X26ABC2"], "receivers":  ["X26ABC1", "X26ABC3"]}
+{"workflow_id": "TEST_WORKFLOW2", "senders":  ["X26ABC1"], "receivers":  ["X26ABC1", "X26ABC2", "X26ABC3"]}

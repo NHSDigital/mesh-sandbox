@@ -2,17 +2,19 @@ from datetime import datetime
 from typing import Optional, cast
 from uuid import uuid4
 
+from dateutil.parser import isoparse
 from dateutil.relativedelta import relativedelta
 from fastapi import Depends, HTTPException, Request
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 
-from ..common import EnvConfig, strtobool
+from ..common import EnvConfig, index_of, strtobool
 from ..common.constants import Headers
+from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..common.mex_headers import MexHeaders
-from ..dependencies import get_env_config, get_store
-from ..models.mailbox import AuthorisedMailbox
+from ..dependencies import get_env_config, get_fernet, get_store
+from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
     MessageEvent,
@@ -55,14 +57,20 @@ def get_chunk_range(chunk_range: str, request_chunk_no: int) -> tuple[Optional[s
 
 class OutboxHandler:
     # pylint: disable=too-many-arguments
-    def __init__(self, config: EnvConfig = Depends(get_env_config), store: Store = Depends(get_store)):
+    def __init__(
+        self,
+        config: EnvConfig = Depends(get_env_config),
+        store: Store = Depends(get_store),
+        fernet: FernetHelper = Depends(get_fernet),
+    ):
         self.config = config
         self.store = store
+        self.fernet = fernet
 
     async def send_message(
         self,
         request: Request,
-        sender_mailbox: AuthorisedMailbox,
+        sender_mailbox: Mailbox,
         mex_headers: MexHeaders,
         content_encoding: str,
         accepts_api_version: int = 1,
@@ -85,7 +93,7 @@ class OutboxHandler:
         if not recipient:
             raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="No mailbox matched")
 
-        status = MessageStatus.ACCEPTED if total_chunks < 2 else MessageStatus.ACCEPTED
+        status = MessageStatus.ACCEPTED if total_chunks < 2 else MessageStatus.UPLOADING
 
         message_id = uuid4().hex
 
@@ -131,48 +139,10 @@ class OutboxHandler:
 
         return send_message_response(message, accepts_api_version)
 
-    async def _validate_chunk_upload(
-        self,
-        sender_mailbox: AuthorisedMailbox,
-        message_id: str,
-        chunk_number: int,
-        chunk_range: Optional[str],
-        content_encoding: str,
-    ) -> Message:
-
-        # why do we need to validate this ( or even accept it on a chunk upload ? )
-        # total chunks is recorded on send message and chunk number is in the path,
-        # think we can just remove this header on send_chunk completely
-        chunk_range = (chunk_range or "").strip()
-        if not chunk_range:
-            raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="InvalidHeaderChunks")
-
-        error, _, _ = get_chunk_range(chunk_range, chunk_number)
-        if error:
-            raise HTTPException(
-                status_code=http_status.HTTP_417_EXPECTATION_FAILED,
-                detail="InvalidHeaderChunks",
-            )
-        message: Optional[Message] = None
-
-        if not message:
-            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
-
-        if not sender_mailbox or sender_mailbox.mailbox_id != message.sender.mailbox_id:
-            raise HTTPException(status_code=http_status.HTTP_403_FORBIDDEN)
-
-        if message.status != MessageStatus.UPLOADING:
-            raise HTTPException(status_code=http_status.HTTP_423_LOCKED)
-
-        if chunk_number > message.total_chunks or message.message_type != MessageType.DATA:
-            raise HTTPException(status_code=http_status.HTTP_406_NOT_ACCEPTABLE)
-
-        return message
-
     async def send_chunk(  # pylint: disable=too-many-locals
         self,
         request: Request,
-        sender_mailbox: AuthorisedMailbox,
+        sender_mailbox: Mailbox,
         message_id: str,
         chunk_number: int,
         mex_chunk_range: str,
@@ -190,7 +160,7 @@ class OutboxHandler:
                 status_code=http_status.HTTP_417_EXPECTATION_FAILED,
                 detail="InvalidHeaderChunks",
             )
-        message: Optional[Message] = None
+        message: Optional[Message] = await self.store.get_message(message_id)
 
         if not message:
             raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
@@ -204,6 +174,12 @@ class OutboxHandler:
         if chunk_number > message.total_chunks or message.message_type != MessageType.DATA:
             raise HTTPException(status_code=http_status.HTTP_406_NOT_ACCEPTABLE)
 
+        if (content_encoding or "").strip() != message.metadata.content_encoding:
+            raise HTTPException(
+                status_code=http_status.HTTP_417_EXPECTATION_FAILED,
+                detail="cannot change content encoding",
+            )
+
         await self.store.receive_chunk(message, chunk_number, await request.body())
 
         if chunk_number < message.total_chunks:
@@ -215,26 +191,50 @@ class OutboxHandler:
 
     async def rich_outbox(
         self,
-        mailbox: AuthorisedMailbox,
+        mailbox: Mailbox,
         start_time: Optional[str],
         continue_from: Optional[str],
         max_results: int = 100,
     ) -> JSONResponse:
+        max_results = max(min(max_results, 100), 0)
+        from_date = datetime.utcnow() + relativedelta(days=-30) if start_time is None else isoparse(start_time)
 
-        from_date = datetime.utcnow() + relativedelta(days=-30)
+        last_key: Optional[dict] = None
+        if continue_from:
+            last_key = self.fernet.decode_dict(continue_from)
 
-        messages: Optional[list[Message]] = None
-        last_evaluated_key: Optional[str] = None
+        messages: list[Message] = cast(list[Message], await self.store.get_outbox(mailbox.mailbox_id))
+
+        def message_filter(message: Message) -> bool:
+            return message.created_timestamp > from_date
+
+        messages = list(filter(message_filter, messages))
+
+        if last_key:
+            last_message_id = last_key["message_id"]
+            ix = index_of(messages, (lambda msg: bool(msg.message_id == last_message_id)))
+            if ix > -1:
+                messages = messages[ix + 1 :]
+
+        last_key = None
+
+        if len(messages) > max_results:
+            messages = messages[:max_results]
+            if messages:
+                last_key = dict(message_id=messages[-1].message_id)
 
         url_template = "{0}/outbox/rich"
         links: dict[str, str] = dict(
-            self=get_handler_uri([mailbox.mailbox_id], url_template=url_template, start_time=from_date)
+            self=get_handler_uri(
+                [mailbox.mailbox_id], url_template=url_template, start_time=from_date, max_results=max_results
+            )
         )
-        if last_evaluated_key:
+        if last_key:
             links["next"] = get_handler_uri(
                 [mailbox.mailbox_id],
                 url_template=url_template,
                 start_time=from_date,
-                continue_from="XXXX",
+                max_results=max_results,
+                continue_from=self.fernet.encode_dict(last_key),
             )
         return get_rich_outbox_view(messages, links)

@@ -1,5 +1,7 @@
 from typing import Final
 
+# pylint: disable=invalid-name
+
 
 class Headers:
     Authorization: Final[str] = "Authorization"

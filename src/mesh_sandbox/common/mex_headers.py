@@ -9,15 +9,15 @@ from . import strtobool
 from .constants import Headers
 
 
-def ensure_text(string, encoding="utf-8", errors="strict"):
+def ensure_text(text: str, encoding="utf-8", errors="strict"):
 
-    if isinstance(string, str):
-        return string
+    if isinstance(text, str):
+        return text
 
-    if isinstance(string, bytes):
-        return string.decode(encoding, errors)
+    if isinstance(text, bytes):
+        return text.decode(encoding, errors)
 
-    raise TypeError(f"not expecting type '{type(string)}'")
+    raise TypeError(f"not expecting type '{type(text)}'")
 
 
 _INVALID_CONTROL_CHAR_REGEX = re.compile(r".*[\x00-\x1f].*")
@@ -29,7 +29,7 @@ def contains_control_chars(value: str):
 
 class MexHeaders(NamedTuple):
     mex_to: str
-    mex_workflow_id: Optional[str]
+    mex_workflow_id: str
     mex_chunk_range: Optional[str]
     mex_subject: Optional[str]
     mex_localid: Optional[str]

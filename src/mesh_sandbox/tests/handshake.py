@@ -1,6 +1,7 @@
 from uuid import uuid4
 
 import pytest
+from fastapi import status
 from fastapi.testclient import TestClient
 
 from ..common import APP_JSON, APP_V1_JSON, APP_V2_JSON
@@ -35,7 +36,7 @@ def test_handshake_no_auth_mailbox_exists(app: TestClient, mailbox_id: str, acce
             },
         )
 
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
 
         if accepts == APP_V2_JSON:
             assert res.text == ""
@@ -57,10 +58,15 @@ def test_handshake_no_auth_mailbox_does_not_exist(app: TestClient, accepts: str)
     with temp_env_vars(AUTH_MODE="none"):
         res = app.get(
             f"/messageexchange/{uuid4().hex}",
-            headers={Headers.Mex_ClientVersion: "1.0", Headers.Mex_OSName: "bob", Headers.Mex_OSVersion: "latest"},
+            headers={
+                Headers.Mex_ClientVersion: "1.0",
+                Headers.Mex_OSName: "bob",
+                Headers.Mex_OSVersion: "latest",
+                Headers.Accept: accepts,
+            },
         )
 
-        assert res.status_code == 403
+        assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize(
@@ -88,7 +94,7 @@ def test_handshake_canned_auth_mailbox_exists(app: TestClient, mailbox_id: str, 
             },
         )
 
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
 
         if accepts == APP_V2_JSON:
             assert res.text == ""
@@ -111,7 +117,7 @@ def test_handshake_canned_invalid_auth_mailbox_exists(app: TestClient, mailbox_i
             },
         )
 
-        assert res.status_code == 403
+        assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 @pytest.mark.parametrize(
@@ -139,7 +145,7 @@ def test_handshake_full_auth_mailbox_exists(app: TestClient, mailbox_id: str, ac
             },
         )
 
-        assert res.status_code == 200
+        assert res.status_code == status.HTTP_200_OK
 
         if accepts == APP_V2_JSON:
             assert res.text == ""
@@ -163,7 +169,7 @@ def test_handshake_full_auth_mailbox_does_not_exist(app: TestClient):
             },
         )
 
-        assert res.status_code == 403
+        assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_handshake_full_auth_mailbox_bad_password(app: TestClient):
@@ -181,7 +187,7 @@ def test_handshake_full_auth_mailbox_bad_password(app: TestClient):
             },
         )
 
-        assert res.status_code == 403
+        assert res.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_handshake_full_auth_mailbox_bad_key(app: TestClient):
@@ -199,4 +205,4 @@ def test_handshake_full_auth_mailbox_bad_key(app: TestClient):
             },
         )
 
-        assert res.status_code == 403
+        assert res.status_code == status.HTTP_403_FORBIDDEN

@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, Header, Request, status
 from ..common.constants import Headers
 from ..dependencies import authorised_mailbox, get_accepts_api_version
 from ..handlers.handshake import HandshakeHandler
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -74,7 +74,7 @@ async def handshake(  # pylint: disable=too-many-arguments
     handler: HandshakeHandler = Depends(HandshakeHandler),
 ):
     return await handler.handshake(
-        cast(AuthorisedMailbox, request.state.authorised_mailbox),
+        cast(Mailbox, request.state.authorised_mailbox),
         request,
         user_agent,
         mex_clientversion,

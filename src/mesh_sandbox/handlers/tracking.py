@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 
 from ..common import MESH_MEDIA_TYPES, EnvConfig, exclude_none_json_encoder
 from ..dependencies import get_env_config, get_store
-from ..models.mailbox import AuthorisedMailbox
+from ..models.mailbox import Mailbox
 from ..models.message import Message
 from ..store.base import Store
 from ..views.tracking import create_tracking_response
@@ -17,9 +17,7 @@ class TrackingHandler:
         self.config = config
         self.store = store
 
-    async def tracking_by_message_id(
-        self, sender_mailbox: AuthorisedMailbox, message_id: str, accepts_api_version: int = 1
-    ):
+    async def tracking_by_message_id(self, sender_mailbox: Mailbox, message_id: str, accepts_api_version: int = 1):
 
         message: Optional[Message] = await self.store.get_message(message_id)
 
@@ -33,7 +31,7 @@ class TrackingHandler:
         model = create_tracking_response(message, accepts_api_version)
         return JSONResponse(content=exclude_none_json_encoder(model), media_type=MESH_MEDIA_TYPES[accepts_api_version])
 
-    async def tracking_by_local_id(self, sender_mailbox: AuthorisedMailbox, local_id: str):
+    async def tracking_by_local_id(self, sender_mailbox: Mailbox, local_id: str):
 
         messages: list[Message] = await self.store.get_by_local_id(sender_mailbox.mailbox_id, local_id)
 

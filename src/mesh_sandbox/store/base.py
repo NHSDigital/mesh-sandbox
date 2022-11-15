@@ -4,7 +4,7 @@ from typing import NamedTuple, Optional
 from fastapi import HTTPException, status
 
 from ..common import EnvConfig, generate_cipher_text
-from ..models.mailbox import AuthorisedMailbox, Mailbox
+from ..models.mailbox import Mailbox
 from ..models.message import Message
 
 
@@ -73,17 +73,13 @@ class Store(ABC):
         self.config = config
 
     @abstractmethod
-    async def get_authorised_mailbox(self, mailbox_id: str) -> AuthorisedMailbox:
+    async def get_mailbox(self, mailbox_id: str, accessed: bool = False) -> Optional[Mailbox]:
         pass
 
-    @abstractmethod
-    async def get_mailbox(self, mailbox_id: str) -> Mailbox:
-        pass
-
-    async def _validate_auth_token(self, mailbox_id: str, authorization: str) -> Optional[AuthorisedMailbox]:
+    async def _validate_auth_token(self, mailbox_id: str, authorization: str) -> Optional[Mailbox]:
 
         if self.config.auth_mode == "none":
-            return await self.get_authorised_mailbox(mailbox_id)
+            return await self.get_mailbox(mailbox_id, accessed=True)
 
         authorization = (authorization or "").strip()
         if not authorization:
@@ -92,6 +88,10 @@ class Store(ABC):
             )
 
         header_parts = try_parse_authorisation_token(authorization)
+        if not header_parts:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading from Authorization header"
+            )
 
         if header_parts.mailbox_id != mailbox_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Mailbox id does not match token")
@@ -100,14 +100,14 @@ class Store(ABC):
 
             if header_parts.nonce.upper() != "VALID":
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="access denied")
-            return await self.get_authorised_mailbox(mailbox_id)
+            return await self.get_mailbox(mailbox_id, accessed=True)
 
         if header_parts.get_reasons_invalid():
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading from Authorization header"
             )
 
-        mailbox = await self.get_authorised_mailbox(mailbox_id)
+        mailbox = await self.get_mailbox(mailbox_id, accessed=True)
 
         if not mailbox:
             return None
@@ -126,7 +126,7 @@ class Store(ABC):
 
         return mailbox
 
-    async def authorise_mailbox(self, mailbox_id: str, authorization: str) -> AuthorisedMailbox:
+    async def authorise_mailbox(self, mailbox_id: str, authorization: str) -> Optional[Mailbox]:
 
         mailbox = await self._validate_auth_token(mailbox_id, authorization)
 
@@ -160,9 +160,21 @@ class Store(ABC):
         pass
 
     @abstractmethod
+    async def get_outbox(self, mailbox_id: str) -> list[Message]:
+        pass
+
+    @abstractmethod
     async def get_by_local_id(self, mailbox_id: str, local_id: str) -> list[Message]:
         pass
 
     @abstractmethod
-    async def retrieve_chunk(self, message_id: str, chunk_number: int) -> Optional[bytes]:
+    async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
+        pass
+
+    @abstractmethod
+    async def lookup_by_ods_code_and_workflow_id(self, ods_code: str, workflow_id: str) -> list[Mailbox]:
+        pass
+
+    @abstractmethod
+    async def lookup_by_workflow_id(self, workflow_id: str) -> list[Mailbox]:
         pass

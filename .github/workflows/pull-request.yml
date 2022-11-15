@@ -8,6 +8,7 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
+    if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -73,37 +74,35 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           thresholdAll: 0.85
 
-#      - name: setup java
-#        if: success() || failure()
-#        uses: actions/setup-java@v3
-#        with:
-#          distribution: "corretto"
-#          java-version: "17"
-#
-#      - name: provision sonar-scanner
-#        if: success() || failure()
-#        run: |
-#          export SONAR_VERSION="4.7.0.2747"
-#          wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
-#          unzip -q ./sonar-scanner.zip
-#          mv ./sonar-scanner-${SONAR_VERSION} ./sonar-scanner
-#          provider_version=$(sed -e '/^provider "registry.terraform.io\/hashicorp\/aws" {/,/^}/!d;/\s*version/!d;s/\s//g;s/version=//;s/"//g' terraform/stacks/account/.terraform.lock.hcl)
-#          echo "sonar.terraform.provider.aws.version=${provider_version}" >> sonar-project.properties
-#          scripts/sonar_tests.py
-#
-#      - name: run sonar scan
-#        if: success() || failure()
-#        run: |
-#          PATH="$PWD/sonar-scanner/bin:$PATH"
-#          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-#            git checkout "${GITHUB_HEAD_REF}"
-#            sonar-scanner -Dsonar.pullrequest.branch="{{ github.event.pull_request.head.sha }}" -Dsonar.pullrequest.base="{{ github.event.pull_request.base.sha }}" -Dsonar.pullrequest.key="${{ github.event.number }}"
-#          else
-#            sonar-scanner
-#          fi
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: setup java
+        if: success() || failure()
+        uses: actions/setup-java@v3
+        with:
+          distribution: "corretto"
+          java-version: "17"
+
+      - name: provision sonar-scanner
+        if: success() || failure()
+        run: |
+          export SONAR_VERSION="4.7.0.2747"
+          wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
+          unzip -q ./sonar-scanner.zip
+          mv ./sonar-scanner-${SONAR_VERSION} ./sonar-scanner
+          scripts/sonar_tests.py
+
+      - name: run sonar scan
+        if: success() || failure()
+        run: |
+          PATH="$PWD/sonar-scanner/bin:$PATH"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            git checkout "${GITHUB_HEAD_REF}"
+            sonar-scanner -Dsonar.pullrequest.branch="{{ github.event.pull_request.head.sha }}" -Dsonar.pullrequest.base="{{ github.event.pull_request.base.sha }}" -Dsonar.pullrequest.key="${{ github.event.number }}"
+          else
+            sonar-scanner
+          fi
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 
       - name: archive reports
@@ -120,12 +119,13 @@ jobs:
           check_name: junit reports
           report_paths: reports/junit/*.xml
 
-      - name: stop docker containers
-        if: success() || failure()
-        run: make down
+#      - name: stop docker containers
+#        if: success() || failure()
+#        run: make down
 
   lint:
     runs-on: ubuntu-latest
+    if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -181,12 +181,12 @@ jobs:
       - name: mypy
         run: make mypy
 
-      - name: hadolint
-        uses: hadolint/hadolint-action@master
-        with:
-          dockerfile: "Dockerfile"
-          recursive: true
-          config: ./docker/hadolint.yml
+#      - name: hadolint
+#        uses: hadolint/hadolint-action@master
+#        with:
+#          dockerfile: "Dockerfile"
+#          recursive: true
+#          config: ./docker/hadolint.yml
 
       - name: shellcheck
         uses: ludeeus/action-shellcheck@master
@@ -195,6 +195,3 @@ jobs:
           ignore_names: git-secrets
         env:
           SHELLCHECK_OPTS: -f gcc -e SC1090,SC1091
-
-      - name: ansible lint
-        run: make ansible-lint
