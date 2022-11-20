@@ -95,7 +95,7 @@ class OutboxHandler:
 
         status = MessageStatus.ACCEPTED if total_chunks < 2 else MessageStatus.UPLOADING
 
-        message_id = uuid4().hex
+        message_id = uuid4().hex.upper()
 
         message = Message(
             events=[MessageEvent(status=status)],
@@ -134,6 +134,9 @@ class OutboxHandler:
         body = await request.body()
         if len(body) == 0:
             raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="MissingDataFile")
+
+        if message.status == MessageStatus.ACCEPTED:
+            message.file_size = len(body)
 
         await self.store.send_message(message, body)
 

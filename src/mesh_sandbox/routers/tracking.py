@@ -6,7 +6,6 @@ from ..common import MESH_MEDIA_TYPES
 from ..dependencies import (
     authorised_mailbox,
     get_accepts_api_version,
-    normalise_message_id_path,
     normalise_message_id_query,
 )
 from ..handlers.tracking import TrackingHandler
@@ -18,38 +17,6 @@ router = APIRouter(
     dependencies=[Depends(authorised_mailbox)],
     route_class=RequestLoggingRoute,
 )
-
-
-# register this last to make sure it does not take over  /outbox/rich etc ..
-@router.get(
-    "/{message_id}/status",
-    summary="Track a sent message",
-    status_code=status.HTTP_200_OK,
-    responses={
-        200: {
-            "content": {
-                MESH_MEDIA_TYPES[2]: {
-                    "schema": TrackingV2.schema(),
-                }
-            }
-        }
-    },
-    include_in_schema=False,
-    response_model_exclude_none=True,
-    openapi_extra={"spec_order": 410},
-)
-async def tracking_by_message_id_path(
-    request: Request,
-    message_id: str = Depends(normalise_message_id_path),
-    accepts_api_version: int = Depends(get_accepts_api_version),
-    handler: TrackingHandler = Depends(TrackingHandler),
-):
-    accepts_api_version = max(accepts_api_version, 2)  # this is a v2 endpoint
-    return await handler.tracking_by_message_id(
-        sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
-        message_id=message_id,
-        accepts_api_version=accepts_api_version,
-    )
 
 
 @router.get(

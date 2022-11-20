@@ -1,45 +1,10 @@
-from multiprocessing import Process
-from time import sleep, time
 from uuid import uuid4
 
 import httpx
 import pytest
-import uvicorn  # type: ignore[import]
 from fastapi import status
 from mesh_client import MeshClient
 from requests.models import HTTPError
-
-from ..api import app
-
-
-def run_server(port: int):
-    uvicorn.run(app, port=port, workers=1)
-
-
-@pytest.fixture(scope="function", name="base_uri")
-def server(unused_tcp_port: int):
-
-    proc = Process(target=run_server, args=(unused_tcp_port,))
-    proc.start()
-    base_uri = f"http://localhost:{unused_tcp_port}"
-    timeout = time() + 1
-    with httpx.Client(base_url=base_uri) as client:
-        while True:
-            try:
-                res = client.get("/health")
-                if res.status_code == status.HTTP_200_OK:
-                    break
-                raise ValueError(res.status_code)
-            except httpx.ConnectError:
-                sleep(0.1)
-                if time() > timeout:
-                    break
-                continue
-
-    try:
-        yield base_uri
-    finally:
-        proc.kill()
 
 
 def test_app_health(base_uri: str):

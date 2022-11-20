@@ -6,7 +6,8 @@ from fastapi.testclient import TestClient
 
 from ..common import APP_V1_JSON, APP_V2_JSON
 from ..common.constants import Headers
-from .helpers import generate_auth_token, send_message
+from ..models.message import MessageStatus
+from .helpers import generate_auth_token, send_message, temp_env_vars
 
 _CANNED_MAILBOX1 = "X26ABC1"
 _CANNED_MAILBOX2 = "X26ABC2"
@@ -165,3 +166,95 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
     response = res.json()
     messages = [res["message_id"] for res in response.get("messages", [])]
     assert messages == message_ids[page_size : page_size * 2]
+
+
+def test_receive_canned_chunked_message(app: TestClient):
+
+    with temp_env_vars(STORE_MODE="canned"):
+
+        recipient = _CANNED_MAILBOX2
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        result = res.json()
+        message_ids = result["messages"]
+        message_id = "CHUNKED_MESSAGE_GZ"
+        assert message_id in message_ids
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox/{message_id}",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        assert res.status_code == status.HTTP_206_PARTIAL_CONTENT
+        message = res.text
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox/{message_id}/2",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        assert res.status_code == status.HTTP_200_OK
+        message += res.text
+
+        assert message.startswith("Lorem ipsum")
+        assert message.endswith("lorem.")
+
+
+def test_receive_canned_simple_message(app: TestClient):
+
+    with temp_env_vars(STORE_MODE="canned"):
+
+        recipient = _CANNED_MAILBOX1
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        result = res.json()
+        message_ids = result["messages"]
+        message_id = "SIMPLE_MESSAGE"
+        assert message_id in message_ids
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox/{message_id}",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        assert res.status_code == status.HTTP_200_OK
+        message = res.text
+
+        assert message.startswith("Lorem ipsum")
+        assert message.endswith("lorem.")
+
+
+@pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
+def test_receive_canned_undelivered_message(app: TestClient, accept: str):
+
+    recipient = _CANNED_MAILBOX1
+    sender = _CANNED_MAILBOX2
+
+    with temp_env_vars(STORE_MODE="canned"):
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox",
+            headers={Headers.Accept: accept, Headers.Authorization: generate_auth_token(recipient)},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        result = res.json()
+        message_ids = result["messages"]
+        message_id = "UNDELIVERED_MESSAGE"
+        assert message_id not in message_ids
+
+        res = app.get(
+            f"/messageexchange/{sender}/outbox/tracking?messageID={message_id}",
+            headers={Headers.Accept: accept, Headers.Authorization: generate_auth_token(sender)},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        result = res.json()
+        assert result["status"] == MessageStatus.UNDELIVERABLE
