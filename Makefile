@@ -55,16 +55,11 @@ install-poetry:
 update:
 	poetry update
 
-.docker.env:
-	echo "MESH_PERSISTANCE=YES" >> .docker.env
+down:
+	poetry run docker-compose down --remove-orphans || true
 
-down: .docker.env
-	poetry run docker-compose --env-file .docker.env down --remove-orphans || true
-	make -C terraform/stacks/local clean
-
-up-ci:
 up:
-	$(BUILDKIT_ARGS) poetry run docker-compose --env-file .docker.env up -d --remove-orphans
+	$(BUILDKIT_ARGS) poetry run docker-compose up -d --remove-orphans --build
 
 docker-build:
 	$(BUILDKIT_ARGS) poetry run docker-compose build
@@ -80,12 +75,10 @@ pylint-ci:
 
 shellcheck:
 	@# Only swallow checking errors (rc=1), not fatal problems (rc=2)
-	docker run --rm -i -v ${PWD}:/mnt:ro koalaman/shellcheck -f gcc -e SC1090,SC1091 `find . \( -path "*/.venv/*" -prune -o -path "*/build/*" -prune \) -o -type f -name '*.sh' -print` || test $$? -eq 1
+	docker run --rm -i -v ${PWD}:/mnt:ro koalaman/shellcheck -f gcc -e SC1090,SC1091 `find . \( -path "*/.venv/*" -prune -o -path "*/build/*" -prune  -o -path "*/java_client/*" -prune  \) -o -type f -name '*.sh' -print` || test $$? -eq 1
 
 hadolint:
-	@echo "hadolint --config=docker/hadolint.yml docker/*/Dockerfile"
-	@# The pipe swallows return code, so no need for "|| true".
-	@docker run --rm -i -v ${PWD}/docker:/docker:ro hadolint/hadolint hadolint --config=docker/hadolint.yml Dockerfile | sed 's/:\([0-9]\+\) /:\1:0 /'
+	@docker run --rm -i -v ${PWD}/:/docker:ro hadolint/hadolint hadolint --config=docker/hadolint.yml docker/Dockerfile | sed 's/:\([0-9]\+\) /:\1:0 /'
 
 clean:
 	rm -rf ./dist || true
@@ -139,3 +132,6 @@ check-secrets:
 
 check-secrets-all:
 	scripts/check-secrets.sh unstaged
+
+export-requirements:
+	poetry export --only main -f requirements.txt --output ./requirements.txt

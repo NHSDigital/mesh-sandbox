@@ -3,3 +3,5 @@ src/mesh_sandbox/tests/
 __pycache__
 .mypy_cache
 **/.pytest_cache/
+.venv
+messages/

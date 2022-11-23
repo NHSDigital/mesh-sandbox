@@ -1,0 +1,5 @@
+ignored:
+  - DL3013  # pin pip versions
+  - DL3008  # pin apt versions
+#  - DL3007
+#  - DL3018

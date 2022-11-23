@@ -14,6 +14,14 @@ class FileStore(MemoryStore):
         super().__init__(config)
         self._base_dir = config.file_store_dir
 
+    async def _get_file_size(self, message: Message) -> int:
+        size = 0
+        message_dir = os.path.join(self._base_dir, f"{message.recipient.mailbox_id}/in/{message.message_id}")
+        for file in os.listdir(message_dir):
+            stat = os.stat(f"{message_dir}/{file}")
+            size += stat.st_size
+        return size
+
     def chunk_path(self, message: Message, chunk_number: int) -> str:
         return os.path.join(self._base_dir, f"{message.recipient.mailbox_id}/in/{message.message_id}/{chunk_number}")
 

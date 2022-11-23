@@ -1,0 +1,24 @@
+version: '3.9'
+
+
+services:
+
+  mesh_sandbox:
+    build: ./
+    ports:
+      - "8700:80"
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+    healthcheck:
+      test: curl -sf http://localhost:80/health || exit 1
+      interval: 3s
+      timeout: 10s
+    environment:
+      - SHARED_KEY=TestKey
+    volumes:
+      # mount a different mailboxes.jsonl to pre created mailboxes
+      - ./src/mesh_sandbox/store/data/mailboxes.jsonl:/app/mesh_sandbox/store/data/mailboxes.jsonl:ro
+      # you can mount a directory if you want access the stored messages
+#      - ./messages:/tmp/mesh_store
