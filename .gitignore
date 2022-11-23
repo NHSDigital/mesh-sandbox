@@ -38,9 +38,6 @@ __pycache__
 *.csr.cfg
 *id_rsa*
 
-# mailbox passwords etc.
-secrets.json
-
 # Big binaries
 *.bz2
 *.gz
@@ -50,10 +47,4 @@ secrets.json
 *.zip
 
 # java client
-java_mesh_client
-*.keystore
-
-# test resources
-resources/
-test_data/
-java_mesh_client/
+java_client/

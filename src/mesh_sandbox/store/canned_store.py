@@ -1,4 +1,5 @@
 import asyncio
+import base64
 import json
 import os
 import threading
@@ -8,7 +9,7 @@ from typing import Optional, cast
 
 from ..common import EnvConfig
 from ..models.mailbox import Mailbox
-from ..models.message import Message
+from ..models.message import Message, MessageStatus
 from ..models.workflow import Workflow
 from .base import Store
 from .serialisation import deserialise_model
@@ -51,8 +52,10 @@ class CannedStore(Store):
             if message.sender.mailbox_id and message.sender.mailbox_id in self.mailboxes:
                 self.outboxes[message.sender.mailbox_id].append(message)
 
-            if message.recipient.mailbox_id and message.recipient.mailbox_id in self.mailboxes:
-                self.inboxes[message.recipient.mailbox_id].append(message)
+            if message.status != MessageStatus.ACCEPTED or message.recipient.mailbox_id not in self.mailboxes:
+                continue
+
+            self.inboxes[message.recipient.mailbox_id].append(message)
 
         for inbox in self.inboxes.values():
             inbox.sort(key=lambda msg: msg.created_timestamp)
@@ -115,15 +118,25 @@ class CannedStore(Store):
             }
 
     @staticmethod
-    def _load_chunks() -> dict[str, list[Optional[bytes]]]:
+    def _load_chunks() -> dict[str, list[bytes]]:
 
-        return {}
+        chunks = defaultdict(list)
 
-        # with open(os.path.join(os.path.dirname(__file__), "data/messages.jsonl"), "r", encoding="utf-8") as f:
-        #     return {
-        #         mailbox.message_id: mailbox
-        #         for mailbox in (Message(**json.loads(line)) for line in f.readlines() if line.strip())
-        #     }
+        with open(os.path.join(os.path.dirname(__file__), "data/chunks.jsonl"), "r", encoding="utf-8") as f:
+
+            for line in f.readlines():
+                line = line.strip()
+                if not line:
+                    continue
+                loaded = json.loads(line)
+                chunks[loaded["message_id"]].append(loaded)
+
+        for message_chunks in chunks.values():
+            message_chunks.sort(key=lambda x: cast(int, x["chunk_no"]))
+
+        parsed_chunks = {k: [base64.b64decode(chunk["data"]) for chunk in v] for k, v in chunks.items()}
+
+        return parsed_chunks
 
     async def get_mailbox(self, mailbox_id: str, accessed: bool = False) -> Optional[Mailbox]:
         mailbox = self.mailboxes.get(mailbox_id)
@@ -160,7 +173,7 @@ class CannedStore(Store):
         return self.local_ids.get(mailbox_id, {}).get(local_id, [])
 
     async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
-        parts: list[Optional[bytes]] = self.chunks.get(message.message_id, [])
+        parts: list[bytes] = self.chunks.get(message.message_id, [])
         if not parts or len(parts) < chunk_number:
             return None
         return parts[chunk_number - 1]

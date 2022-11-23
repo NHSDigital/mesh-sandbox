@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import cast
 
 from ..common import EnvConfig
 from ..models.message import Message, MessageEvent, MessageStatus
@@ -16,7 +16,7 @@ class MemoryStore(CannedStore):
     async def send_message(self, message: Message, body: bytes):
 
         async with self.lock:
-            parts: list[Optional[bytes]] = [None for _ in range(message.total_chunks)]
+            parts: list[bytes] = cast(list[bytes], [None for _ in range(message.total_chunks)])
 
             self.messages[message.message_id] = message
             self.chunks[message.message_id] = parts
@@ -39,6 +39,7 @@ class MemoryStore(CannedStore):
     async def accept_message(self, message: Message):
         async with self.lock:
             message.events.insert(0, MessageEvent(status=MessageStatus.ACCEPTED))
+            message.file_size = sum(len(chunk) for chunk in self.chunks.get(message.message_id, []))
             self.inboxes[message.recipient.mailbox_id].append(message)
 
     async def acknowledge_message(self, message: Message):

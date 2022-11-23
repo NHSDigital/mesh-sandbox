@@ -96,7 +96,6 @@ class Message:  # pylint: disable=too-many-public-methods,too-many-instance-attr
 
     workflow_id: str = field(default="UNDEFINED")
     message_type: Optional[str] = field(default=None)
-    visible_to_sender: bool = field(default=True)
 
     total_chunks: int = field(default=1)
     file_size: int = field(default=0)

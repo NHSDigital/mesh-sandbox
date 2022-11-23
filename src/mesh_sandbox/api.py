@@ -4,8 +4,9 @@ from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from starlette.responses import JSONResponse
 
-from .common import exclude_none_json_encoder
+from .common import exclude_none_json_encoder, logger
 from .common.constants import Headers
+from .dependencies import get_env_config
 from .routers import (
     handshake,
     inbox,
@@ -33,6 +34,14 @@ app = FastAPI(
     docs_url=None,
     redoc_url=None,
 )
+
+
+@app.on_event("startup")
+async def startup():
+
+    config = get_env_config()
+    # pylint: disable=logging-fstring-interpolation
+    logger.info(f"startup auth_mode: {config.auth_mode} store_mode: {config.store_mode}")
 
 
 @app.exception_handler(Exception)
