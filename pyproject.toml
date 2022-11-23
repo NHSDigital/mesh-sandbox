@@ -37,6 +37,7 @@ pyOpenSSL = "^22.1.0"
 lxml = "^4.9.1"
 types-pyOpenSSL = "^22.1.0.2"
 types-lxml = "^2022.11.8"
+docker-compose = "^1.29.2"
 
 
 [tool.poetry.group.local.dependencies]
@@ -93,7 +94,7 @@ output = "reports/coverage.xml"
 [tool.pytest.ini_options]
 python_classes = "NoToTestClasses"
 python_files = "src/mesh_sandbox/tests/*.py"
-norecursedirs = ".git .venv .eggs build dist terraform features"
+norecursedirs = ".git .venv .eggs build dist features"
 
 
 [tool.pylint.main]

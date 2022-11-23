@@ -26,8 +26,8 @@ class CannedStore(Store):
         self._lock = None
         self.mailboxes = self._load_mailboxes()
         self.endpoints = self._load_endpoints()
-        self.messages = self._load_messages() if load_messages else {}
         self.chunks = self._load_chunks() if load_messages else {}
+        self.messages = self._load_messages() if load_messages else {}
         self.inboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.outboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.local_ids: dict[str, dict[str, list[Message]]] = {
@@ -106,7 +106,6 @@ class CannedStore(Store):
 
     @staticmethod
     def _load_messages() -> dict[str, Message]:
-
         with open(os.path.join(os.path.dirname(__file__), "data/messages.jsonl"), "r", encoding="utf-8") as f:
             return {
                 message.message_id: message

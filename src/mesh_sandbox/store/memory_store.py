@@ -36,10 +36,13 @@ class MemoryStore(CannedStore):
     async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes):
         self.chunks[message.message_id][chunk_number - 1] = chunk
 
+    async def _get_file_size(self, message: Message) -> int:
+        return sum(len(chunk) for chunk in self.chunks.get(message.message_id, []))
+
     async def accept_message(self, message: Message):
         async with self.lock:
             message.events.insert(0, MessageEvent(status=MessageStatus.ACCEPTED))
-            message.file_size = sum(len(chunk) for chunk in self.chunks.get(message.message_id, []))
+            message.file_size = await self._get_file_size(message)
             self.inboxes[message.recipient.mailbox_id].append(message)
 
     async def acknowledge_message(self, message: Message):

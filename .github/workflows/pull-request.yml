@@ -75,6 +75,9 @@ jobs:
           distribution: "corretto"
           java-version: "11"
 
+      - name: start docker containers
+        run: make up
+
       - name: code coverage
         run: make coverage-ci
 
@@ -131,9 +134,9 @@ jobs:
           check_name: junit reports
           report_paths: reports/junit/*.xml
 
-#      - name: stop docker containers
-#        if: success() || failure()
-#        run: make down
+      - name: stop docker containers
+        if: success() || failure()
+        run: make down
 
   lint:
     runs-on: ubuntu-latest
@@ -193,12 +196,12 @@ jobs:
       - name: mypy
         run: make mypy
 
-#      - name: hadolint
-#        uses: hadolint/hadolint-action@master
-#        with:
-#          dockerfile: "Dockerfile"
-#          recursive: true
-#          config: ./docker/hadolint.yml
+      - name: hadolint
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: "Dockerfile"
+          recursive: true
+          config: ./hadolint.yml
 
       - name: shellcheck
         uses: ludeeus/action-shellcheck@master
