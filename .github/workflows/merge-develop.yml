@@ -99,9 +99,6 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
-    needs:
-      - coverage
-      - lint
     steps:
       - name: checkout
         uses: actions/checkout@v3
