@@ -134,11 +134,12 @@ jobs:
 
       - name: tag and push
         run: |
+          git config --global user.name "github"
+          git config --global user.email "username@users.noreply.github.com"
           git add pyproject.toml
           git add src/mesh_sandbox/__init__.py
           version="$(poetry version | cut -d' ' -f2)"
-          git config --global user.name "github"
-          git config --global user.email "username@users.noreply.github.com
           git commit -m "tag release version: ${version}"
           git tag "${version}"
+          git push
           git push --tags
