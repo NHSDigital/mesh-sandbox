@@ -210,3 +210,63 @@ jobs:
           ignore_names: git-secrets
         env:
           SHELLCHECK_OPTS: -f gcc -e SC1090,SC1091
+
+
+
+  publish:
+    runs-on: ubuntu-latest
+    if: github.repository == 'NHSDigital/mesh-sandbox'
+    needs:
+      - coverage
+      - lint
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: print branch info
+        run: |
+          git branch
+          echo "GITHUB_HEAD_REF=${GITHUB_HEAD_REF}"
+          echo "GITHUB_BASE_REF=${GITHUB_BASE_REF}"
+          git log --oneline -n 10
+
+      - name: clean
+        run: |
+          git clean -fdx
+          find . -type f | xargs chmod g+w
+
+      - name: merge into base_branch
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo base branch "${{ github.base_ref }}"
+          echo pr branch "${{ github.head_ref }}"
+          git checkout "${{ github.base_ref }}"
+          git checkout -b "merging-${{ github.event.number }}"
+          git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+
+      - name: setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+
+      - name: install poetry
+        run: make install-poetry
+
+      - name: poetry build
+        run: |
+          poetry version prerelease
+          poetry build
+
+      - name: poetry config
+        run: |
+          poetry config repositories.testpypi https://test.pypi.org/legacy/
+          poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_TOKEN }}
+
+      - name: poetry publish
+        run: poetry publish -r testpypi
+
+      - name: git status
+        run: git status
+
