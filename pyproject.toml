@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "mesh-sandbox"
-version = "0.1.0"
-description = ""
+version = "0.1.1"
+description = "NHSDigital mesh sandbox, a locally testable version of the MESH api"
 authors = ["spinecore"]
 license = "MIT"
 packages = [
     { include = "mesh_sandbox", from = "src" },
 ]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 # core dependencies
@@ -38,6 +39,7 @@ lxml = "^4.9.1"
 types-pyOpenSSL = "^22.1.0.2"
 types-lxml = "^2022.11.8"
 docker-compose = "^1.29.2"
+python-semantic-release = "^7.32.2"
 
 
 [tool.poetry.group.local.dependencies]
@@ -164,6 +166,7 @@ ignore_missing_imports = true
 [tool.isort]
 profile = "black"
 known_third_party = ["fastapi", "pydantic", "starlette"]
+
 
 [build-system]
 requires = ["poetry>=1.1"]
