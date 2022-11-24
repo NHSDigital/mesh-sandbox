@@ -1,12 +1,13 @@
 [tool.poetry]
 name = "mesh-sandbox"
 version = "0.1.0"
-description = ""
+description = "NHSDigital mesh sandbox, a locally testable version of the MESH api"
 authors = ["spinecore"]
 license = "MIT"
 packages = [
     { include = "mesh_sandbox", from = "src" },
 ]
+readme = "README.md"
 
 [tool.poetry.dependencies]
 # core dependencies
