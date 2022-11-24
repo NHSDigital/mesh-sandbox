@@ -8,7 +8,7 @@ jobs:
 
   coverage:
     runs-on: ubuntu-latest
-    if: github.repository == 'NHSDigital/mesh-sandbox'
+    if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -96,10 +96,9 @@ jobs:
         run: make down
 
 
-
   publish:
     runs-on: ubuntu-latest
-    if: github.repository == 'NHSDigital/mesh-sandbox'
+    if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:'
     needs:
       - coverage
       - lint
@@ -125,6 +124,8 @@ jobs:
       - name: poetry build
         run: |
           poetry version patch
+          version="$(poetry version | cut -d' ' -f2)"
+          sed -E -i "s#__version__ = \"[0-9]+\.[0-9]+\.[0-9]+\"#__version__ = \"$version\"#" src/mesh_sandbox/__init__.py
           poetry build
 
       - name: poetry config
@@ -133,3 +134,12 @@ jobs:
 
       - name: poetry publish
         run: poetry publish
+
+      - name: tag and push
+        run: |
+          git add pyproject.toml
+          git add src/mesh_sandbox/__init__.py
+          version="$(poetry version | cut -d' ' -f2)"
+          git commit -m "tag release version: ${version}"
+          git tag "${version}"
+          git push --tags

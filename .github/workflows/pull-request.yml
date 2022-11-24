@@ -257,6 +257,8 @@ jobs:
       - name: poetry build
         run: |
           poetry version prerelease
+          version="$(poetry version | cut -d' ' -f2)-$(date +"%Y%m%d%H%M%S")"
+          poetry version $version
           poetry build
 
       - name: poetry config
