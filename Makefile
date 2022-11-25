@@ -50,7 +50,8 @@ install-ci:
 
 install-poetry:
 	python3 -m pip install --user --upgrade pip && \
-	python3 -m pip install --user poetry
+	python3 -m pip install --user poetry && \
+	poetry self add "poetry-dynamic-versioning[plugin]"
 
 update:
 	poetry update
@@ -135,19 +136,3 @@ check-secrets-all:
 
 export-requirements:
 	poetry export --only main -f requirements.txt --output ./requirements.txt
-
-update-init-py-version:
-	@version="$$(poetry version | cut -d' ' -f2)" && \
-	sed -E -i "s#__version__ = \".*?\"#__version__ = \"$$version\"#" src/mesh_sandbox/__init__.py
-
-bump-patch-release:
-	poetry version patch
-	make --no-print-directory update-init-py-version
-
-bump-minor-release:
-	poetry version minor
-	make --no-print-directory update-init-py-version
-
-bump-major-release:
-	poetry version major
-	make --no-print-directory update-init-py-version

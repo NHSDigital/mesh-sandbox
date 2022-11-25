@@ -120,29 +120,24 @@ jobs:
 
       - name: poetry build
         run: |
-          make bump-patch-release
-          poetry build
+          version="v$(poetry version patch | rev | cut -d' ' -f1 | rev)"
+          echo "RELEASE_VERSION=$version" >> $GITHUB_ENV
+          git tag $version
+          poetry build --format=wheel
 
       - name: poetry config
         run: |
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
-      - name: GH_TOKEN
-        run: echo "GH_TOKEN=${GITHUB_TOKEN}" >> $GITHUB_ENV
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1
+        continue-on-error: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: tag and push
-        run: |
-          git config --local user.name github-actions
-          git config --local user.email github-actions@github.com
-          git add pyproject.toml
-          git add src/mesh_sandbox/__init__.py
-          version="$(poetry version | cut -d' ' -f2)"
-          git commit -m "tag release version: ${version}"
-          git tag "${version}"
-          git push
-          git push --tags
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          release_name: ${{ env.RELEASE_VERSION }}
 
       - name: poetry publish
         run: poetry publish
