@@ -119,7 +119,6 @@ jobs:
         run: make install-poetry
 
       - name: poetry build
-      - name: poetry build
         run: |
           make bump-patch-release
           poetry build
