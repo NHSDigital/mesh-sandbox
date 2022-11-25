@@ -48,6 +48,9 @@ jobs:
           distribution: "corretto"
           java-version: "11"
 
+      - name: start docker containers
+        run: make up
+
       - name: code coverage
         run: make coverage-ci
 
