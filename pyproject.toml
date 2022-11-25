@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mesh-sandbox"
-version = "0.1.5"
+version = "0.0.0"
 description = "NHSDigital mesh sandbox, a locally testable version of the MESH api"
 authors = ["spinecore"]
 license = "MIT"
@@ -167,7 +167,14 @@ ignore_missing_imports = true
 profile = "black"
 known_third_party = ["fastapi", "pydantic", "starlette"]
 
+[tool.poetry-dynamic-versioning]
+enable = true
+vcs = "git"
+style = "semver"
+folders = [
+    { path = "src" }
+]
 
 [build-system]
-requires = ["poetry>=1.1"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry>=1.2", "poetry-dynamic-versioning"]
+build-backend = "poetry_dynamic_versioning.backend"
