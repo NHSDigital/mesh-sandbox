@@ -119,23 +119,25 @@ jobs:
         run: make install-poetry
 
       - name: poetry build
+      - name: poetry build
         run: |
-          poetry version patch
-          version="$(poetry version | cut -d' ' -f2)"
-          sed -E -i "s#__version__ = \"[0-9]+\.[0-9]+\.[0-9]+\"#__version__ = \"$version\"#" src/mesh_sandbox/__init__.py
+          make bump-patch-release
           poetry build
 
       - name: poetry config
         run: |
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
-      - name: poetry publish
-        run: poetry publish
+      - name: GH_TOKEN
+        if: env.GH_TOKEN == ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "GH_TOKEN=${GITHUB_TOKEN}" >> $GITHUB_ENV
 
       - name: tag and push
         run: |
-          git config --global user.name "github"
-          git config --global user.email "username@users.noreply.github.com"
+          git config --local user.name github-actions
+          git config --local user.email github-actions@github.com
           git add pyproject.toml
           git add src/mesh_sandbox/__init__.py
           version="$(poetry version | cut -d' ' -f2)"
@@ -143,3 +145,6 @@ jobs:
           git tag "${version}"
           git push
           git push --tags
+
+      - name: poetry publish
+        run: poetry publish

@@ -266,9 +266,6 @@ jobs:
           poetry config repositories.testpypi https://test.pypi.org/legacy/
           poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_TOKEN }}
 
-      - name: poetry publish
+      - name: poetry test publish
         run: poetry publish -r testpypi
-
-      - name: git status
-        run: git status
 
