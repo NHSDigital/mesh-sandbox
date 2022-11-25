@@ -137,8 +137,8 @@ export-requirements:
 	poetry export --only main -f requirements.txt --output ./requirements.txt
 
 update-init-py-version:
-	@version="$(poetry version | cut -d' ' -f2)" && \
-	sed -E -i "s#__version__ = \"[0-9]+\.[0-9]+\.[0-9]+\"#__version__ = \"$version\"#" src/mesh_sandbox/__init__.py
+	@version="$$(poetry version | cut -d' ' -f2)" && \
+	sed -E -i "s#__version__ = \".*?\"#__version__ = \"$$version\"#" src/mesh_sandbox/__init__.py
 
 bump-patch-release:
 	poetry version patch

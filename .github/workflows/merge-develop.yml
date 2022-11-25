@@ -129,10 +129,9 @@ jobs:
           poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
       - name: GH_TOKEN
-        if: env.GH_TOKEN == ''
+        run: echo "GH_TOKEN=${GITHUB_TOKEN}" >> $GITHUB_ENV
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: echo "GH_TOKEN=${GITHUB_TOKEN}" >> $GITHUB_ENV
 
       - name: tag and push
         run: |
