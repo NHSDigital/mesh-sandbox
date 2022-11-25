@@ -169,8 +169,12 @@ known_third_party = ["fastapi", "pydantic", "starlette"]
 
 [tool.poetry-dynamic-versioning]
 enable = true
+metadata = false
 vcs = "git"
-style = "semver"
+style = "pep440"
+
+
+[tool.poetry-dynamic-versioning.substitution]
 folders = [
     { path = "src" }
 ]
