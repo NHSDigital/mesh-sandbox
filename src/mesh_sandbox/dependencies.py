@@ -1,5 +1,6 @@
 import re
 from functools import lru_cache
+from typing import Optional
 
 from fastapi import Depends, Header, HTTPException, Path, Query, Request
 
@@ -14,14 +15,8 @@ from .store.memory_store import MemoryStore
 _ACCEPTABLE_ACCEPTS = re.compile(r"^application/vnd\.mesh\.v(\d+)\+json$")
 
 
-async def get_accepts_api_version(
-    accept: str = Header(
-        title="Accept",
-        default="application/json",
-        description="the accepts header can be used to vary the response type",
-        example="application/vnd.mesh.v2+json",
-    ),
-) -> int:
+def parse_accept_header(accept: str) -> Optional[int]:
+
     if not accept:
         return 1
 
@@ -32,11 +27,30 @@ async def get_accepts_api_version(
 
         match = _ACCEPTABLE_ACCEPTS.match(accepts)
         if not match:
-            raise HTTPException(status_code=400, detail="Accept header api format incorrect")
+            return None
         accepts_version = int(match.group(1))
         return accepts_version
 
     return 1
+
+
+async def get_accepts_api_version(
+    accept: str = Header(
+        title="Accept",
+        default="application/json",
+        description="the accepts header can be used to vary the response type",
+        example="application/vnd.mesh.v2+json",
+    ),
+) -> int:
+    accepts = parse_accept_header(accept)
+
+    if accepts is None:
+        raise HTTPException(status_code=400, detail="Accept header api format incorrect")
+
+    if not accept:
+        return 1
+
+    return accepts
 
 
 async def normalise_mailbox_id_path(
