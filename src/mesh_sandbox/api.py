@@ -1,11 +1,10 @@
 from typing import cast
 
-from fastapi import FastAPI, HTTPException, Request, Response, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
-from starlette.responses import JSONResponse
 
-from .common import exclude_none_json_encoder, logger
-from .common.constants import Headers
+from .common import logger
+from .common.exceptions import MessagingException
 from .dependencies import get_env_config
 from .routers import (
     handshake,
@@ -17,6 +16,7 @@ from .routers import (
     tracking,
     update,
 )
+from .views.error import get_error_response, get_validation_error_response
 
 app = FastAPI(
     title="MESH Sandbox",
@@ -45,29 +45,31 @@ async def startup():
 
 
 @app.exception_handler(Exception)
-async def exception_handler(_request: Request, _exception: Exception):  # pylint: disable=unused-argument
-    return JSONResponse(
-        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-        content={"message": "An internal error occurred.\n\nPlease contact support."},
+async def exception_handler(request: Request, _exception: Exception):  # pylint: disable=unused-argument
+    return get_error_response(request, status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+# pylint: disable=unused-argument
+@app.exception_handler(MessagingException)
+async def send_message_exception_handler(request: Request, exception: MessagingException):
+    return get_error_response(
+        request,
+        exception.status_code,
+        exception.detail,
+        message_id=exception.message_id,
+        headers=cast(dict, exception.headers),
     )
 
 
+# pylint: disable=unused-argument
 @app.exception_handler(HTTPException)
-async def http_exception_handler(_request: Request, exception: HTTPException):  # pylint: disable=unused-argument
-    return JSONResponse(status_code=exception.status_code, content=exception.detail)
+async def http_exception_handler(request: Request, exception: HTTPException):
+    return get_error_response(request, exception.status_code, exception.detail, headers=cast(dict, exception.headers))
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(_request: Request, exc: RequestValidationError):
-
-    for err in exc.errors():
-        if err["loc"][0] == "header" and cast(str, err["loc"][1]).lower() == Headers.Authorization.lower():
-            return Response(status_code=status.HTTP_403_FORBIDDEN)
-
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content=exclude_none_json_encoder({"detail": exc.errors(), "body": exc.body}),
-    )
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return get_validation_error_response(request, exc)
 
 
 app.include_router(simple.router)

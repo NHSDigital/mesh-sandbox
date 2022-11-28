@@ -8,7 +8,13 @@ from dateutil.tz import tzutc
 from fastapi import Depends, HTTPException, Response, status
 from starlette.responses import JSONResponse
 
-from ..common import MESH_MEDIA_TYPES, EnvConfig, exclude_none_json_encoder, index_of
+from ..common import (
+    MESH_MEDIA_TYPES,
+    EnvConfig,
+    constants,
+    exclude_none_json_encoder,
+    index_of,
+)
 from ..common.constants import Headers
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
@@ -113,21 +119,21 @@ class InboxHandler:
         message = await self.store.get_message(message_id)
 
         if not message:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
         is_recipient_query = message.recipient.mailbox_id == mailbox.mailbox_id
         is_sender_query = message.sender and message.sender.mailbox_id == mailbox.mailbox_id
         allow_access = is_recipient_query or is_sender_query
 
         if not allow_access:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
         allowed_statuses = (
             (MessageStatus.ACCEPTED, MessageStatus.ACKNOWLEDGED) if is_recipient_query else MessageStatus.VALID_VALUES
         )
 
         if message.status not in allowed_statuses:
-            raise HTTPException(status_code=status.HTTP_410_GONE)
+            raise HTTPException(status_code=status.HTTP_410_GONE, detail=constants.ERROR_MESSAGE_GONE)
 
         headers = self._get_response_headers(message, 1)
         return Response(headers=headers)
@@ -148,13 +154,13 @@ class InboxHandler:
         message = await self.store.get_message(message_id)
 
         if not message:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
         if message.recipient.mailbox_id != mailbox.mailbox_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)
 
         if message.status not in (MessageStatus.ACCEPTED, MessageStatus.ACKNOWLEDGED):
-            raise HTTPException(status_code=status.HTTP_410_GONE)
+            raise HTTPException(status_code=status.HTTP_410_GONE, detail=constants.ERROR_MESSAGE_GONE)
 
         headers = self._get_response_headers(message, chunk_number)
 
@@ -162,17 +168,14 @@ class InboxHandler:
             return Response(headers=headers, content="")
 
         if chunk_number < 1 or chunk_number > message.total_chunks:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
         status_code = status.HTTP_200_OK if chunk_number >= message.total_chunks else status.HTTP_206_PARTIAL_CONTENT
 
         chunk = await self.store.retrieve_chunk(message, chunk_number)
 
         if chunk is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Message does not exist",
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
         headers[Headers.Content_Length] = str(len(chunk))
         content_encoding = headers.get(Headers.Content_Encoding, "")
@@ -195,7 +198,7 @@ class InboxHandler:
 
         message = await self.store.get_message(message_id)
         if not message:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
         if message.recipient.mailbox_id != mailbox.mailbox_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN)

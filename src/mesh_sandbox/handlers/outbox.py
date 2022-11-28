@@ -8,8 +8,9 @@ from fastapi import Depends, HTTPException, Request
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 
-from ..common import EnvConfig, index_of, strtobool
+from ..common import EnvConfig, constants, index_of, strtobool
 from ..common.constants import Headers
+from ..common.exceptions import MessagingException
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..common.mex_headers import MexHeaders
@@ -77,21 +78,25 @@ class OutboxHandler:
     ):  # pylint: disable=too-many-locals
 
         if not mex_headers.mex_to:
-            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail="TO_DTS missing")
+            raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_MISSING_TO_ADDRESS)
 
         if content_encoding and content_encoding != "gzip":
             raise HTTPException(
-                status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY, detail="UnsupportedContentEncoding"
+                status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY, detail=constants.UNSUPPORTED_CONTENT_ENCODING
             )
 
         chunk_error, chunk_no, total_chunks = get_chunk_range(cast(str, mex_headers.mex_chunk_range), 1)
 
         if chunk_error or chunk_no > 1:
-            raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="Invalid chunk range")
+            raise HTTPException(
+                status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail=constants.ERROR_INVALID_HEADER_CHUNKS
+            )
 
         recipient = await self.store.get_mailbox(mex_headers.mex_to)
         if not recipient:
-            raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="No mailbox matched")
+            raise HTTPException(
+                status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail=constants.ERROR_NO_MAILBOX_MATCHES
+            )
 
         status = MessageStatus.ACCEPTED if total_chunks < 2 else MessageStatus.UPLOADING
 
@@ -155,13 +160,18 @@ class OutboxHandler:
 
         chunk_range = (mex_chunk_range or "").strip()
         if not chunk_range:
-            raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="InvalidHeaderChunks")
+            raise MessagingException(
+                status_code=http_status.HTTP_417_EXPECTATION_FAILED,
+                detail=constants.ERROR_INVALID_HEADER_CHUNKS,
+                message_id=message_id,
+            )
 
         error, _, _ = get_chunk_range(chunk_range, chunk_number)
         if error:
-            raise HTTPException(
+            raise MessagingException(
                 status_code=http_status.HTTP_417_EXPECTATION_FAILED,
-                detail="InvalidHeaderChunks",
+                detail=constants.ERROR_INVALID_HEADER_CHUNKS,
+                message_id=message_id,
             )
         message: Optional[Message] = await self.store.get_message(message_id)
 
@@ -172,15 +182,16 @@ class OutboxHandler:
             raise HTTPException(status_code=http_status.HTTP_403_FORBIDDEN)
 
         if message.status != MessageStatus.UPLOADING:
-            raise HTTPException(status_code=http_status.HTTP_423_LOCKED)
+            raise MessagingException(status_code=http_status.HTTP_423_LOCKED, message_id=message_id)
 
         if chunk_number > message.total_chunks or message.message_type != MessageType.DATA:
-            raise HTTPException(status_code=http_status.HTTP_406_NOT_ACCEPTABLE)
+            raise MessagingException(status_code=http_status.HTTP_406_NOT_ACCEPTABLE, message_id=message_id)
 
         if (content_encoding or "").strip() != message.metadata.content_encoding:
-            raise HTTPException(
+            raise MessagingException(
                 status_code=http_status.HTTP_417_EXPECTATION_FAILED,
-                detail="cannot change content encoding",
+                detail=constants.ERROR_CONTENT_ENCODING_CHANGED,
+                message_id=message_id,
             )
 
         await self.store.receive_chunk(message, chunk_number, await request.body())

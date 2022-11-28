@@ -3,7 +3,7 @@ from typing import NamedTuple, Optional
 
 from fastapi import HTTPException, status
 
-from ..common import EnvConfig, generate_cipher_text
+from ..common import EnvConfig, constants, generate_cipher_text
 from ..models.mailbox import Mailbox
 from ..models.message import Message
 
@@ -83,29 +83,23 @@ class Store(ABC):
 
         authorization = (authorization or "").strip()
         if not authorization:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading from Authorization header"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_READING_AUTH_HEADER)
 
         header_parts = try_parse_authorisation_token(authorization)
         if not header_parts:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading from Authorization header"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_READING_AUTH_HEADER)
 
         if header_parts.mailbox_id != mailbox_id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Mailbox id does not match token")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_MAILBOX_TOKEN_MISMATCH)
 
         if self.config.auth_mode == "canned":
 
             if header_parts.nonce.upper() != "VALID":
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="access denied")
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_INVALID_AUTH_TOKEN)
             return await self.get_mailbox(mailbox_id, accessed=True)
 
         if header_parts.get_reasons_invalid():
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Error reading from Authorization header"
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_INVALID_AUTH_TOKEN)
 
         mailbox = await self.get_mailbox(mailbox_id, accessed=True)
 
@@ -122,7 +116,7 @@ class Store(ABC):
         )
 
         if header_parts.cipher_text != cypher_text:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid Authentication Token")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_INVALID_AUTH_TOKEN)
 
         return mailbox
 
@@ -131,7 +125,7 @@ class Store(ABC):
         mailbox = await self._validate_auth_token(mailbox_id, authorization)
 
         if not mailbox:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No mailbox matched")
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_NO_MAILBOX_MATCHES)
 
         return mailbox
 
