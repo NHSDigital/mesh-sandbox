@@ -42,4 +42,5 @@ class TrackingHandler:
             raise HTTPException(status_code=http_status.HTTP_300_MULTIPLE_CHOICES)
 
         message = messages[0]
-        return create_tracking_response(message)
+        model = create_tracking_response(message, 1)
+        return JSONResponse(content=exclude_none_json_encoder(model))

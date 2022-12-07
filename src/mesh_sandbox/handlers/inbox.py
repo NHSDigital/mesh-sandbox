@@ -73,6 +73,7 @@ class InboxHandler:
             }
 
         return {
+            Headers.Mex_LinkedMsgId: error_event.linked_message_id,
             Headers.Mex_StatusCode: error_event.code,
             Headers.Mex_StatusEvent: error_event.event,
             Headers.Mex_StatusDescription: error_event.description,
@@ -88,10 +89,10 @@ class InboxHandler:
             Headers.Mex_To: message.recipient.mailbox_id,
             Headers.Mex_WorkflowID: message.workflow_id,
             Headers.Mex_Chunk_Range: f"{chunk_number}:{message.total_chunks}",
-            Headers.Mex_AddressType: "ALL",  # todo: remove?
+            Headers.Mex_AddressType: "ALL",
             Headers.Mex_LocalID: message.metadata.local_id,
             Headers.Mex_PartnerID: message.metadata.partner_id,
-            Headers.Mex_FileName: message.metadata.file_name,
+            Headers.Mex_FileName: message.metadata.file_name or f"{message.message_id}.dat",
             Headers.Mex_Subject: message.metadata.subject,
             Headers.Mex_Version: "1.0",
             Headers.Mex_MessageType: message.message_type,
@@ -103,9 +104,6 @@ class InboxHandler:
         }
 
         if message.message_type == MessageType.REPORT:
-            linked_event = message.find_status_event(lambda ev: ev.status == MessageStatus.ERROR)
-            if linked_event and linked_event.linked_message_id:
-                headers[Headers.Mex_LinkedMsgId] = linked_event.linked_message_id
             headers.pop(Headers.Content_Encoding)
 
         if message.last_event and message.last_event.timestamp:
