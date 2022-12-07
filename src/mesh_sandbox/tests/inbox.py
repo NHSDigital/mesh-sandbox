@@ -257,4 +257,5 @@ def test_receive_canned_undelivered_message(app: TestClient, accept: str):
 
         assert res.status_code == status.HTTP_200_OK
         result = res.json()
-        assert result["status"] == MessageStatus.UNDELIVERABLE
+        expected = MessageStatus.UNDELIVERABLE.title() if accept == APP_V1_JSON else MessageStatus.UNDELIVERABLE
+        assert result["status"] == expected

@@ -77,7 +77,8 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
     )
 
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["status"] == MessageStatus.ACCEPTED
+    expected = MessageStatus.ACCEPTED.title() if accept == APP_V1_JSON else MessageStatus.ACCEPTED
+    assert res.json()["status"] == expected
 
     res = app.get(
         f"/messageexchange/{sender}/outbox/tracking/{local_id}",
@@ -85,7 +86,8 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
     )
 
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["status"] == MessageStatus.ACCEPTED
+
+    assert res.json()["status"] == MessageStatus.ACCEPTED.title()
 
     res = app.get(
         f"/messageexchange/{recipient}/inbox?workflow_filter={workflow_id}",
@@ -120,7 +122,8 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
         headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
     )
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["status"] == MessageStatus.ACKNOWLEDGED
+    expected = MessageStatus.ACKNOWLEDGED.title() if accept == APP_V1_JSON else MessageStatus.ACKNOWLEDGED
+    assert res.json()["status"] == expected
 
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
@@ -225,7 +228,8 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
     )
 
     assert res.status_code == status.HTTP_200_OK
-    assert res.json()["status"] == MessageStatus.UPLOADING
+    expected = MessageStatus.UPLOADING.title() if accept == APP_V1_JSON else MessageStatus.UPLOADING
+    assert res.json()["status"] == expected
 
     res = app.head(
         f"/messageexchange/{recipient}/inbox/{message_id}",
@@ -306,7 +310,7 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
 
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
-def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):
+def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):  # pylint: disable=too-many-statements
 
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
@@ -346,7 +350,8 @@ def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):
         )
 
         assert res.status_code == status.HTTP_200_OK
-        assert res.json()["status"] == MessageStatus.UPLOADING
+        expected = MessageStatus.UPLOADING.title() if accept == APP_V1_JSON else MessageStatus.UPLOADING
+        assert res.json()["status"] == expected
 
         res = app.head(
             f"/messageexchange/{recipient}/inbox/{message_id}",

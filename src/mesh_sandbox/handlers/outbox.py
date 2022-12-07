@@ -95,7 +95,7 @@ class OutboxHandler:
         recipient = await self.store.get_mailbox(mex_headers.mex_to)
         if not recipient:
             raise HTTPException(
-                status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail=constants.ERROR_NO_MAILBOX_MATCHES
+                status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail=constants.ERROR_UNREGISTERED_RECIPIENT
             )
 
         status = MessageStatus.ACCEPTED if total_chunks < 2 else MessageStatus.UPLOADING
