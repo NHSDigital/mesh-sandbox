@@ -61,9 +61,9 @@ using asdf
 
 get the required plugins
 ```bash
-adsf plugin install python
-adsf plugin install java
-adsf plugin install poetry
+asdf plugin add python
+asdf plugin add java
+asdf plugin add poetry
 ```
 
 install the tools
