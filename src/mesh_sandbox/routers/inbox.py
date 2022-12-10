@@ -214,9 +214,12 @@ async def retrieve_message(
         default="",
         example="gzip",
     ),
+    accepts_api_version: int = Depends(get_accepts_api_version),
     handler: InboxHandler = Depends(InboxHandler),
 ):
-    return await handler.retrieve_message(cast(Mailbox, request.state.authorised_mailbox), message_id, accept_encoding)
+    return await handler.retrieve_message(
+        cast(Mailbox, request.state.authorised_mailbox), message_id, accept_encoding, accepts_api_version
+    )
 
 
 @router.get(
@@ -248,6 +251,7 @@ async def retrieve_chunk(
         default="",
         example="gzip",
     ),
+    accepts_api_version: int = Depends(get_accepts_api_version),
     handler: InboxHandler = Depends(InboxHandler),
 ):
     return await handler.retrieve_chunk(
@@ -255,4 +259,5 @@ async def retrieve_chunk(
         message_id,
         accept_encoding,
         chunk_number=chunk_number,
+        accepts_api_version=accepts_api_version,
     )

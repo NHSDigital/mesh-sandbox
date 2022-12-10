@@ -136,18 +136,34 @@ class InboxHandler:
         headers = self._get_response_headers(message, 1)
         return Response(headers=headers)
 
-    async def retrieve_message(self, mailbox: Mailbox, message_id: str, accept_encoding: str):
+    async def retrieve_message(
+        self, mailbox: Mailbox, message_id: str, accept_encoding: str, accepts_api_version: int = 1
+    ):
         return await self._retrieve_message_or_chunk(
-            mailbox=mailbox, message_id=message_id, accept_encoding=accept_encoding
+            mailbox=mailbox,
+            message_id=message_id,
+            accept_encoding=accept_encoding,
+            accepts_api_version=accepts_api_version,
         )
 
-    async def retrieve_chunk(self, mailbox: Mailbox, message_id: str, accept_encoding: str, chunk_number: int):
+    async def retrieve_chunk(
+        self, mailbox: Mailbox, message_id: str, accept_encoding: str, chunk_number: int, accepts_api_version: int = 1
+    ):
         return await self._retrieve_message_or_chunk(
-            mailbox=mailbox, message_id=message_id, accept_encoding=accept_encoding, chunk_number=chunk_number
+            mailbox=mailbox,
+            message_id=message_id,
+            accept_encoding=accept_encoding,
+            chunk_number=chunk_number,
+            accepts_api_version=accepts_api_version,
         )
 
     async def _retrieve_message_or_chunk(
-        self, mailbox: Mailbox, message_id: str, accept_encoding: str, chunk_number: int = 1
+        self,
+        mailbox: Mailbox,
+        message_id: str,
+        accept_encoding: str,
+        chunk_number: int = 1,
+        accepts_api_version: int = 1,
     ):
         message = await self.store.get_message(message_id)
 
@@ -179,8 +195,13 @@ class InboxHandler:
         content_encoding = headers.get(Headers.Content_Encoding, "")
         if content_encoding == "gzip" and "gzip" not in accept_encoding:
             headers.pop(Headers.Content_Encoding)
-            headers.pop(Headers.Content_Length)
             chunk = gzip.decompress(chunk)
+
+        if accepts_api_version > 1 and not content_encoding and "gzip" in accept_encoding:
+            headers[Headers.Content_Encoding] = "gzip"
+            chunk = gzip.compress(chunk)
+
+        headers[Headers.Content_Length] = str(len(chunk))
 
         if headers.get(Headers.Content_Encoding) == "gzip":
             headers[Headers.Mex_Content_Compressed] = "Y"
