@@ -68,7 +68,6 @@ asdf plugin add poetry
 
 install the tools
 ```bash
-cd <project_dir>
 asdf install
 ```
 
