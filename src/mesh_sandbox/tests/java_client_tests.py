@@ -20,11 +20,7 @@ def configure_client(base_uri: str, version: str):
 
     java_client_config_path = f"{base_dir}/client/meshclient.cfg"
     java_client_jar_path = f"{base_dir}/client/meshClient.jar"
-    java_client_log_config = (
-        f"-Dlog4j.configuration=file:{base_dir}/client/log4j.xml"
-        if version == "6.2.0"
-        else f"-Dlog4j2.configurationFile={base_dir}/client/log4j2.xml"
-    )
+    java_client_log_config = f"-Dlog4j2.configurationFile={base_dir}/client/log4j2.xml"
 
     assert os.path.exists(java_client_jar_path), "Could not find java mesh client installation"
 
@@ -167,7 +163,7 @@ def find_sent_message_id(ctl_file: str) -> str:
     return cast(str, message_id.text)
 
 
-@pytest.mark.parametrize("version", ["6.3.6", "6.2.0"])
+@pytest.mark.parametrize("version", ["6.3.6"])
 def test_basic_send_and_receive(base_uri: str, version: str):  # pylint: disable=too-many-locals
 
     base_dir, client_args = configure_client(base_uri, version)
