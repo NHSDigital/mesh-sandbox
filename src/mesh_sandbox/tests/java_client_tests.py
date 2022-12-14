@@ -167,7 +167,7 @@ def find_sent_message_id(ctl_file: str) -> str:
     return cast(str, message_id.text)
 
 
-@pytest.mark.parametrize("version", ["6.3.6"])
+@pytest.mark.parametrize("version", ["6.3.6", "6.2.0"])
 def test_basic_send_and_receive(base_uri: str, version: str):  # pylint: disable=too-many-locals
 
     base_dir, client_args = configure_client(base_uri, version)
