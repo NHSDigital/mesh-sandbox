@@ -20,7 +20,7 @@ def configure_client(base_uri: str, version: str):
 
     java_client_config_path = f"{base_dir}/client/meshclient.cfg"
     java_client_jar_path = f"{base_dir}/client/meshClient.jar"
-    java_client_log_config = f"-Dlog4j.configuration=file:{base_dir}/client/log4j.xml"
+    java_client_log_config = f"-Dlog4j2.configurationFile={base_dir}/client/log4j2.xml"
 
     assert os.path.exists(java_client_jar_path), "Could not find java mesh client installation"
 
