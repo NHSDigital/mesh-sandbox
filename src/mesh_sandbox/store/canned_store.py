@@ -21,13 +21,18 @@ class CannedStore(Store):
     """
 
     def __init__(self, config: EnvConfig, load_messages: bool = True):
-        super().__init__(config)
+        self._config = config
+        self._load_msgs = load_messages
         self._sync_lock = threading.Lock()
-        self._lock = None
+        self._lock: Optional[asyncio.Lock] = None
+        super().__init__(self._config)
+        self.initialise()
+
+    def initialise(self):
         self.mailboxes = self._load_mailboxes()
         self.endpoints = self._load_endpoints()
-        self.chunks = self._load_chunks() if load_messages else {}
-        self.messages = self._load_messages() if load_messages else {}
+        self.chunks = self._load_chunks() if self._load_msgs else {}
+        self.messages = self._load_messages() if self._load_msgs else {}
         self.inboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.outboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.local_ids: dict[str, dict[str, list[Message]]] = {

@@ -1,4 +1,4 @@
-from typing import cast
+from typing import Optional, cast
 
 from ..common import EnvConfig
 from ..models.message import Message, MessageEvent, MessageStatus
@@ -12,6 +12,9 @@ class MemoryStore(CannedStore):
 
     def __init__(self, config: EnvConfig):
         super().__init__(config, load_messages=False)
+
+    async def reinitialise(self, clear_disk: Optional[str] = None):
+        super().initialise()
 
     async def send_message(self, message: Message, body: bytes):
 

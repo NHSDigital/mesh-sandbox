@@ -1,4 +1,5 @@
 import os.path
+import shutil
 from typing import Optional
 
 from ..common import EnvConfig
@@ -13,6 +14,11 @@ class FileStore(MemoryStore):
     def __init__(self, config: EnvConfig):
         super().__init__(config)
         self._base_dir = config.file_store_dir
+
+    async def reinitialise(self, clear_disk: Optional[str] = None):
+        await super().reinitialise()
+        if clear_disk is None or clear_disk.lower() == "true":
+            shutil.rmtree(self._base_dir)
 
     async def _get_file_size(self, message: Message) -> int:
         size = 0
