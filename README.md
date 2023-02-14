@@ -6,12 +6,12 @@ MESH sandbox for local testing of [NHS Digital's MESH API](https://digital.nhs.u
 Installation
 ------------
 
-
 Example use
 -----------
 
 pip
 ---
+
 ```bash
 pip install mesh-sandbox
 STORE_MODE=file FILE_STORE_DIR=/tmp/mesh uvicorn mesh_sandbox.api:app --reload --port 8700 --workers=1
@@ -20,6 +20,7 @@ curl http://localhost:8700/health
 
 docker compose
 --------------
+
 ```yaml
 version: '3.9'
 
@@ -49,17 +50,21 @@ services:
 
 Guidance for contributors
 -------------------------
+
 this project uses
+
 - python 3.9
 - java coretto11
 - poetry > 1.2
 
 Setup
 -----
+
 using asdf
 [install asdf](https://asdf-vm.com/guide/getting-started.html#_3-install-asdf)
 
 get the required plugins
+
 ```bash
 asdf plugin add python
 asdf plugin add java
@@ -67,11 +72,13 @@ asdf plugin add poetry
 ```
 
 install the tools
+
 ```bash
 asdf install
 ```
 
 install the dependencies
+
 ```bash
 make install
 ```

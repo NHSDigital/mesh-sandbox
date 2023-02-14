@@ -13,6 +13,9 @@ class MemoryStore(CannedStore):
     def __init__(self, config: EnvConfig):
         super().__init__(config, load_messages=False)
 
+    async def reinitialise(self, clear_disk: bool):
+        super().initialise()
+
     async def send_message(self, message: Message, body: bytes):
 
         async with self.lock:

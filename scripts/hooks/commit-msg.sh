@@ -6,7 +6,7 @@ message_file="${1}"
 
 commit_message="$(tr '[:upper:]' '[:lower:]' < "${message_file}")"
 
-if [[ "${commit_message}" =~ ^((mesh(2cloud)?\-[0-9]+\:?\ )|(merge\ branch)).* ]]; then
+if [[ "${commit_message}" =~ ^(((mesh|spinecore)?\-[0-9]+\:?\ )|(merge\ branch)).* ]]; then
   exit 0
 else
   echo ""
