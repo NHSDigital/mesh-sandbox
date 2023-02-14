@@ -259,7 +259,7 @@ class InboxHandler:
         if len(messages) > max_results:
             messages = messages[:max_results]
             if messages:
-                last_key = dict(message_id=messages[-1].message_id)
+                last_key = {"message_id": messages[-1].message_id}
 
         return messages, last_key
 
@@ -331,7 +331,7 @@ class InboxHandler:
 
         if continue_from:
             if accepts_api_version < 2:
-                last_key = dict(message_id=continue_from)
+                last_key = {"message_id": continue_from}
             else:
                 last_key = self.fernet.decode_dict(continue_from)
 
@@ -352,11 +352,13 @@ class InboxHandler:
             "workflow_filter": workflow_filter,
         }
 
-        links: dict[str, str] = dict(self=get_handler_uri([mailbox.mailbox_id], "{0}/inbox", **uri_query_args))
+        links: dict[str, str] = {"self": get_handler_uri([mailbox.mailbox_id], "{0}/inbox", **uri_query_args)}
 
-        result: dict[str, Any] = dict(
-            messages=cast(list[str], response.get("messages", [])), approx_inbox_count=mailbox.inbox_count, links=links
-        )
+        result: dict[str, Any] = {
+            "messages": cast(list[str], response.get("messages", [])),
+            "approx_inbox_count": mailbox.inbox_count,
+            "links": links,
+        }
 
         if last_key:
             uri_query_args["continue_from"] = self.fernet.encode_dict(last_key)
@@ -384,11 +386,11 @@ class InboxHandler:
         messages, last_key = await self._get_inbox_messages(mailbox, max_results, last_key, message_filter)
 
         url_template = "{0}/inbox/rich"
-        links: dict[str, str] = dict(
-            self=get_handler_uri(
+        links: dict[str, str] = {
+            "self": get_handler_uri(
                 [mailbox.mailbox_id], url_template=url_template, start_time=from_date, max_results=max_results
             )
-        )
+        }
         if last_key:
             links["next"] = get_handler_uri(
                 [mailbox.mailbox_id],

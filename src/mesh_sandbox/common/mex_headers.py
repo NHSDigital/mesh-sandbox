@@ -48,18 +48,18 @@ class MexHeaders(NamedTuple):
 
     @classmethod
     def from_message(cls, message: Message, chunk_range: Optional[str], **kwargs):
-        create: dict[str, Any] = dict(
-            mex_to=message.recipient.mailbox_id,
-            mex_workflow_id=message.workflow_id,
-            mex_chunk_range=chunk_range,
-            mex_subject=message.metadata.subject,
-            mex_localid=message.metadata.local_id,
-            mex_partnerid=message.metadata.partner_id,
-            mex_filename=message.metadata.file_name,
-            mex_content_encrypted=message.metadata.encrypted,
-            mex_content_compressed=message.metadata.is_compressed,
-            mex_content_checksum=message.metadata.checksum,
-        )
+        create: dict[str, Any] = {
+            "mex_to": message.recipient.mailbox_id,
+            "mex_workflow_id": message.workflow_id,
+            "mex_chunk_range": chunk_range,
+            "mex_subject": message.metadata.subject,
+            "mex_localid": message.metadata.local_id,
+            "mex_partnerid": message.metadata.partner_id,
+            "mex_filename": message.metadata.file_name,
+            "mex_content_encrypted": message.metadata.encrypted,
+            "mex_content_compressed": message.metadata.is_compressed,
+            "mex_content_checksum": message.metadata.checksum,
+        }
 
         if kwargs:
             create.update(kwargs)
