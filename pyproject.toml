@@ -188,4 +188,3 @@ folders = [
 [build-system]
 requires = ["poetry>=1.2", "poetry-dynamic-versioning"]
 build-backend = "poetry_dynamic_versioning.backend"
-

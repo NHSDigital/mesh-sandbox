@@ -235,14 +235,14 @@ class OutboxHandler:
         if len(messages) > max_results:
             messages = messages[:max_results]
             if messages:
-                last_key = dict(message_id=messages[-1].message_id)
+                last_key = {"message_id": messages[-1].message_id}
 
         url_template = "{0}/outbox/rich"
-        links: dict[str, str] = dict(
-            self=get_handler_uri(
+        links: dict[str, str] = {
+            "self": get_handler_uri(
                 [mailbox.mailbox_id], url_template=url_template, start_time=from_date, max_results=max_results
             )
-        )
+        }
         if last_key:
             links["next"] = get_handler_uri(
                 [mailbox.mailbox_id],
