@@ -156,7 +156,7 @@ class Store(ABC):
         pass
 
     @abstractmethod
-    async def get_inbox(self, mailbox_id: str) -> list[Message]:
+    async def get_inbox(self, mailbox_id: str, rich: bool) -> list[Message]:
         pass
 
     @abstractmethod
