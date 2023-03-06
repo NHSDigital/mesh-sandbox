@@ -241,7 +241,7 @@ class InboxHandler:
         max_results: int = DEFAULT_MAX_RESULTS,
         last_key: Optional[dict] = None,
         message_filter: Optional[Callable[[Message], bool]] = None,
-        rich: bool = False
+        rich: bool = False,
     ) -> tuple[list[Message], Optional[dict]]:
 
         messages = await self.store.get_inbox(mailbox.mailbox_id, rich=rich)
