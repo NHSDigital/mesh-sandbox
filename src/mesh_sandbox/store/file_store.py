@@ -15,8 +15,8 @@ class FileStore(MemoryStore):
         super().__init__(config)
         self._base_dir = config.file_store_dir
 
-    async def reinitialise(self, clear_disk: bool):
-        await super().reinitialise(clear_disk)
+    async def reset(self, clear_disk: bool):
+        await super().reset(clear_disk)
         # recursive delete, but preserve top-level folder
         if clear_disk:
             for file in os.listdir(self._base_dir):
@@ -25,6 +25,13 @@ class FileStore(MemoryStore):
                     os.remove(path)
                 else:
                     shutil.rmtree(path)
+
+    async def reset_mailbox(self, clear_disk: bool, mailbox_id):
+        await super().reset_mailbox(clear_disk, mailbox_id)
+        if clear_disk:
+            path = os.path.join(self._base_dir, mailbox_id)
+            if os.path.exists(path):
+                shutil.rmtree(path)
 
     async def _get_file_size(self, message: Message) -> int:
         size = 0

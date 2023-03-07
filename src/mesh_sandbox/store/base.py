@@ -72,7 +72,13 @@ class Store(ABC):
     def __init__(self, config: EnvConfig):
         self.config = config
 
-    async def reinitialise(self, clear_disk: bool):
+    async def reset(self, clear_disk: bool):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"reset not supported for {self.config.store_mode} store mode",
+        )
+
+    async def reset_mailbox(self, clear_disk: bool, mailbox_id: str):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"reset not supported for {self.config.store_mode} store mode",

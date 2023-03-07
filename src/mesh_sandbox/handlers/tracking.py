@@ -28,6 +28,10 @@ class TrackingHandler:
             # intentionally not a 403 (matching spine)
             raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
 
+        sender_outbox = await self.store.get_outbox(sender_mailbox.mailbox_id)
+        if message.message_id not in [message.message_id for message in sender_outbox]:
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
+
         model = create_tracking_response(message, accepts_api_version)
         return JSONResponse(content=exclude_none_json_encoder(model), media_type=MESH_MEDIA_TYPES[accepts_api_version])
 
@@ -42,5 +46,10 @@ class TrackingHandler:
             raise HTTPException(status_code=http_status.HTTP_300_MULTIPLE_CHOICES)
 
         message = messages[0]
+
+        sender_outbox = await self.store.get_outbox(sender_mailbox.mailbox_id)
+        if message.message_id not in [message.message_id for message in sender_outbox]:
+            raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
+
         model = create_tracking_response(message, 1)
         return JSONResponse(content=exclude_none_json_encoder(model))

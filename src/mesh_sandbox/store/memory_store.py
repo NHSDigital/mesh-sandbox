@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import cast
 
 from ..common import EnvConfig
@@ -13,8 +14,14 @@ class MemoryStore(CannedStore):
     def __init__(self, config: EnvConfig):
         super().__init__(config, load_messages=False)
 
-    async def reinitialise(self, clear_disk: bool):
+    async def reset(self, clear_disk: bool):
         super().initialise()
+
+    async def reset_mailbox(self, clear_disk: bool, mailbox_id: str):
+
+        self.inboxes[mailbox_id] = []
+        self.outboxes[mailbox_id] = []
+        self.local_ids[mailbox_id] = defaultdict(list)
 
     async def send_message(self, message: Message, body: bytes):
 

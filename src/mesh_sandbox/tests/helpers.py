@@ -8,11 +8,9 @@ from typing import Optional
 from uuid import uuid4
 
 import httpx
-from fastapi.testclient import TestClient
 from OpenSSL import crypto
 
 from ..common import MESH_AUTH_SCHEME, generate_cipher_text
-from ..common.constants import Headers
 
 
 def generate_auth_token(
@@ -47,37 +45,6 @@ def temp_env_vars(**kwargs):
     finally:
         os.environ.clear()
         os.environ.update(old_environ)
-
-
-def send_message(
-    app: TestClient,
-    sender_mailbox_id: str,
-    recipient_mailbox_id: str,
-    workflow_id: Optional[str] = None,
-    message_data: Optional[bytes] = None,
-    extra_headers: Optional[dict] = None,
-    test_empty_payload: bool = False,
-    file_name: Optional[str] = None,
-):
-
-    if not test_empty_payload:
-        message_data = message_data or f"Hello World!\n{uuid4().hex}".encode("utf-8")
-
-    headers = {
-        Headers.Mex_From: sender_mailbox_id,
-        Headers.Mex_To: recipient_mailbox_id,
-        Headers.Mex_WorkflowID: workflow_id or "TEST_WORKFLOW",
-        Headers.Authorization: generate_auth_token(sender_mailbox_id),
-    }
-    if file_name:
-        headers[Headers.Mex_FileName] = file_name
-
-    if extra_headers:
-        headers.update(extra_headers)
-
-    response = app.post(f"/messageexchange/{sender_mailbox_id}/outbox", headers=headers, data=message_data)
-
-    return response
 
 
 def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pylint: disable=too-many-locals
