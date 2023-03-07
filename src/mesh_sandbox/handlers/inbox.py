@@ -241,9 +241,10 @@ class InboxHandler:
         max_results: int = DEFAULT_MAX_RESULTS,
         last_key: Optional[dict] = None,
         message_filter: Optional[Callable[[Message], bool]] = None,
+        rich: bool = False,
     ) -> tuple[list[Message], Optional[dict]]:
 
-        messages = await self.store.get_inbox(mailbox.mailbox_id)
+        messages = await self.store.get_inbox(mailbox.mailbox_id, rich=rich)
 
         if message_filter:
             messages = list(filter(message_filter, messages))
@@ -383,7 +384,7 @@ class InboxHandler:
         def message_filter(message: Message) -> bool:
             return message.created_timestamp > from_date
 
-        messages, last_key = await self._get_inbox_messages(mailbox, max_results, last_key, message_filter)
+        messages, last_key = await self._get_inbox_messages(mailbox, max_results, last_key, message_filter, rich=True)
 
         url_template = "{0}/inbox/rich"
         links: dict[str, str] = {

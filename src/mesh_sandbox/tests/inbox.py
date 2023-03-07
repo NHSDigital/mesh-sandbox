@@ -259,3 +259,60 @@ def test_receive_canned_undelivered_message(app: TestClient, accept: str):
         result = res.json()
         expected = MessageStatus.UNDELIVERABLE.title() if accept == APP_V1_JSON else MessageStatus.UNDELIVERABLE
         assert result["status"] == expected
+
+
+def test_rich_inbox_includes_acknowledged_messages(app: TestClient):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox",
+        headers={Headers.Authorization: generate_auth_token(recipient)},
+    )
+    assert res.json()["messages"] == []
+
+    acknowledged_message_id = ""
+    message_ids = []
+    for index in range(5):
+
+        resp = send_message(
+            app,
+            sender_mailbox_id=sender,
+            recipient_mailbox_id=recipient,
+        )
+
+        assert resp.status_code == status.HTTP_202_ACCEPTED
+        result = resp.json()
+        message_id = result["messageID"]
+        assert message_id
+        message_ids.append(message_id)
+
+        if index == 2:
+            ack_response = app.put(
+                f"/messageexchange/{recipient}/inbox/{message_id}/status/acknowledged",
+                headers={Headers.Authorization: generate_auth_token(recipient)},
+            )
+            assert ack_response.status_code == status.HTTP_200_OK
+            assert message_id in ack_response.text
+            acknowledged_message_id = message_id
+
+    # inbox
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox",
+        headers={Headers.Authorization: generate_auth_token(recipient)},
+    )
+    assert res.status_code == status.HTTP_200_OK
+    messages = res.json().get("messages", [])
+    assert len(messages) == 4
+    assert acknowledged_message_id not in messages
+
+    # rich inbox
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox/rich",
+        headers={Headers.Authorization: generate_auth_token(recipient)},
+    )
+    assert res.status_code == status.HTTP_200_OK
+    messages = res.json().get("messages", [])
+    assert len(messages) == 5
+    assert acknowledged_message_id in [m["message_id"] for m in messages]

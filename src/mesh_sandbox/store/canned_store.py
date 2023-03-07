@@ -167,7 +167,10 @@ class CannedStore(Store):
     async def get_message(self, message_id: str) -> Optional[Message]:
         return self.messages.get(message_id)
 
-    async def get_inbox(self, mailbox_id: str) -> list[Message]:
+    async def get_inbox(self, mailbox_id: str, rich: bool) -> list[Message]:
+        if rich:  # note: rich inbox is deprecated
+            return [m for m in self.messages.values() if m.recipient.mailbox_id == mailbox_id]
+
         return self.inboxes[mailbox_id]
 
     async def get_outbox(self, mailbox_id: str) -> list[Message]:
