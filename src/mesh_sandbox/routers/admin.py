@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Query, status
 
-from ..dependencies import EnvConfig, get_env_config
+from ..dependencies import EnvConfig, get_env_config, normalise_mailbox_id_path
 from ..handlers.reset import ResetHandler
 from .request_logging import RequestLoggingRoute
 
@@ -40,4 +40,24 @@ async def reset(
     handler: ResetHandler = Depends(ResetHandler),
 ):
     await handler.reset(clear_disk.lower() == "true")
-    return {"message": "reset ok"}
+    return {"message": "all mailboxes reset"}
+
+
+@router.get(
+    "/messageexchange/reset/{mailbox_id}",
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+    response_model_exclude_none=True,
+)
+async def reset_mailbox(
+    clear_disk: str = Query(
+        default="true",
+        title="Clear disk",
+        description="whether to clear the filesystem store if STORE_MODE=file, otherwise ignored",
+        example="true",
+    ),
+    mailbox_id: str = Depends(normalise_mailbox_id_path),
+    handler: ResetHandler = Depends(ResetHandler),
+):
+    await handler.reset(clear_disk.lower() == "true", mailbox_id)
+    return {"message": "mailbox {mailbox_id} reset"}

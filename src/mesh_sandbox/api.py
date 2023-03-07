@@ -7,12 +7,12 @@ from .common import logger
 from .common.exceptions import MessagingException
 from .dependencies import get_env_config
 from .routers import (
+    admin,
     handshake,
     inbox,
     inbox_count,
     lookup,
     outbox,
-    simple,
     tracking,
     update,
 )
@@ -72,7 +72,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return get_validation_error_response(request, exc)
 
 
-app.include_router(simple.router)
+app.include_router(admin.router)
 
 
 app.include_router(

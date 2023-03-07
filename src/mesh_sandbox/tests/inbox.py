@@ -4,10 +4,12 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
+from mesh_sandbox.tests.mesh_api_helpers import mesh_api_send_message
+
 from ..common import APP_V1_JSON, APP_V2_JSON
 from ..common.constants import Headers
 from ..models.message import MessageStatus
-from .helpers import generate_auth_token, send_message, temp_env_vars
+from .helpers import generate_auth_token, temp_env_vars
 
 _CANNED_MAILBOX1 = "X26ABC1"
 _CANNED_MAILBOX2 = "X26ABC2"
@@ -39,12 +41,12 @@ def test_inbox_count(app: TestClient, accept: str):
 
     message_body = f"test{uuid4().hex}".encode()
 
-    resp = send_message(
+    resp = mesh_api_send_message(
         app,
         sender_mailbox_id=sender,
         recipient_mailbox_id=recipient,
-        workflow_id=workflow_id,
         message_data=message_body,
+        workflow_id=workflow_id,
         extra_headers={Headers.Accept: accept, Headers.Mex_LocalID: local_id},
     )
 
@@ -78,7 +80,7 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
     message_ids = []
     for _ in range(page_size * 3):
 
-        resp = send_message(
+        resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,
             recipient_mailbox_id=recipient,
@@ -276,7 +278,7 @@ def test_rich_inbox_includes_acknowledged_messages(app: TestClient):
     message_ids = []
     for index in range(5):
 
-        resp = send_message(
+        resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,
             recipient_mailbox_id=recipient,

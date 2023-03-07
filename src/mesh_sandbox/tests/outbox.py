@@ -5,10 +5,12 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
+from mesh_sandbox.tests.mesh_api_helpers import mesh_api_send_message
+
 from ..common import APP_V1_JSON, APP_V2_JSON
 from ..common.constants import Headers
 from ..models.message import MessageStatus
-from .helpers import generate_auth_token, send_message, temp_env_vars
+from .helpers import generate_auth_token, temp_env_vars
 
 _CANNED_MAILBOX1 = "X26ABC1"
 _CANNED_MAILBOX2 = "X26ABC2"
@@ -33,12 +35,12 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
 
     message_body = f"test{uuid4().hex}".encode()
 
-    resp = send_message(
+    resp = mesh_api_send_message(
         app,
         sender_mailbox_id=sender,
         recipient_mailbox_id=recipient,
-        workflow_id=workflow_id,
         message_data=message_body,
+        workflow_id=workflow_id,
         extra_headers={Headers.Accept: accept, Headers.Mex_LocalID: local_id},
     )
 
@@ -146,12 +148,12 @@ def test_file_send_message_with_local_id(app: TestClient, accept: str, tmp_path:
 
         message_body = f"test{uuid4().hex}".encode()
 
-        resp = send_message(
+        resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,
             recipient_mailbox_id=recipient,
-            workflow_id=workflow_id,
             message_data=message_body,
+            workflow_id=workflow_id,
             extra_headers={Headers.Accept: accept},
         )
 
@@ -208,12 +210,12 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
 
     workflow_id = "TEST_WORKFLOW"
 
-    resp = send_message(
+    resp = mesh_api_send_message(
         app,
         sender_mailbox_id=sender,
         recipient_mailbox_id=recipient,
-        workflow_id=workflow_id,
         message_data=chunk_1,
+        workflow_id=workflow_id,
         extra_headers={Headers.Accept: accept, Headers.Mex_Chunk_Range: "1:2"},
     )
 
@@ -330,12 +332,12 @@ def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):
 
         workflow_id = "TEST_WORKFLOW"
 
-        resp = send_message(
+        resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,
             recipient_mailbox_id=recipient,
-            workflow_id=workflow_id,
             message_data=chunk_1,
+            workflow_id=workflow_id,
             extra_headers={Headers.Accept: accept, Headers.Mex_Chunk_Range: "1:2"},
         )
 
@@ -464,7 +466,7 @@ def test_mex_content_compress_validation(app: TestClient, value: str):
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Compress: value})
+    response = mesh_api_send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Compress: value})
 
     assert response.status_code == status.HTTP_202_ACCEPTED
 
@@ -502,7 +504,7 @@ def test_mex_content_encrypted_validation(app: TestClient, value: str):
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Encrypted: value})
+    response = mesh_api_send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Encrypted: value})
 
     assert response.status_code == status.HTTP_202_ACCEPTED
 
@@ -540,7 +542,7 @@ def test_mex_content_compressed_validation(app: TestClient, value: str):
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Compressed: value})
+    response = mesh_api_send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Compressed: value})
     assert response.status_code == status.HTTP_202_ACCEPTED
 
 
@@ -561,7 +563,9 @@ def test_mex_content_checksum_validation(app: TestClient, mex_content_checksum: 
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    response = send_message(app, sender, recipient, extra_headers={Headers.Mex_Content_Checksum: mex_content_checksum})
+    response = mesh_api_send_message(
+        app, sender, recipient, extra_headers={Headers.Mex_Content_Checksum: mex_content_checksum}
+    )
 
     assert response.status_code == expected_response_status
 
@@ -571,7 +575,7 @@ def test_mex_local_id_validation(app: TestClient):
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    response = send_message(
+    response = mesh_api_send_message(
         app, sender, recipient, extra_headers={Headers.Mex_LocalID: "test#TEST", Headers.Mex_WorkflowID: "test TEST"}
     )
 
