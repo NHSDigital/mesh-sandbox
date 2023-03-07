@@ -41,7 +41,7 @@ docker-compose = "^1.29.2"
 python-semantic-release = "^7.32.2"
 
 [tool.poetry.group.local.dependencies]
-ipython = "^7.31.1"
+ipython = ">=7.31.1,<9.0.0"
 ipykernel = "^6.5.0"
 ipython_genutils = "^0.2.0"
 
