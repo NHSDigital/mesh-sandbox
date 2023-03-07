@@ -46,7 +46,7 @@ install:
 	poetry install --sync
 
 install-ci:
-	poetry install --without local 
+	poetry install --without local --sync
 
 install-poetry:
 	python3 -m pip install --user --upgrade pip && \
