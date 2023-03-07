@@ -18,7 +18,6 @@ gunicorn = "^20.1.0"
 types-python-dateutil = "^2.8.9"
 cryptography = "^38.0.3"
 python-dateutil = "^2.8.2"
-certifi = "^2022.12.7"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -41,7 +40,7 @@ types-pyOpenSSL = "^22.1.0.2"
 types-lxml = "^2022.11.8"
 docker-compose = "^1.29.2"
 python-semantic-release = "^7.32.2"
-
+certifi = "^2022.12.7"
 
 [tool.poetry.group.local.dependencies]
 ipython = "^7.31.1"
