@@ -27,7 +27,7 @@ async def ping(config: EnvConfig = Depends(get_env_config)):
     return {"env": config.env, "build_label": config.build_label, "status": "running", "outcome": "Yes"}
 
 
-@router.get(
+@router.delete(
     "/messageexchange/reset", status_code=status.HTTP_200_OK, include_in_schema=False, response_model_exclude_none=True
 )
 async def reset(
@@ -43,7 +43,7 @@ async def reset(
     return {"message": "all mailboxes reset"}
 
 
-@router.get(
+@router.delete(
     "/messageexchange/reset/{mailbox_id}",
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
