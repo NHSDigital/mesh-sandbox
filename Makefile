@@ -50,7 +50,7 @@ install-ci:
 
 install-poetry:
 	python3 -m pip install --user --upgrade pip && \
-	python3 -m pip install --user poetry && \
+	python3 -m pip install --user poetry==1.3.2 && \
 	poetry self add "poetry-dynamic-versioning[plugin]"
 
 update:
