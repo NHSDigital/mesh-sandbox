@@ -37,6 +37,7 @@ class TrackingV1(BaseModel):
     recipientOrgCode: Optional[str] = Field(description="recipient organisation code")
     recipientOrgName: Optional[str] = Field(description="recipient organisation name")
     recipientSmtp: Optional[str] = _EMPTY
+    recipientBillingEntity: Optional[str] = Field(description="recipient billing entity")
 
     sender: Optional[str] = Field(description="sender mailbox identifier")
     senderName: Optional[str] = Field(description="sender mailbox name")
@@ -44,8 +45,9 @@ class TrackingV1(BaseModel):
     senderOrgCode: Optional[str] = Field(description="sender organisation code")
     senderOrgName: Optional[str] = Field(description="sender organisation name")
     senderSmtp: Optional[str] = _EMPTY
-    status: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
+    senderBillingEntity: Optional[str] = Field(description="recipient billing entity")
 
+    status: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
     statusCode: Optional[str] = Field(description="status code")
     statusDescription: Optional[str] = Field(description="status description")
     statusEvent: Optional[str] = Field(description="status event")
@@ -146,11 +148,13 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
             recipientName=message.recipient.mailbox_name,
             recipientOrgCode=message.recipient.org_code,
             recipientOrgName=message.recipient.org_name,
+            recipientBillingEntity=message.recipient.billing_entity,
             sender=message.sender.mailbox_id,
             senderName=message.sender.mailbox_name,
             senderOdsCode=message.sender.ods_code,
             senderOrgCode=message.sender.org_code,
             senderOrgName=message.sender.org_name,
+            senderBillingEntity=message.sender.billing_entity,
             status=message.status.title(),
             statusCode=status_code,
             statusDescription=status_description,
