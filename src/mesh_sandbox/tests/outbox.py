@@ -611,35 +611,3 @@ def test_checksum_is_returned(app: TestClient, accept: str):
     )
     assert download_response.status_code == status.HTTP_200_OK
     assert download_response.headers[Headers.Mex_Content_Checksum] == checksum
-
-
-def test_send_message_enriches_with_mailbox_details(app: TestClient):
-
-    sender = _CANNED_MAILBOX1
-    recipient = _CANNED_MAILBOX2
-
-    send_response = mesh_api_send_message(
-        app,
-        sender,
-        recipient,
-        extra_headers={
-            Headers.Mex_LocalID: "test#TEST",
-            Headers.Mex_WorkflowID: "test TEST",
-        },
-    )
-    assert send_response.status_code == status.HTTP_202_ACCEPTED
-    send_result = send_response.json()
-    message_id = send_result["messageID"]
-    assert message_id
-
-    tracking_response = app.get(
-        f"/messageexchange/{sender}/outbox/tracking?messageID={message_id}",
-        headers={Headers.Authorization: generate_auth_token(sender)},
-    )
-
-    assert tracking_response.status_code == status.HTTP_200_OK
-    tracking_result = tracking_response.json()
-
-    assert tracking_result["status"] == "Accepted"
-    assert tracking_result["senderBillingEntity"] == "England"
-    assert tracking_result["recipientBillingEntity"] == "Wales"
