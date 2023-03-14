@@ -101,6 +101,7 @@ class InboxHandler:
             **InboxHandler._get_status_headers(message),
             Headers.Mex_Content_Compressed: "Y" if message.metadata.is_compressed else None,
             Headers.Mex_Content_Encrypted: "Y" if message.metadata.encrypted else None,
+            Headers.Mex_Content_Checksum: message.metadata.checksum,
         }
 
         if message.message_type == MessageType.REPORT:

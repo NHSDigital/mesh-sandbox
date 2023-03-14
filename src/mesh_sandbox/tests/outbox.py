@@ -580,3 +580,34 @@ def test_mex_local_id_validation(app: TestClient):
     )
 
     assert response.status_code == status.HTTP_202_ACCEPTED
+
+
+@pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
+def test_checksum_is_returned(app: TestClient, accept: str):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+    checksum = uuid4().hex
+
+    send_response = mesh_api_send_message(
+        app,
+        sender,
+        recipient,
+        extra_headers={
+            Headers.Mex_LocalID: "test#TEST",
+            Headers.Mex_WorkflowID: "test TEST",
+            Headers.Accept: accept,
+            Headers.Mex_Content_Checksum: checksum,
+        },
+    )
+    assert send_response.status_code == status.HTTP_202_ACCEPTED
+    send_result = send_response.json()
+    message_id = send_result["messageID"] if accept == APP_V1_JSON else send_result["message_id"]
+    assert message_id
+
+    download_response = app.head(
+        f"/messageexchange/{recipient}/inbox/{message_id}",
+        headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
+    )
+    assert download_response.status_code == status.HTTP_200_OK
+    assert download_response.headers[Headers.Mex_Content_Checksum] == checksum
