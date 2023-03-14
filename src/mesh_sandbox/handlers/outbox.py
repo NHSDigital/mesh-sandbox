@@ -100,7 +100,7 @@ class OutboxHandler:
 
         status = MessageStatus.ACCEPTED if total_chunks < 2 else MessageStatus.UPLOADING
 
-        message_id = uuid4().hex.upper()
+        message_id = "_".join([datetime.utcnow().strftime("%Y%m%d%H%M%S%f"), uuid4().hex[:6].upper()])
 
         message = Message(
             events=[MessageEvent(status=status)],
