@@ -66,7 +66,7 @@ def test_handshake_bad_password(base_uri: str):
 
         with pytest.raises(HTTPError) as err:
             client.handshake()
-        assert err.value.response.status_code == status.HTTP_400_BAD_REQUEST
+        assert err.value.response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_send_receive_chunked_message(base_uri: str):
