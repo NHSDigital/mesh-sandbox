@@ -44,8 +44,8 @@ class TrackingV1(BaseModel):
     senderOrgCode: Optional[str] = Field(description="sender organisation code")
     senderOrgName: Optional[str] = Field(description="sender organisation name")
     senderSmtp: Optional[str] = _EMPTY
-    status: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
 
+    status: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
     statusCode: Optional[str] = Field(description="status code")
     statusDescription: Optional[str] = Field(description="status description")
     statusEvent: Optional[str] = Field(description="status event")
