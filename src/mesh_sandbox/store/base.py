@@ -95,11 +95,11 @@ class Store(ABC):
 
         authorization = (authorization or "").strip()
         if not authorization:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_READING_AUTH_HEADER)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_READING_AUTH_HEADER)
 
         header_parts = try_parse_authorisation_token(authorization)
         if not header_parts:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_READING_AUTH_HEADER)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_READING_AUTH_HEADER)
 
         if header_parts.mailbox_id != mailbox_id:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_MAILBOX_TOKEN_MISMATCH)
@@ -111,7 +111,7 @@ class Store(ABC):
             return await self.get_mailbox(mailbox_id, accessed=True)
 
         if header_parts.get_reasons_invalid():
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_INVALID_AUTH_TOKEN)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_READING_AUTH_HEADER)
 
         mailbox = await self.get_mailbox(mailbox_id, accessed=True)
 
@@ -128,7 +128,7 @@ class Store(ABC):
         )
 
         if header_parts.cipher_text != cypher_text:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_INVALID_AUTH_TOKEN)
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_INVALID_AUTH_TOKEN)
 
         return mailbox
 
