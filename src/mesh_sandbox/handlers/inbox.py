@@ -247,6 +247,8 @@ class InboxHandler:
 
         messages = await self.store.get_inbox(mailbox.mailbox_id, rich=rich)
 
+        messages = sorted(messages, key=lambda msg: msg.created_timestamp)
+
         if message_filter:
             messages = list(filter(message_filter, messages))
 
