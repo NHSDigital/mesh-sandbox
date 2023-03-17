@@ -12,12 +12,13 @@ readme = "README.md"
 [tool.poetry.dependencies]
 # core dependencies
 python = "^3.9"
-fastapi = "^0.75.0"
-uvicorn = "^0.15.0"
+fastapi = "^0.94.0"
 gunicorn = "^20.1.0"
+uvicorn = "^0.21.0"
 types-python-dateutil = "^2.8.9"
-cryptography = "^38.0.3"
+cryptography = "^39.0.1"
 python-dateutil = "^2.8.2"
+
 
 [tool.poetry.group.dev.dependencies]
 # ci / testing dependencies
@@ -28,23 +29,19 @@ pylint = "^2.11.1"
 pytest = "^7.2.0"
 pytest-asyncio = "^0.16.0"
 Mesh-Client = "^1.5.0"
-mypy = "^0.991"
+mypy = "^1.1.1"
 coverage = "^6.5.0"
 safety = "^2.3.1"
 httpx = "^0.23.0"
 types-requests = "^2.28.11.4"
-pyOpenSSL = "^22.1.0"
+pyOpenSSL = "^23.0.0"
+types-pyOpenSSL = "^23.0.0.2"
 lxml = "^4.9.1"
-types-pyOpenSSL = "^22.1.0.2"
 types-lxml = "^2022.11.8"
-docker-compose = "^1.29.2"
 python-semantic-release = "^7.32.2"
 
 [tool.poetry.group.local.dependencies]
-ipython = "^7.31.1"
-ipykernel = "^6.5.0"
-ipython_genutils = "^0.2.0"
-
+ipython = "^8.11.0"
 
 [tool.black]
 line-length = 120

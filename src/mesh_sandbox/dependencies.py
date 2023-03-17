@@ -15,7 +15,7 @@ from .store.memory_store import MemoryStore
 _ACCEPTABLE_ACCEPTS = re.compile(r"^application/vnd\.mesh\.v(\d+)\+json$")
 
 
-def parse_accept_header(accept: str) -> Optional[int]:
+def parse_accept_header(accept: Optional[str]) -> Optional[int]:
 
     if not accept:
         return 1

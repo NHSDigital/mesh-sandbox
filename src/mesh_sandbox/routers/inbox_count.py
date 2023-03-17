@@ -41,10 +41,12 @@ async def count_messages_in_inbox(
 ):
     mailbox = cast(Mailbox, request.state.authorised_mailbox)
 
+    count = mailbox.inbox_count or 0
+
     response = (
-        InboxCountV1(count=mailbox.inbox_count, internalID=uuid4().hex, allResultsIncluded=True)
+        InboxCountV1(count=count, internalID=uuid4().hex, allResultsIncluded=True)
         if accepts_api_version < 2
-        else InboxCountV2(count=mailbox.inbox_count)
+        else InboxCountV2(count=count)
     )
 
     return JSONResponse(content=exclude_none_json_encoder(response))

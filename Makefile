@@ -57,13 +57,13 @@ update:
 	poetry update
 
 down:
-	poetry run docker-compose down --remove-orphans || true
+	poetry run docker compose down --remove-orphans || true
 
 up:
-	$(BUILDKIT_ARGS) poetry run docker-compose up -d --remove-orphans --build
+	$(BUILDKIT_ARGS) poetry run docker compose up -d --remove-orphans --build
 
 docker-build:
-	$(BUILDKIT_ARGS) poetry run docker-compose build
+	$(BUILDKIT_ARGS) poetry run docker compose build
 
 mypy:
 	poetry run mypy . --exclude '(^|/)(build|dist|scripts)/.*\.py'
