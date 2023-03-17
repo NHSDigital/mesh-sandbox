@@ -60,4 +60,4 @@ async def reset_mailbox(
     handler: ResetHandler = Depends(ResetHandler),
 ):
     await handler.reset(clear_disk.lower() == "true", mailbox_id)
-    return {"message": "mailbox {mailbox_id} reset"}
+    return {"message": f"mailbox {mailbox_id} reset"}
