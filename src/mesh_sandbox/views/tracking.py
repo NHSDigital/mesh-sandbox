@@ -109,6 +109,7 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
     status_description = None
     status_event = None
     status_timestamp = None
+    status_timestamp_string = None
 
     if error_event:
         if message.message_type == MessageType.DATA:
@@ -118,7 +119,8 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
             status_code = error_event.code
             status_description = error_event.description
             status_event = error_event.event
-            status_timestamp = _format_timestamp(error_event.timestamp)
+            status_timestamp = error_event.timestamp
+            status_timestamp_string = _format_timestamp(status_timestamp)
 
     if model_version < 2:
 
@@ -156,7 +158,7 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
             statusDescription=status_description,
             statusEvent=status_event,
             statusSuccess=MessageDeliveryStatus.SUCCESS if successful else MessageDeliveryStatus.ERROR,
-            statusTimestamp=status_timestamp,
+            statusTimestamp=status_timestamp_string,
             subject=message.metadata.subject,
             uploadTimestamp=_format_timestamp(message.created_timestamp),
             workflowId=message.workflow_id,

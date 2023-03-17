@@ -133,4 +133,4 @@ def deserialise_model(model_dict: dict[str, Any], model_type: Type[TModel]) -> O
 
         deserialised[field.name] = _deserialise_value(field.type, value)
 
-    return model_type(**deserialised)
+    return model_type(**deserialised)  # type: ignore[return-value]

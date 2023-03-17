@@ -35,7 +35,7 @@ def mesh_api_send_message(
     if extra_headers:
         headers.update(extra_headers)
 
-    return app.post(f"/messageexchange/{sender_mailbox_id}/outbox", headers=headers, data=message_data)
+    return app.post(f"/messageexchange/{sender_mailbox_id}/outbox", headers=headers, content=message_data)
 
 
 def mesh_api_send_message_and_return_message_id(

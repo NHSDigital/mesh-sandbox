@@ -247,7 +247,7 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
             Headers.Accept: accept,
             Headers.Mex_Chunk_Range: "2:2",
         },
-        data=chunk_2,
+        content=chunk_2,
     )
     assert res.status_code == status.HTTP_202_ACCEPTED, res.text
 
@@ -369,7 +369,7 @@ def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):
                 Headers.Accept: accept,
                 Headers.Mex_Chunk_Range: "2:2",
             },
-            data=chunk_2,
+            content=chunk_2,
         )
         assert res.status_code == status.HTTP_202_ACCEPTED, res.text
 

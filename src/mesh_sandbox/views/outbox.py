@@ -27,7 +27,7 @@ class SendMessageV2(BaseModel):
 
 class UploadChunkV1(BaseModel):
     messageID: str = Field(default=None, description="message identifier, as supplied in the request url")
-    blockID: str = Field(default=None, description="chunk number, as supplied in the request url")
+    blockID: int = Field(default=None, description="chunk number, as supplied in the request url")
 
     class Config:
         title = "upload_chunk"
@@ -98,6 +98,7 @@ def map_to_outbox_message(messages: list[Message]) -> list[OutboxMessageV1]:
                 sender_name=msg.sender.mailbox_name,
                 sent_date=msg.created_timestamp,
                 status=msg.status,
+                status_code=msg.last_event.code,
                 workflow_id=msg.workflow_id,
             ),
             messages,
