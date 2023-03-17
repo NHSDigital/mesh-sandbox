@@ -19,5 +19,5 @@ def test_serialise_deserialise_message():
     assert serialised
 
     deserialised = deserialise_model(serialised, Message)
-
+    assert deserialised
     assert asdict(deserialised) == asdict(message)
