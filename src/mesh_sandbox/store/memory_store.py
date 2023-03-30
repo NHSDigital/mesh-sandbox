@@ -23,6 +23,14 @@ class MemoryStore(CannedStore):
         self.outboxes[mailbox_id] = []
         self.local_ids[mailbox_id] = defaultdict(list)
 
+        # pylint: disable=attribute-defined-outside-init
+        # clear rich inbox for mailbox
+        self.messages = {
+            message_id: message
+            for message_id, message in self.messages.items()
+            if message.recipient.mailbox_id != mailbox_id
+        }
+
     async def send_message(self, message: Message, body: bytes):
 
         async with self.lock:

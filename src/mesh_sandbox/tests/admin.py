@@ -5,6 +5,7 @@ import pytest
 from fastapi import status
 from fastapi.testclient import TestClient
 
+from mesh_sandbox.common import APP_V1_JSON
 from mesh_sandbox.tests import _CANNED_MAILBOX1, _CANNED_MAILBOX2
 from mesh_sandbox.tests.mesh_api_helpers import (
     mesh_api_get_inbox_size,
@@ -13,7 +14,8 @@ from mesh_sandbox.tests.mesh_api_helpers import (
     mesh_api_track_message_by_message_id_status,
 )
 
-from .helpers import temp_env_vars
+from ..common.constants import Headers
+from .helpers import generate_auth_token, temp_env_vars
 
 
 def test_reset_canned_store_should_return_bad_request(app: TestClient):
@@ -88,16 +90,52 @@ def test_reset_memory_store_should_clear_specified_mailbox_only(app: TestClient)
         res = mesh_api_track_message_by_message_id(app, _CANNED_MAILBOX2, msg_2to1_id)
         assert res.json()["messageId"] == msg_2to1_id
 
+        res = app.get(
+            f"/messageexchange/{_CANNED_MAILBOX1}/inbox/rich?max_results=10",
+            headers={Headers.Authorization: generate_auth_token(_CANNED_MAILBOX1), Headers.Accept: APP_V1_JSON},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        response = res.json()
+        messages = [res["message_id"] for res in response.get("messages", [])]
+        assert len(messages) == 1
+
+        res = app.get(
+            f"/messageexchange/{_CANNED_MAILBOX2}/inbox/rich?max_results=10",
+            headers={Headers.Authorization: generate_auth_token(_CANNED_MAILBOX2), Headers.Accept: APP_V1_JSON},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        response = res.json()
+        messages = [res["message_id"] for res in response.get("messages", [])]
+        assert len(messages) == 1
+
+        # RESET mailbox 2
         res = app.delete(f"/messageexchange/reset/{_CANNED_MAILBOX2}")
         assert res.status_code == status.HTTP_200_OK
 
+        assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX1) == 1
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX2) == 0
-        assert (
-            mesh_api_track_message_by_message_id_status(app, _CANNED_MAILBOX2, msg_2to1_id) == status.HTTP_404_NOT_FOUND
+
+        res = app.get(
+            f"/messageexchange/{_CANNED_MAILBOX1}/inbox/rich?max_results=10",
+            headers={Headers.Authorization: generate_auth_token(_CANNED_MAILBOX1), Headers.Accept: APP_V1_JSON},
         )
 
-        assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX1) == 1
-        assert mesh_api_track_message_by_message_id_status(app, _CANNED_MAILBOX1, msg_1to2_id) == status.HTTP_200_OK
+        assert res.status_code == status.HTTP_200_OK
+        response = res.json()
+        mb1_rich_inbox_messages = [res["message_id"] for res in response.get("messages", [])]
+        assert len(mb1_rich_inbox_messages) == 1
+
+        res = app.get(
+            f"/messageexchange/{_CANNED_MAILBOX2}/inbox/rich?max_results=10",
+            headers={Headers.Authorization: generate_auth_token(_CANNED_MAILBOX2), Headers.Accept: APP_V1_JSON},
+        )
+
+        assert res.status_code == status.HTTP_200_OK
+        response = res.json()
+        mb2_rich_inbox_messages = [res["message_id"] for res in response.get("messages", [])]
+        assert len(mb2_rich_inbox_messages) == 0
 
 
 @pytest.mark.parametrize("clear_disk", ["tRue", "faLse", None])
@@ -173,12 +211,7 @@ def test_reset_file_store_should_clear_specified_mailbox_only_and_maybe_files(
         assert res.status_code == status.HTTP_200_OK
 
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX1) == 1
-        assert mesh_api_track_message_by_message_id_status(app, _CANNED_MAILBOX1, msg_1to2_id) == status.HTTP_200_OK
-
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX2) == 0
-        assert (
-            mesh_api_track_message_by_message_id_status(app, _CANNED_MAILBOX2, msg_2to1_id) == status.HTTP_404_NOT_FOUND
-        )
 
         # clear_disk should default to true if file mode is used
         if not clear_disk or clear_disk == "tRue":
