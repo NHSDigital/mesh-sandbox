@@ -69,7 +69,7 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
         version_dash = version.replace(".", "-")
 
         installer_uri = (
-            "https://nhs-prod.global.ssl.fastly.net/binaries/content/assets/website-assets/services"
+            "https://digital.nhs.uk/binaries/content/assets/website-assets/services"
             f"/message-exchange-for-social-care-and-health-mesh/mesh-installation-pack-client-{version_dash}.rar"
         )
 
