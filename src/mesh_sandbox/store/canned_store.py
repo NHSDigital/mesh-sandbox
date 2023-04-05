@@ -1,15 +1,18 @@
 import asyncio
-import base64
 import json
 import os
 import threading
 from collections import defaultdict
 from datetime import datetime
-from typing import Optional, cast
+from json import JSONDecodeError
+from typing import Callable, Optional, cast
+from weakref import WeakValueDictionary
+
+from dateutil.relativedelta import relativedelta
 
 from ..common import EnvConfig
 from ..models.mailbox import Mailbox
-from ..models.message import Message, MessageStatus
+from ..models.message import Message, MessageStatus, MessageType
 from ..models.workflow import Workflow
 from .base import Store
 from .serialisation import deserialise_model
@@ -20,25 +23,34 @@ class CannedStore(Store):
     pre canned messages or mailboxes not editable
     """
 
-    def __init__(self, config: EnvConfig, load_messages: bool = True):
+    load_messages = True
+
+    def __init__(self, config: EnvConfig, filter_expired: bool = False):
         self._config = config
-        self._load_msgs = load_messages
+        self._canned_data_dir = os.path.join(os.path.dirname(__file__), "data")
+        self._mailboxes_data_dir = self.get_mailboxes_data_dir()
         self._sync_lock = threading.Lock()
         self._lock: Optional[asyncio.Lock] = None
+        self._filter_expired = filter_expired
         super().__init__(self._config)
+
         self.initialise()
+
+    def get_mailboxes_data_dir(self) -> str:
+        return os.path.join(self._canned_data_dir, "mailboxes")
 
     def initialise(self):
         self.mailboxes = self._load_mailboxes()
         self.endpoints = self._load_endpoints()
-        self.chunks = self._load_chunks() if self._load_msgs else {}
-        self.messages = self._load_messages() if self._load_msgs else {}
+        self.messages = self._load_messages() if self.load_messages else {}
+        self.chunks = self._load_chunks() if self.load_messages else defaultdict(list)
         self.inboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.outboxes: dict[str, list[Message]] = {mailbox.mailbox_id: [] for mailbox in self.mailboxes.values()}
         self.local_ids: dict[str, dict[str, list[Message]]] = {
             mailbox.mailbox_id: defaultdict(list) for mailbox in self.mailboxes.values()
         }
         self._fill_boxes()
+        self.messages = cast(dict[str, Message], WeakValueDictionary(self.messages))
 
     @property
     def lock(self):
@@ -57,7 +69,7 @@ class CannedStore(Store):
             if message.sender.mailbox_id and message.sender.mailbox_id in self.mailboxes:
                 self.outboxes[message.sender.mailbox_id].append(message)
 
-            if message.status != MessageStatus.ACCEPTED or message.recipient.mailbox_id not in self.mailboxes:
+            if message.recipient.mailbox_id not in self.mailboxes:
                 continue
 
             self.inboxes[message.recipient.mailbox_id].append(message)
@@ -72,13 +84,24 @@ class CannedStore(Store):
                     continue
                 self.local_ids[mailbox_id][message.metadata.local_id].append(message)
 
+        for mailbox in self.mailboxes.values():
+            mailbox.inbox_count = sum(
+                1 for message in self.inboxes[mailbox.mailbox_id] if message.status == MessageStatus.ACCEPTED
+            )
+
     def _load_endpoints(self) -> dict[str, list[Mailbox]]:
 
-        with open(os.path.join(os.path.dirname(__file__), "data/workflows.jsonl"), "r", encoding="utf-8") as f:
+        canned_workflows = os.path.join(self._canned_data_dir, "workflows.jsonl")
+        endpoints: dict[str, list[Mailbox]] = defaultdict(list)
+
+        if not os.path.exists(canned_workflows):
+            return endpoints
+
+        with open(canned_workflows, "r", encoding="utf-8") as f:
             workflows = list(
                 cast(Workflow, deserialise_model(json.loads(line), Workflow)) for line in f.readlines() if line.strip()
             )
-            endpoints = defaultdict(list)
+
             for workflow in workflows:
 
                 receivers = workflow.receivers
@@ -96,10 +119,14 @@ class CannedStore(Store):
 
             return endpoints
 
-    @staticmethod
-    def _load_mailboxes() -> dict[str, Mailbox]:
+    def _load_mailboxes(self) -> dict[str, Mailbox]:
 
-        with open(os.path.join(os.path.dirname(__file__), "data/mailboxes.jsonl"), "r", encoding="utf-8") as f:
+        canned_mailboxes = os.path.join(self._canned_data_dir, "mailboxes.jsonl")
+
+        if not os.path.exists(canned_mailboxes):
+            return {}
+
+        with open(canned_mailboxes, "r", encoding="utf-8") as f:
             return {
                 mailbox.mailbox_id: mailbox
                 for mailbox in (
@@ -109,50 +136,79 @@ class CannedStore(Store):
                 )
             }
 
-    @staticmethod
-    def _load_messages() -> dict[str, Message]:
-        with open(os.path.join(os.path.dirname(__file__), "data/messages.jsonl"), "r", encoding="utf-8") as f:
-            return {
-                message.message_id: message
-                for message in (
-                    cast(Message, deserialise_model(json.loads(line), Message))
-                    for line in f.readlines()
-                    if line.strip()
-                )
-            }
+    def _load_messages(self) -> dict[str, Message]:
 
-    @staticmethod
-    def _load_chunks() -> dict[str, list[bytes]]:
+        messages: dict[str, Message] = {}
 
-        chunks = defaultdict(list)
+        if not os.path.exists(self._mailboxes_data_dir):
+            return messages
 
-        with open(os.path.join(os.path.dirname(__file__), "data/chunks.jsonl"), "r", encoding="utf-8") as f:
+        for mailbox_path in os.scandir(self._mailboxes_data_dir):
+            if not mailbox_path.is_dir():
+                continue
+            mailbox_id = mailbox_path.name.upper().strip()
+            if mailbox_id != mailbox_path.name:
+                raise ValueError("mailbox directory names should be upper case")
 
-            for line in f.readlines():
-                line = line.strip()
-                if not line:
+            if mailbox_id not in self.mailboxes:
+                self.mailboxes[mailbox_id] = Mailbox(mailbox_id=mailbox_id, mailbox_name="Unknown", password="password")
+
+            inbox_dir = os.path.join(self._mailboxes_data_dir, mailbox_id, "in")
+            if not os.path.exists(inbox_dir):
+                continue
+
+            for message_path in os.scandir(inbox_dir):
+
+                if not message_path.is_file() or not message_path.name.endswith(".json"):
                     continue
-                loaded = json.loads(line)
-                chunks[loaded["message_id"]].append(loaded)
 
-        for message_chunks in chunks.values():
-            message_chunks.sort(key=lambda x: cast(int, x["chunk_no"]))
+                try:
+                    with open(message_path.path, "r", encoding="utf-8") as f:
+                        message = deserialise_model(json.load(f), Message)
+                        assert message
+                        message_expiry_date = message.created_timestamp + relativedelta(
+                            days=self.config.message_expiry_days
+                        )
+                        if self._filter_expired and message_expiry_date <= datetime.utcnow():
+                            continue
+                        messages[message.message_id] = message
+                except JSONDecodeError as e:
+                    print(f"failed to load message json {message_path.path}")
+                    print(e)
 
-        parsed_chunks = {k: [base64.b64decode(chunk["data"]) for chunk in v] for k, v in chunks.items()}
+        return messages
 
-        return parsed_chunks
+    def _load_chunks(self) -> dict[str, list[Optional[bytes]]]:
+
+        chunks: dict[str, list[Optional[bytes]]] = defaultdict(list)
+
+        for message in self.messages.values():
+            if not message.recipient.mailbox_id or message.message_type != MessageType.DATA or message.total_chunks < 1:
+                continue
+
+            chunks_dir = os.path.join(self._mailboxes_data_dir, message.recipient.mailbox_id, "in", message.message_id)
+            message_chunks: list[Optional[bytes]] = [None for _ in range(message.total_chunks)]
+            for chunk_no in range(message.total_chunks):
+                chunk_path = os.path.join(chunks_dir, str(chunk_no + 1))
+                if not os.path.exists(chunk_path):
+                    continue
+                with open(chunk_path, "rb") as f:
+                    message_chunks[chunk_no] = f.read()
+            chunks[message.message_id] = message_chunks
+
+        return chunks
 
     async def get_mailbox(self, mailbox_id: str, accessed: bool = False) -> Optional[Mailbox]:
         mailbox = self.mailboxes.get(mailbox_id)
         if not mailbox:
             return None
 
-        mailbox.inbox_count = len(self.inboxes[mailbox_id])
+        mailbox.inbox_count = len(await self.get_accepted_inbox_messages(mailbox_id))
         if accessed:
             mailbox.last_accessed = datetime.utcnow()
         return mailbox
 
-    async def send_message(self, message: Message, body: bytes):
+    async def send_message(self, message: Message, body: Optional[bytes] = None):
         pass
 
     async def accept_message(self, message: Message):
@@ -167,11 +223,14 @@ class CannedStore(Store):
     async def get_message(self, message_id: str) -> Optional[Message]:
         return self.messages.get(message_id)
 
-    async def get_inbox(self, mailbox_id: str, rich: bool) -> list[Message]:
-        if rich:  # note: rich inbox is deprecated
-            return [m for m in self.messages.values() if m.recipient.mailbox_id == mailbox_id]
+    async def get_inbox_messages(
+        self, mailbox_id: str, predicate: Optional[Callable[[Message], bool]] = None
+    ) -> list[Message]:
+        inbox = self.inboxes[mailbox_id]
+        if not predicate:
+            return inbox
 
-        return self.inboxes[mailbox_id]
+        return [m for m in inbox if predicate(m)]
 
     async def get_outbox(self, mailbox_id: str) -> list[Message]:
         return self.outboxes[mailbox_id]
@@ -180,7 +239,7 @@ class CannedStore(Store):
         return self.local_ids.get(mailbox_id, {}).get(local_id, [])
 
     async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
-        parts: list[bytes] = self.chunks.get(message.message_id, [])
+        parts = self.chunks.get(message.message_id, [])
         if not parts or len(parts) < chunk_number:
             return None
         return parts[chunk_number - 1]

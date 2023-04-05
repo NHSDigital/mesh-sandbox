@@ -32,6 +32,7 @@ router = APIRouter(
             }
         }
     },
+    deprecated=True,
     response_model_exclude_none=True,
     openapi_extra={"spec_order": 290},
 )

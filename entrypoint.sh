@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 
-PORT="${PORT}"
-SSL=${SSL-no}
-SSL_CRTFILE=${SSL_CRTFILE-/tmp/server-cert.pem}
-SSL_KEYFILE=${SSL_KEYFILE-/tmp/server-cert.key}
+SSL="${SSL-no}"
+SSL_CRTFILE="${SSL_CRTFILE-/tmp/server-cert.pem}"
+SSL_KEYFILE="${SSL_KEYFILE-/tmp/server-cert.key}"
 
 if [[ -z "${PORT}" ]]; then
   if [[ "${SSL}" == "yes" ]]; then

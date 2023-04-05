@@ -86,6 +86,25 @@ async def normalise_message_id_query(
     return message_id.upper()
 
 
+async def normalise_content_encoding(
+    content_encoding: str = Header(
+        title=Headers.Content_Encoding, description="content encoding", example="gzip", default=""
+    ),
+):
+    return (content_encoding or "").strip().lower()
+
+
+async def normalise_content_type(
+    content_type: str = Header(
+        title=Headers.Content_Type,
+        description="content type of the message when decoded",
+        example="text/csv",
+        default="",
+    ),
+):
+    return (content_type or "").strip().lower()
+
+
 @lru_cache()
 def get_env_config() -> EnvConfig:
     return EnvConfig()

@@ -4,3 +4,4 @@ password: str = field\(default=""\)
 "password": "password"
 password=_PASSWORD
 password="BAD"
+Mailbox\(mailbox_id=mailbox_id, mailbox_name="Unknown", password="password"\)

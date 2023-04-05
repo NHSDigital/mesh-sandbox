@@ -9,7 +9,6 @@ from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 
 from ..common import EnvConfig, constants, index_of, strtobool
-from ..common.constants import Headers
 from ..common.exceptions import MessagingException
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
@@ -74,6 +73,7 @@ class OutboxHandler:
         sender_mailbox: Mailbox,
         mex_headers: MexHeaders,
         content_encoding: str,
+        content_type: str,
         accepts_api_version: int = 1,
     ):  # pylint: disable=too-many-locals
 
@@ -126,7 +126,8 @@ class OutboxHandler:
             workflow_id=mex_headers.mex_workflow_id,
             metadata=MessageMetadata(
                 subject=mex_headers.mex_subject,
-                content_encoding=request.headers.get(Headers.Content_Encoding, ""),
+                content_type=content_type,
+                content_encoding=content_encoding,
                 file_name=mex_headers.mex_filename or f"{message_id}.dat",
                 local_id=mex_headers.mex_localid,
                 partner_id=mex_headers.mex_partnerid,

@@ -49,3 +49,4 @@ __pycache__
 # java client
 java_client/
 messages/
+!src/mesh_sandbox/store/data/mailboxes/

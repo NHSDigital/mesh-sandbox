@@ -134,7 +134,7 @@ def test_file_send_message_with_local_id(app: TestClient, accept: str, tmp_path:
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    with temp_env_vars(STORE_MODE="file", FILE_STORE_DIR=tmp_path):
+    with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
 
         res = app.get(
             f"/messageexchange/{recipient}/inbox",
@@ -317,7 +317,7 @@ def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
-    with temp_env_vars(STORE_MODE="file", FILE_STORE_DIR=tmp_path):
+    with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
 
         res = app.get(
             f"/messageexchange/{recipient}/inbox",

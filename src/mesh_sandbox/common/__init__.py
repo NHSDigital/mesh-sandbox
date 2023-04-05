@@ -53,7 +53,9 @@ class EnvConfig:
     auth_mode: str = field(default="no_auth")
     store_mode: str = field(default="canned")
     shared_key: str = field(default="Banana")
-    file_store_dir: str = field(default="/tmp/mesh_store")
+    mailboxes_dir: str = field(default="/tmp/mesh_store")
+    message_expiry_days: int = field(default=30)
+    inbox_expiry_days: int = field(default=5)
 
     def __post_init__(self):
         self.env = os.environ.get("ENV", self.env)
@@ -61,7 +63,9 @@ class EnvConfig:
         self.auth_mode = os.environ.get("AUTH_MODE", self.auth_mode)
         self.store_mode = os.environ.get("STORE_MODE", self.store_mode)
         self.shared_key = os.environ.get("SHARED_KEY", self.shared_key)
-        self.file_store_dir = os.environ.get("FILE_STORE_DIR", self.file_store_dir)
+        self.mailboxes_dir = os.environ.get("MAILBOXES_DATA_DIR", os.environ.get("FILE_STORE_DIR", self.mailboxes_dir))
+        self.message_expiry_days = int(os.environ.get("MESSAGE_EXPIRY_DAYS", self.message_expiry_days))
+        self.inbox_expiry_days = int(os.environ.get("INBOX_EXPIRY_DAYS", self.inbox_expiry_days))
 
 
 T = TypeVar("T")

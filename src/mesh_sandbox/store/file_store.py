@@ -1,51 +1,60 @@
+import json
 import os.path
-import shutil
+from collections import defaultdict
 from typing import Optional
 
-from ..common import EnvConfig
 from ..models.message import Message
 from .memory_store import MemoryStore
+from .serialisation import serialise_model
 
 
 class FileStore(MemoryStore):
 
     """file based store, will store the message payloads in the filesystem"""
 
-    def __init__(self, config: EnvConfig):
-        super().__init__(config)
-        self._base_dir = config.file_store_dir
+    load_messages = True
 
-    async def reset(self, clear_disk: bool):
-        await super().reset(clear_disk)
-        # recursive delete, but preserve top-level folder
-        if clear_disk:
-            for file in os.listdir(self._base_dir):
-                path = os.path.join(self._base_dir, file)
-                if os.path.isfile(path) or os.path.islink(path):
-                    os.remove(path)
-                else:
-                    shutil.rmtree(path)
-
-    async def reset_mailbox(self, clear_disk: bool, mailbox_id):
-        await super().reset_mailbox(clear_disk, mailbox_id)
-        if clear_disk:
-            path = os.path.join(self._base_dir, mailbox_id)
-            if os.path.exists(path):
-                shutil.rmtree(path)
+    def get_mailboxes_data_dir(self) -> str:
+        return self._config.mailboxes_dir
 
     async def _get_file_size(self, message: Message) -> int:
         size = 0
-        message_dir = os.path.join(self._base_dir, f"{message.recipient.mailbox_id}/in/{message.message_id}")
-        for file in os.listdir(message_dir):
-            stat = os.stat(f"{message_dir}/{file}")
+        if message.total_chunks < 1:
+            return 0
+
+        message_dir = self.message_path(message)
+        for chunk_no in range(message.total_chunks):
+            stat = os.stat(f"{message_dir}/{chunk_no+1}")
             size += stat.st_size
         return size
 
-    def chunk_path(self, message: Message, chunk_number: int) -> str:
-        return os.path.join(self._base_dir, f"{message.recipient.mailbox_id}/in/{message.message_id}/{chunk_number}")
+    async def save_message(self, message: Message):
+        await super().save_message(message)
+        message_json_path = f"{self.message_path(message)}.json"
+        os.makedirs(os.path.dirname(message_json_path), exist_ok=True)
+        with open(message_json_path, "w+", encoding="utf-8") as f:
+            json.dump(serialise_model(message), f)
 
-    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes):
+    def inbox_path(self, mailbox_id: str) -> str:
+        return os.path.join(self._mailboxes_data_dir, mailbox_id, "in")
+
+    def message_path(self, message: Message) -> str:
+        return os.path.join(self.inbox_path(message.recipient.mailbox_id), message.message_id)
+
+    def chunk_path(self, message: Message, chunk_number: int) -> str:
+        return os.path.join(self.message_path(message), str(chunk_number))
+
+    def _load_chunks(self) -> dict[str, list[Optional[bytes]]]:
+        return defaultdict(list)
+
+    async def receive_chunk(self, message: Message, chunk_number: int, chunk: Optional[bytes]):
         chunk_path = self.chunk_path(message, chunk_number)
+        if chunk is None:
+            if not os.path.exists(chunk_path):
+                return
+            os.remove(chunk_path)
+            return
+
         os.makedirs(os.path.dirname(chunk_path), exist_ok=True)
         with open(chunk_path, "wb+") as f:
             f.write(chunk)
@@ -56,5 +65,5 @@ class FileStore(MemoryStore):
         if not os.path.exists(chunk_path):
             return None
 
-        with open(chunk_path, "rb+") as f:
+        with open(chunk_path, "rb") as f:
             return f.read()
