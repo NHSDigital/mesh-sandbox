@@ -778,8 +778,8 @@ category = "dev"
 optional = false
 python-versions = ">=3.9"
 files = [
-    {file = "ipython-8.13.2-py3-none-any.whl", hash = "sha256:ffca270240fbd21b06b2974e14a86494d6d29290184e788275f55e0b55914926"},
-    {file = "ipython-8.13.2.tar.gz", hash = "sha256:7dff3fad32b97f6488e02f87b970f309d082f758d7b7fc252e3b19ee0e432dbb"},
+    {file = "ipython-8.11.0-py3-none-any.whl", hash = "sha256:5b54478e459155a326bf5f42ee4f29df76258c0279c36f21d71ddb560f88b156"},
+    {file = "ipython-8.11.0.tar.gz", hash = "sha256:735cede4099dbc903ee540307b9171fbfef4aa75cfcacc5a273b2cda2f02be04"},
 ]
 
 [package.dependencies]
@@ -1500,21 +1500,22 @@ testing = ["argcomplete", "hypothesis (>=3.56)", "mock", "nose", "pygments (>=2.
 
 [[package]]
 name = "pytest-asyncio"
-version = "0.16.0"
-description = "Pytest support for asyncio."
+version = "0.21.0"
+description = "Pytest support for asyncio"
 category = "dev"
 optional = false
-python-versions = ">= 3.6"
+python-versions = ">=3.7"
 files = [
-    {file = "pytest-asyncio-0.16.0.tar.gz", hash = "sha256:7496c5977ce88c34379df64a66459fe395cd05543f0a2f837016e7144391fcfb"},
-    {file = "pytest_asyncio-0.16.0-py3-none-any.whl", hash = "sha256:5f2a21273c47b331ae6aa5b36087047b4899e40f03f18397c0e65fa5cca54e9b"},
+    {file = "pytest-asyncio-0.21.0.tar.gz", hash = "sha256:2b38a496aef56f56b0e87557ec313e11e1ab9276fc3863f6a7be0f1d0e415e1b"},
+    {file = "pytest_asyncio-0.21.0-py3-none-any.whl", hash = "sha256:f2b3366b7cd501a4056858bd39349d5af19742aed2d81660b7998b6341c7eb9c"},
 ]
 
 [package.dependencies]
-pytest = ">=5.4.0"
+pytest = ">=7.0.0"
 
 [package.extras]
-testing = ["coverage", "hypothesis (>=5.7.1)"]
+docs = ["sphinx (>=5.3)", "sphinx-rtd-theme (>=1.0)"]
+testing = ["coverage (>=6.2)", "flaky (>=3.5.0)", "hypothesis (>=5.7.1)", "mypy (>=0.931)", "pytest-trio (>=0.7.0)"]
 
 [[package]]
 name = "python-dateutil"
@@ -2239,4 +2240,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.9"
-content-hash = "d82188a3d34f691f6ee53778c11b65b7ab3a9900a3bbe712e3e24196154082b4"
+content-hash = "17da3d27a4026a30a646c82a0b0752915775d10eda6144bbe07fb4418d156997"
