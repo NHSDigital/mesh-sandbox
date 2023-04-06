@@ -1074,15 +1074,15 @@ files = [
 ]
 
 [[package]]
-name = "Mesh-Client"
-version = "1.5.2"
+name = "mesh-client"
+version = "1.6.0"
 description = "Client for NHS Digital's MESH messaging system"
 category = "dev"
 optional = false
 python-versions = ">=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*"
 files = [
-    {file = "Mesh Client-1.5.2.tar.gz", hash = "sha256:cbc5c79567e264ae07873462437a84e050e6cf90b446afb4051d68a00f32b972"},
-    {file = "Mesh_Client-1.5.2-py2.py3-none-any.whl", hash = "sha256:ea5b1926914c5cc987dac81af1a30fa815be8bc2c5f85ca9ccd1ff2a4b1a855a"},
+    {file = "Mesh Client-1.6.0.tar.gz", hash = "sha256:9ca761af538e6ab70122bf1304cc0ae57bc3b9d0fac62c0d52972e39f52cda84"},
+    {file = "Mesh_Client-1.6.0-py2.py3-none-any.whl", hash = "sha256:c343cd5eca15008259434d97a371e690c873e8b75d8039f81ed108e3b889b612"},
 ]
 
 [package.dependencies]
@@ -1508,6 +1508,8 @@ python-versions = ">=3.7"
 files = [
     {file = "pytest-asyncio-0.21.0.tar.gz", hash = "sha256:2b38a496aef56f56b0e87557ec313e11e1ab9276fc3863f6a7be0f1d0e415e1b"},
     {file = "pytest_asyncio-0.21.0-py3-none-any.whl", hash = "sha256:f2b3366b7cd501a4056858bd39349d5af19742aed2d81660b7998b6341c7eb9c"},
+    {file = "pytest-asyncio-0.16.0.tar.gz", hash = "sha256:7496c5977ce88c34379df64a66459fe395cd05543f0a2f837016e7144391fcfb"},
+    {file = "pytest_asyncio-0.16.0-py3-none-any.whl", hash = "sha256:5f2a21273c47b331ae6aa5b36087047b4899e40f03f18397c0e65fa5cca54e9b"},
 ]
 
 [package.dependencies]
@@ -2241,3 +2243,4 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 lock-version = "2.0"
 python-versions = "^3.9"
 content-hash = "17da3d27a4026a30a646c82a0b0752915775d10eda6144bbe07fb4418d156997"
+content-hash = "d82188a3d34f691f6ee53778c11b65b7ab3a9900a3bbe712e3e24196154082b4"
