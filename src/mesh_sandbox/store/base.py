@@ -1,11 +1,11 @@
 from abc import ABC, abstractmethod
-from typing import NamedTuple, Optional
+from typing import Callable, NamedTuple, Optional
 
 from fastapi import HTTPException, status
 
 from ..common import EnvConfig, constants, generate_cipher_text
 from ..models.mailbox import Mailbox
-from ..models.message import Message
+from ..models.message import Message, MessageStatus
 
 
 class AuthoriseHeaderParts(NamedTuple):
@@ -69,20 +69,20 @@ def try_parse_authorisation_token(auth_token: str) -> Optional[AuthoriseHeaderPa
 
 
 class Store(ABC):
+
+    supports_reset = False
+
     def __init__(self, config: EnvConfig):
         self.config = config
 
-    async def reset(self, clear_disk: bool):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"reset not supported for {self.config.store_mode} store mode",
-        )
+    def get_mailboxes_data_dir(self) -> str:
+        raise NotImplementedError()
 
-    async def reset_mailbox(self, clear_disk: bool, mailbox_id: str):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"reset not supported for {self.config.store_mode} store mode",
-        )
+    async def reset(self):
+        raise NotImplementedError()
+
+    async def reset_mailbox(self, mailbox_id: str):
+        raise NotImplementedError()
 
     @abstractmethod
     async def get_mailbox(self, mailbox_id: str, accessed: bool = False) -> Optional[Mailbox]:
@@ -142,7 +142,7 @@ class Store(ABC):
         return mailbox
 
     @abstractmethod
-    async def send_message(self, message: Message, body: bytes):
+    async def send_message(self, message: Message, body: Optional[bytes] = None):
         pass
 
     @abstractmethod
@@ -161,8 +161,16 @@ class Store(ABC):
     async def get_message(self, message_id: str) -> Optional[Message]:
         pass
 
+    async def get_accepted_inbox_messages(self, mailbox_id: str) -> list[Message]:
+        def accepted_messages(msg: Message) -> bool:
+            return msg.status == MessageStatus.ACCEPTED
+
+        return await self.get_inbox_messages(mailbox_id, accepted_messages)
+
     @abstractmethod
-    async def get_inbox(self, mailbox_id: str, rich: bool) -> list[Message]:
+    async def get_inbox_messages(
+        self, mailbox_id: str, predicate: Optional[Callable[[Message], bool]] = None
+    ) -> list[Message]:
         pass
 
     @abstractmethod

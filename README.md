@@ -14,7 +14,7 @@ pip
 
 ```bash
 pip install mesh-sandbox
-STORE_MODE=file FILE_STORE_DIR=/tmp/mesh uvicorn mesh_sandbox.api:app --reload --port 8700 --workers=1
+STORE_MODE=file MAILBOXES_DATA_DIR=/tmp/mesh uvicorn mesh_sandbox.api:app --reload --port 8700 --workers=1
 curl http://localhost:8700/health
 ```
 

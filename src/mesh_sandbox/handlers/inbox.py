@@ -245,7 +245,11 @@ class InboxHandler:
         rich: bool = False,
     ) -> tuple[list[Message], Optional[dict]]:
 
-        messages = await self.store.get_inbox(mailbox.mailbox_id, rich=rich)
+        messages = (
+            await self.store.get_inbox_messages(mailbox.mailbox_id)
+            if rich
+            else await self.store.get_accepted_inbox_messages(mailbox.mailbox_id)
+        )
 
         if message_filter:
             messages = list(filter(message_filter, messages))

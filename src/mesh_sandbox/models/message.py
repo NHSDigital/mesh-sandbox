@@ -33,6 +33,7 @@ class MessageDeliveryStatus:
 class MessageMetadata:
 
     subject: Optional[str] = field(default=None)
+    content_type: Optional[str] = field(default=None)
     content_encoding: Optional[str] = field(default=None)
     file_name: Optional[str] = field(default=None)
     local_id: Optional[str] = field(default=None)

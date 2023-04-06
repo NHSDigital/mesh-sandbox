@@ -8,6 +8,8 @@ from ..common.mex_headers import MexHeaders, send_message_mex_headers
 from ..dependencies import (
     authorised_mailbox,
     get_accepts_api_version,
+    normalise_content_encoding,
+    normalise_content_type,
     normalise_message_id_path,
 )
 from ..handlers.outbox import OutboxHandler
@@ -44,9 +46,8 @@ router = APIRouter(
 async def send_message(
     request: Request,
     mex_headers: MexHeaders = Depends(send_message_mex_headers),
-    content_encoding: str = Header(
-        title=Headers.Content_Encoding, description="content encoding", example="gzip", default=""
-    ),
+    content_type: str = Depends(normalise_content_type),
+    content_encoding: str = Depends(normalise_content_encoding),
     accepts_api_version: int = Depends(get_accepts_api_version),
     handler: OutboxHandler = Depends(OutboxHandler),
 ):
@@ -55,6 +56,7 @@ async def send_message(
         sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         mex_headers=mex_headers,
         content_encoding=content_encoding,
+        content_type=content_type,
         accepts_api_version=accepts_api_version,
     )
 
@@ -71,9 +73,7 @@ async def send_chunk(
     request: Request,
     message_id: str = Depends(normalise_message_id_path),
     mex_chunk_range: str = Header(title=Headers.Mex_Chunk_Range, default="", example="1:2", max_length=20),
-    content_encoding: str = Header(
-        title=Headers.Content_Encoding, description="content encoding", example="gzip", default=""
-    ),
+    content_encoding: str = Depends(normalise_content_encoding),
     chunk_number: int = Path(..., title="chunk_number", description="The index number of the chunk", example="1"),
     accepts_api_version: int = Depends(get_accepts_api_version),
     handler: OutboxHandler = Depends(OutboxHandler),

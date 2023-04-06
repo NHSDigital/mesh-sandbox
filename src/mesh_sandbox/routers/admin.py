@@ -1,12 +1,15 @@
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 
 from ..dependencies import EnvConfig, get_env_config, normalise_mailbox_id_path
-from ..handlers.reset import ResetHandler
+from ..handlers.admin import AdminHandler
+from ..views.admin import PutReportRequest
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
     route_class=RequestLoggingRoute,
 )
+
+TESTING_ONLY = "This is not part of the real api!, just for testing purposes"
 
 
 @router.get("/health", status_code=status.HTTP_200_OK, include_in_schema=False, response_model_exclude_none=True)
@@ -28,21 +31,30 @@ async def ping(config: EnvConfig = Depends(get_env_config)):
 
 
 @router.delete(
-    "/messageexchange/reset", status_code=status.HTTP_200_OK, include_in_schema=False, response_model_exclude_none=True
+    "/admin/reset",
+    summary=f"Reset in memory storage completely, will reload from disk. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+@router.delete(
+    "/messageexchange/reset",
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+    response_model_exclude_none=True,
 )
 async def reset(
-    clear_disk: str = Query(
-        default="true",
-        title="Clear disk",
-        description="whether to clear the filesystem store if STORE_MODE=file, otherwise ignored",
-        example="true",
-    ),
-    handler: ResetHandler = Depends(ResetHandler),
+    handler: AdminHandler = Depends(AdminHandler),
 ):
-    await handler.reset(clear_disk.lower() == "true")
+    await handler.reset()
     return {"message": "all mailboxes reset"}
 
 
+@router.delete(
+    "/admin/reset/{mailbox_id}",
+    summary=f"Clear messages in a particular inbox. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
 @router.delete(
     "/messageexchange/reset/{mailbox_id}",
     status_code=status.HTTP_200_OK,
@@ -50,14 +62,22 @@ async def reset(
     response_model_exclude_none=True,
 )
 async def reset_mailbox(
-    clear_disk: str = Query(
-        default="true",
-        title="Clear disk",
-        description="whether to clear the filesystem store if STORE_MODE=file, otherwise ignored",
-        example="true",
-    ),
     mailbox_id: str = Depends(normalise_mailbox_id_path),
-    handler: ResetHandler = Depends(ResetHandler),
+    handler: AdminHandler = Depends(AdminHandler),
 ):
-    await handler.reset(clear_disk.lower() == "true", mailbox_id)
+    await handler.reset(mailbox_id)
     return {"message": f"mailbox {mailbox_id} reset"}
+
+
+@router.post(
+    "/messageexchange/report",
+    summary=f"Put a report messages into a particular inbox. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+async def put_report(
+    request: PutReportRequest,
+    handler: AdminHandler = Depends(AdminHandler),
+):
+    message = await handler.put_report(request)
+    return {"message_id": message.message_id}

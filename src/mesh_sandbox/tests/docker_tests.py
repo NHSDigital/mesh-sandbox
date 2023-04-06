@@ -14,10 +14,15 @@ def test_send_receive_chunked_message():
     recipient_mailbox_id = _CANNED_MAILBOX2
     workflow_id = uuid4().hex
 
-    base_uri = "http://localhost:8700"
+    base_uri = "https://localhost:8700"
 
     with MeshClient(
-        url=base_uri, mailbox=sender_mailbox_id, password=_PASSWORD, shared_key=_SHARED_KEY, max_chunk_size=100
+        url=base_uri,
+        mailbox=sender_mailbox_id,
+        password=_PASSWORD,
+        shared_key=_SHARED_KEY,
+        max_chunk_size=100,
+        verify=False,
     ) as sender:
 
         sent_payload = b"a" * 1000
