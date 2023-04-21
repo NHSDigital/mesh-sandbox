@@ -248,6 +248,8 @@ def test_put_report_in_inbox(app: TestClient, tmp_path: str):
             code="21",
             description="my error",
             subject=f"my subject {uuid4().hex}",
+            local_id=f"my local id {uuid4().hex}",
+            file_name=f"my filename {uuid4().hex}",
         )
 
         res = app.post("/messageexchange/report", json=request.dict())
@@ -277,6 +279,8 @@ def test_put_report_in_inbox(app: TestClient, tmp_path: str):
         assert res.headers.get(Headers.Mex_MessageType) == MessageType.REPORT
         assert res.headers.get(Headers.Mex_StatusCode) == request.code
         assert res.headers.get(Headers.Mex_StatusDescription) == request.description
+        assert res.headers.get(Headers.Mex_FileName) == request.file_name
+        assert res.headers.get(Headers.Mex_LocalID) == request.local_id
         assert res.headers.get(Headers.Mex_StatusSuccess) == "ERROR"
         assert res.headers.get(Headers.Content_Length) == "0"
 

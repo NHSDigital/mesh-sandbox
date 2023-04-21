@@ -77,6 +77,7 @@ class AdminHandler:
             metadata=MessageMetadata(
                 subject=request.subject,
                 local_id=request.local_id,
+                file_name=request.file_name,
             ),
         )
 
