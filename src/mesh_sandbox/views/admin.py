@@ -13,3 +13,4 @@ class PutReportRequest(BaseModel):
     subject: Optional[str] = Field(description="report workflow id", default=None)
     local_id: Optional[str] = Field(description="report message local id", default=None)
     status: str = Field(description="report status (error/undeliverable)", default=MessageStatus.UNDELIVERABLE)
+    file_name: Optional[str] = Field(description="file name", default=None)
