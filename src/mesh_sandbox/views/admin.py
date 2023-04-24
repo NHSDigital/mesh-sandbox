@@ -14,3 +14,4 @@ class PutReportRequest(BaseModel):
     local_id: Optional[str] = Field(description="report message local id", default=None)
     status: str = Field(description="report status (error/undeliverable)", default=MessageStatus.UNDELIVERABLE)
     file_name: Optional[str] = Field(description="file name", default=None)
+    linked_message_id: Optional[str] = Field(description="linked message id", default=None)
