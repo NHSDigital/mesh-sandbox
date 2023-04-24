@@ -51,7 +51,11 @@ class AdminHandler:
             events=[
                 MessageEvent(status=MessageStatus.ACCEPTED),
                 MessageEvent(
-                    status=request.status, event="TRANSFER", code=request.code, description=request.description
+                    status=request.status,
+                    event="TRANSFER",
+                    code=request.code,
+                    description=request.description,
+                    linked_message_id=request.linked_message_id,
                 ),
             ],
             message_id=uuid4().hex.upper(),
