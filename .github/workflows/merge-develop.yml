@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
 
       - name: setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.9"
 
@@ -24,7 +24,7 @@ jobs:
         run: make install-poetry
 
       - name: cache virtualenv
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: |
             .venv
@@ -114,7 +114,7 @@ jobs:
           find . -type f | xargs chmod g+w
 
       - name: setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
         with:
           python-version: "3.9"
 
