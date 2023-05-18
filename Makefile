@@ -81,6 +81,9 @@ shellcheck:
 hadolint:
 	@docker run --rm -i -v ${PWD}/:/docker:ro hadolint/hadolint hadolint --config=docker/hadolint.yml docker/Dockerfile | sed 's/:\([0-9]\+\) /:\1:0 /'
 
+
+lint: pylint mypy shellcheck hadolint
+
 clean:
 	rm -rf ./dist || true
 	rm -rf ./reports || true
