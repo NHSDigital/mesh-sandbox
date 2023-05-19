@@ -29,11 +29,11 @@ class FileStore(MemoryStore):
         return size
 
     async def save_message(self, message: Message):
+        await super().save_message(message)
         message_json_path = f"{self.message_path(message)}.json"
         os.makedirs(os.path.dirname(message_json_path), exist_ok=True)
         with open(message_json_path, "w+", encoding="utf-8") as f:
             json.dump(serialise_model(message), f)
-        await super().save_message(message)
 
     def inbox_path(self, mailbox_id: str) -> str:
         return os.path.join(self._mailboxes_data_dir, mailbox_id, "in")
