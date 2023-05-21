@@ -1,3 +1,4 @@
+import logging
 import re
 from functools import lru_cache
 from typing import Optional
@@ -108,6 +109,11 @@ async def normalise_content_type(
 @lru_cache()
 def get_env_config() -> EnvConfig:
     return EnvConfig()
+
+
+@lru_cache()
+def get_logger() -> logging.Logger:
+    return logging.getLogger("mesh-sandbox")
 
 
 @lru_cache()

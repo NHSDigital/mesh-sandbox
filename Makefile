@@ -129,6 +129,12 @@ coverage: coverage-cleanup coverage-test coverage-report
 coverage-test:
 	poetry run coverage run -m pytest
 
+
+pytest:
+	poetry run pytest
+
+test: pytest
+
 coverage-ci: coverage-cleanup coverage-ci-test coverage-report
 
 check-secrets:
