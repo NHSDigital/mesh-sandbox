@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 from typing import Optional, cast
 from uuid import uuid4
@@ -13,7 +14,7 @@ from ..common.exceptions import MessagingException
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..common.mex_headers import MexHeaders
-from ..dependencies import get_env_config, get_fernet, get_store
+from ..dependencies import get_env_config, get_fernet, get_logger, get_store
 from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
@@ -62,10 +63,12 @@ class OutboxHandler:
         config: EnvConfig = Depends(get_env_config),
         store: Store = Depends(get_store),
         fernet: FernetHelper = Depends(get_fernet),
+        logger: logging.Logger = Depends(get_logger),
     ):
         self.config = config
         self.store = store
         self.fernet = fernet
+        self.logger = logger
 
     async def send_message(
         self,
@@ -145,6 +148,14 @@ class OutboxHandler:
             message.file_size = len(body)
 
         await self.store.send_message(message, body)
+
+        self.logger.info(
+            (
+                f"created message: message_id={message.message_id} "
+                f"from={message.sender.mailbox_id} to={message.recipient.mailbox_id} "
+                f"workflow={message.workflow_id or ''}"
+            )
+        )
 
         return send_message_response(message, accepts_api_version)
 
