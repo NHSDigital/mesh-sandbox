@@ -44,3 +44,6 @@ def test_send_receive_chunked_message():
             message.acknowledge()
             message_ids = recipient.list_messages()
             assert message_ids == []
+
+            # test that plugin is loaded and is able to edit the message ( though this wouldn't be saved in file mode )
+            assert message.subject == "plugin message from file"  # pylint: disable=no-member

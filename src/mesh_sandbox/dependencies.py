@@ -8,6 +8,7 @@ from fastapi import Depends, Header, HTTPException, Path, Query, Request
 from .common import EnvConfig
 from .common.constants import Headers
 from .common.fernet import FernetHelper
+from .common.plugin_manager import PluginManager
 from .store.base import Store
 from .store.canned_store import CannedStore
 from .store.file_store import FileStore
@@ -114,6 +115,11 @@ def get_env_config() -> EnvConfig:
 @lru_cache()
 def get_logger() -> logging.Logger:
     return logging.getLogger("mesh-sandbox")
+
+
+@lru_cache()
+def get_plugin_manager() -> PluginManager:
+    return PluginManager()
 
 
 @lru_cache()

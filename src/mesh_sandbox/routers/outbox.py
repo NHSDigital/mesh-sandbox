@@ -1,6 +1,7 @@
 from typing import Optional, cast
 
 from fastapi import APIRouter, Depends, Header, Path, Query, Request, Response, status
+from starlette.background import BackgroundTasks
 
 from ..common import MESH_MEDIA_TYPES
 from ..common.constants import Headers
@@ -44,6 +45,7 @@ router = APIRouter(
     openapi_extra={"spec_order": 300},
 )
 async def send_message(
+    background_tasks: BackgroundTasks,
     request: Request,
     mex_headers: MexHeaders = Depends(send_message_mex_headers),
     content_type: str = Depends(normalise_content_type),
@@ -52,6 +54,7 @@ async def send_message(
     handler: OutboxHandler = Depends(OutboxHandler),
 ):
     return await handler.send_message(
+        background_tasks=background_tasks,
         request=request,
         sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         mex_headers=mex_headers,
@@ -70,6 +73,7 @@ async def send_message(
     openapi_extra={"spec_order": 310},
 )
 async def send_chunk(
+    background_tasks: BackgroundTasks,
     request: Request,
     message_id: str = Depends(normalise_message_id_path),
     mex_chunk_range: str = Header(title=Headers.Mex_Chunk_Range, default="", example="1:2", max_length=20),
@@ -79,6 +83,7 @@ async def send_chunk(
     handler: OutboxHandler = Depends(OutboxHandler),
 ):
     return await handler.send_chunk(
+        background_tasks=background_tasks,
         request=request,
         sender_mailbox=cast(Mailbox, request.state.authorised_mailbox),
         message_id=message_id,

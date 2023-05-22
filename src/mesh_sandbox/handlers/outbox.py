@@ -8,13 +8,21 @@ from dateutil.relativedelta import relativedelta
 from fastapi import Depends, HTTPException, Request
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
+from starlette.background import BackgroundTasks
 
 from ..common import EnvConfig, constants, index_of, strtobool
 from ..common.exceptions import MessagingException
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..common.mex_headers import MexHeaders
-from ..dependencies import get_env_config, get_fernet, get_logger, get_store
+from ..common.plugin_manager import PluginManager
+from ..dependencies import (
+    get_env_config,
+    get_fernet,
+    get_logger,
+    get_plugin_manager,
+    get_store,
+)
 from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
@@ -64,14 +72,17 @@ class OutboxHandler:
         store: Store = Depends(get_store),
         fernet: FernetHelper = Depends(get_fernet),
         logger: logging.Logger = Depends(get_logger),
+        plugins: PluginManager = Depends(get_plugin_manager),
     ):
         self.config = config
         self.store = store
         self.fernet = fernet
         self.logger = logger
+        self.plugins = plugins
 
     async def send_message(
         self,
+        background_tasks: BackgroundTasks,
         request: Request,
         sender_mailbox: Mailbox,
         mex_headers: MexHeaders,
@@ -157,10 +168,14 @@ class OutboxHandler:
             )
         )
 
+        if message.status == MessageStatus.ACCEPTED:
+            background_tasks.add_task(self.plugins.on_event, "message_accepted", message)
+
         return send_message_response(message, accepts_api_version)
 
     async def send_chunk(  # pylint: disable=too-many-locals
         self,
+        background_tasks: BackgroundTasks,
         request: Request,
         sender_mailbox: Mailbox,
         message_id: str,
@@ -212,6 +227,9 @@ class OutboxHandler:
             return upload_chunk_response(message, chunk_number, accepts_api_version)
 
         await self.store.accept_message(message)
+
+        if message.status == MessageStatus.ACCEPTED:
+            background_tasks.add_task(self.plugins.on_event, "message_accepted", message)
 
         return upload_chunk_response(message, chunk_number, accepts_api_version)
 
