@@ -5,8 +5,7 @@ from typing import Any, Callable, Optional, cast
 from dateutil.parser import isoparse
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
-from fastapi import Depends, HTTPException, Response, status
-from starlette.background import BackgroundTasks
+from fastapi import BackgroundTasks, Depends, HTTPException, Response, status
 from starlette.responses import JSONResponse
 
 from ..common import (
@@ -19,8 +18,7 @@ from ..common import (
 from ..common.constants import Headers
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
-from ..common.plugin_manager import PluginManager
-from ..dependencies import get_env_config, get_fernet, get_plugin_manager, get_store
+from ..dependencies import get_env_config, get_fernet, get_store
 from ..models.mailbox import Mailbox
 from ..models.message import Message, MessageDeliveryStatus, MessageStatus, MessageType
 from ..store.base import Store
@@ -44,12 +42,10 @@ class InboxHandler:
         config: EnvConfig = Depends(get_env_config),
         store: Store = Depends(get_store),
         fernet: FernetHelper = Depends(get_fernet),
-        plugins: PluginManager = Depends(get_plugin_manager),
     ):
         self.config = config
         self.store = store
         self.fernet = fernet
-        self.plugins = plugins
 
     @staticmethod
     def _get_status_headers(message: Message) -> dict[str, Optional[str]]:
@@ -238,9 +234,7 @@ class InboxHandler:
         if message.status != MessageStatus.ACCEPTED:
             return response()
 
-        await self.store.acknowledge_message(message)
-
-        background_tasks.add_task(self.plugins.on_event, "message_acknowledged", message)
+        await self.store.acknowledge_message(message, background_tasks)
 
         return response()
 

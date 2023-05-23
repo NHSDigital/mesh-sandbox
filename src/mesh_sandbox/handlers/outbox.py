@@ -5,24 +5,16 @@ from uuid import uuid4
 
 from dateutil.parser import isoparse
 from dateutil.relativedelta import relativedelta
-from fastapi import Depends, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, HTTPException, Request
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
-from starlette.background import BackgroundTasks
 
 from ..common import EnvConfig, constants, index_of, strtobool
 from ..common.exceptions import MessagingException
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
 from ..common.mex_headers import MexHeaders
-from ..common.plugin_manager import PluginManager
-from ..dependencies import (
-    get_env_config,
-    get_fernet,
-    get_logger,
-    get_plugin_manager,
-    get_store,
-)
+from ..dependencies import get_env_config, get_fernet, get_logger, get_store
 from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
@@ -72,13 +64,11 @@ class OutboxHandler:
         store: Store = Depends(get_store),
         fernet: FernetHelper = Depends(get_fernet),
         logger: logging.Logger = Depends(get_logger),
-        plugins: PluginManager = Depends(get_plugin_manager),
     ):
         self.config = config
         self.store = store
         self.fernet = fernet
         self.logger = logger
-        self.plugins = plugins
 
     async def send_message(
         self,
@@ -155,10 +145,7 @@ class OutboxHandler:
         if len(body) == 0:
             raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="MissingDataFile")
 
-        if message.status == MessageStatus.ACCEPTED:
-            message.file_size = len(body)
-
-        await self.store.send_message(message, body)
+        await self.store.send_message(message, body, background_tasks)
 
         self.logger.info(
             (
@@ -167,9 +154,6 @@ class OutboxHandler:
                 f"workflow={message.workflow_id or ''}"
             )
         )
-
-        if message.status == MessageStatus.ACCEPTED:
-            background_tasks.add_task(self.plugins.on_event, "message_accepted", message)
 
         return send_message_response(message, accepts_api_version)
 
@@ -221,15 +205,12 @@ class OutboxHandler:
                 message_id=message_id,
             )
 
-        await self.store.receive_chunk(message, chunk_number, await request.body())
+        await self.store.receive_chunk(message, chunk_number, await request.body(), background_tasks)
 
         if chunk_number < message.total_chunks:
             return upload_chunk_response(message, chunk_number, accepts_api_version)
 
-        await self.store.accept_message(message)
-
-        if message.status == MessageStatus.ACCEPTED:
-            background_tasks.add_task(self.plugins.on_event, "message_accepted", message)
+        await self.store.accept_message(message, background_tasks)
 
         return upload_chunk_response(message, chunk_number, accepts_api_version)
 

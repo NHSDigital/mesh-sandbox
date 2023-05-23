@@ -1,12 +1,13 @@
+import logging
 from uuid import uuid4
 
 from .. import tests as tests_module
-from ..common.plugin_manager import PluginManager
+from ..common import EnvConfig
 from ..models.message import Message
-from ..models.plugin import SandboxPlugin
+from ..store.memory_store import MemoryStore
 
 
-class TestPlugin(SandboxPlugin):
+class TestPlugin:
 
     triggers = ["message_accepted"]
 
@@ -19,7 +20,7 @@ class TestPlugin(SandboxPlugin):
 
 async def test_plugin_provider():
 
-    manager = PluginManager(package=tests_module)
+    manager = MemoryStore(config=EnvConfig(), logger=logging.getLogger("mesh-sandbox"), plugins_module=tests_module)
 
     calls = []
 
@@ -28,7 +29,7 @@ async def test_plugin_provider():
 
     TestPlugin.real_handler = test_handler  # type: ignore[method-assign, assignment]
 
-    assert manager.plugins
+    assert manager._plugin_registry  # pylint: disable=protected-access
 
     message = Message(message_id=uuid4().hex)
 

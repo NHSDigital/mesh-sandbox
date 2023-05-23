@@ -47,7 +47,7 @@ class FileStore(MemoryStore):
     def _load_chunks(self) -> dict[str, list[Optional[bytes]]]:
         return defaultdict(list)
 
-    async def receive_chunk(self, message: Message, chunk_number: int, chunk: Optional[bytes]):
+    async def save_chunk(self, message: Message, chunk_number: int, chunk: Optional[bytes]):
         chunk_path = self.chunk_path(message, chunk_number)
         if chunk is None:
             if not os.path.exists(chunk_path):

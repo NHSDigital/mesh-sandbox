@@ -8,7 +8,6 @@ from fastapi import Depends, Header, HTTPException, Path, Query, Request
 from .common import EnvConfig
 from .common.constants import Headers
 from .common.fernet import FernetHelper
-from .common.plugin_manager import PluginManager
 from .store.base import Store
 from .store.canned_store import CannedStore
 from .store.file_store import FileStore
@@ -118,22 +117,17 @@ def get_logger() -> logging.Logger:
 
 
 @lru_cache()
-def get_plugin_manager() -> PluginManager:
-    return PluginManager()
-
-
-@lru_cache()
 def get_store() -> Store:
-
+    logger = get_logger()
     config = get_env_config()
     if config.store_mode == "canned":
-        return CannedStore(config)
+        return CannedStore(config, logger)
 
     if config.store_mode == "memory":
-        return MemoryStore(config)
+        return MemoryStore(config, logger)
 
     if config.store_mode == "file":
-        return FileStore(config)
+        return FileStore(config, logger)
 
     raise ValueError(f"unrecognised store mode {config.store_mode}")
 

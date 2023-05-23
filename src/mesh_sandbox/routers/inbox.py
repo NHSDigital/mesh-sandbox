@@ -1,8 +1,16 @@
 from typing import Optional, cast
 
-from fastapi import APIRouter, Depends, Header, Path, Query, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    Path,
+    Query,
+    Request,
+    Response,
+)
 from starlette import status
-from starlette.background import BackgroundTasks
 
 from ..common import MESH_MEDIA_TYPES
 from ..dependencies import (

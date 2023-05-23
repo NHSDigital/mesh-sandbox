@@ -1,7 +1,7 @@
 from typing import Optional
 from uuid import uuid4
 
-from fastapi import Depends, HTTPException, status
+from fastapi import BackgroundTasks, Depends, HTTPException, status
 
 from ..common import EnvConfig
 from ..dependencies import get_env_config, get_store
@@ -40,7 +40,7 @@ class AdminHandler:
 
         await self.store.reset_mailbox(mailbox.mailbox_id)
 
-    async def put_report(self, request: PutReportRequest) -> Message:
+    async def put_report(self, request: PutReportRequest, background_tasks: BackgroundTasks) -> Message:
         recipient = await self.store.get_mailbox(request.mailbox_id, accessed=False)
         if not recipient:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mailbox does not exist")
@@ -85,6 +85,6 @@ class AdminHandler:
             ),
         )
 
-        await self.store.send_message(message)
+        await self.store.send_message(message, b"", background_tasks)
 
         return message
