@@ -45,6 +45,8 @@ services:
     volumes:
       # mount a different mailboxes.jsonl to pre created mailboxes
       - ./src/mesh_sandbox/store/data/mailboxes.jsonl:/app/mesh_sandbox/store/data/mailboxes.jsonl:ro
+      # the mesh sandbox supports injecting a plugin to support test hooks 
+      # - ./my_test_plugin.py:/app/mesh_sandbox/plugin/my_test_plygin.py:ro
 
 ```
 
