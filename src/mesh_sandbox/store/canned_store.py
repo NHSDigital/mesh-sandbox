@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import os
 import threading
 from collections import defaultdict
@@ -9,6 +10,7 @@ from typing import Callable, Optional, cast
 from weakref import WeakValueDictionary
 
 from dateutil.relativedelta import relativedelta
+from fastapi import BackgroundTasks
 
 from ..common import EnvConfig
 from ..models.mailbox import Mailbox
@@ -25,14 +27,14 @@ class CannedStore(Store):
 
     load_messages = True
 
-    def __init__(self, config: EnvConfig, filter_expired: bool = False):
+    def __init__(self, config: EnvConfig, logger: logging.Logger, filter_expired: bool = False):
         self._config = config
         self._canned_data_dir = os.path.join(os.path.dirname(__file__), "data")
         self._mailboxes_data_dir = self.get_mailboxes_data_dir()
         self._sync_lock = threading.Lock()
         self._lock: Optional[asyncio.Lock] = None
         self._filter_expired = filter_expired
-        super().__init__(self._config)
+        super().__init__(self._config, logger)
 
         self.initialise()
 
@@ -208,16 +210,16 @@ class CannedStore(Store):
             mailbox.last_accessed = datetime.utcnow()
         return mailbox
 
-    async def send_message(self, message: Message, body: Optional[bytes] = None):
+    async def send_message(self, message: Message, body: bytes, background_tasks: BackgroundTasks):
         pass
 
-    async def accept_message(self, message: Message):
+    async def accept_message(self, message: Message, background_tasks: BackgroundTasks):
         pass
 
-    async def acknowledge_message(self, message: Message):
+    async def acknowledge_message(self, message: Message, background_tasks: BackgroundTasks):
         pass
 
-    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes):
+    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes, background_tasks: BackgroundTasks):
         pass
 
     async def get_message(self, message_id: str) -> Optional[Message]:

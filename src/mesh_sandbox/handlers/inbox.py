@@ -5,7 +5,7 @@ from typing import Any, Callable, Optional, cast
 from dateutil.parser import isoparse
 from dateutil.relativedelta import relativedelta
 from dateutil.tz import tzutc
-from fastapi import Depends, HTTPException, Response, status
+from fastapi import BackgroundTasks, Depends, HTTPException, Response, status
 from starlette.responses import JSONResponse
 
 from ..common import (
@@ -214,7 +214,9 @@ class InboxHandler:
             media_type="application/octet-stream",
         )
 
-    async def acknowledge_message(self, mailbox: Mailbox, message_id: str, accepts_api_version: int = 1):
+    async def acknowledge_message(
+        self, background_tasks: BackgroundTasks, mailbox: Mailbox, message_id: str, accepts_api_version: int = 1
+    ):
 
         message = await self.store.get_message(message_id)
         if not message:
@@ -232,7 +234,7 @@ class InboxHandler:
         if message.status != MessageStatus.ACCEPTED:
             return response()
 
-        await self.store.acknowledge_message(message)
+        await self.store.acknowledge_message(message, background_tasks)
 
         return response()
 

@@ -118,16 +118,16 @@ def get_logger() -> logging.Logger:
 
 @lru_cache()
 def get_store() -> Store:
-
+    logger = get_logger()
     config = get_env_config()
     if config.store_mode == "canned":
-        return CannedStore(config)
+        return CannedStore(config, logger)
 
     if config.store_mode == "memory":
-        return MemoryStore(config)
+        return MemoryStore(config, logger)
 
     if config.store_mode == "file":
-        return FileStore(config)
+        return FileStore(config, logger)
 
     raise ValueError(f"unrecognised store mode {config.store_mode}")
 

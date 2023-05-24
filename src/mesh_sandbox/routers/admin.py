@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 
 from ..dependencies import EnvConfig, get_env_config, normalise_mailbox_id_path
 from ..handlers.admin import AdminHandler
@@ -77,7 +77,8 @@ async def reset_mailbox(
 )
 async def put_report(
     request: PutReportRequest,
+    background_tasks: BackgroundTasks,
     handler: AdminHandler = Depends(AdminHandler),
 ):
-    message = await handler.put_report(request)
+    message = await handler.put_report(request, background_tasks)
     return {"message_id": message.message_id}

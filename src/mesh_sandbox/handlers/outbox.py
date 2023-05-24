@@ -5,7 +5,7 @@ from uuid import uuid4
 
 from dateutil.parser import isoparse
 from dateutil.relativedelta import relativedelta
-from fastapi import Depends, HTTPException, Request
+from fastapi import BackgroundTasks, Depends, HTTPException, Request
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 
@@ -72,6 +72,7 @@ class OutboxHandler:
 
     async def send_message(
         self,
+        background_tasks: BackgroundTasks,
         request: Request,
         sender_mailbox: Mailbox,
         mex_headers: MexHeaders,
@@ -144,10 +145,7 @@ class OutboxHandler:
         if len(body) == 0:
             raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="MissingDataFile")
 
-        if message.status == MessageStatus.ACCEPTED:
-            message.file_size = len(body)
-
-        await self.store.send_message(message, body)
+        await self.store.send_message(message, body, background_tasks)
 
         self.logger.info(
             (
@@ -161,6 +159,7 @@ class OutboxHandler:
 
     async def send_chunk(  # pylint: disable=too-many-locals
         self,
+        background_tasks: BackgroundTasks,
         request: Request,
         sender_mailbox: Mailbox,
         message_id: str,
@@ -206,12 +205,12 @@ class OutboxHandler:
                 message_id=message_id,
             )
 
-        await self.store.receive_chunk(message, chunk_number, await request.body())
+        await self.store.receive_chunk(message, chunk_number, await request.body(), background_tasks)
 
         if chunk_number < message.total_chunks:
             return upload_chunk_response(message, chunk_number, accepts_api_version)
 
-        await self.store.accept_message(message)
+        await self.store.accept_message(message, background_tasks)
 
         return upload_chunk_response(message, chunk_number, accepts_api_version)
 

@@ -27,7 +27,7 @@ def test_send_receive_chunked_message():
 
         sent_payload = b"a" * 1000
 
-        message_id = sender.send_message(_CANNED_MAILBOX2, sent_payload, workflow_id=workflow_id)
+        message_id = sender.send_message(_CANNED_MAILBOX2, sent_payload, workflow_id=workflow_id, subject="change me")
 
         assert message_id
 
@@ -44,3 +44,6 @@ def test_send_receive_chunked_message():
             message.acknowledge()
             message_ids = recipient.list_messages()
             assert message_ids == []
+
+            # test that plugin is loaded and is able to edit the message ( though this wouldn't be saved in file mode )
+            assert message.subject == "plugin message from file"  # pylint: disable=no-member

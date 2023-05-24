@@ -1,7 +1,8 @@
+import logging
 from abc import ABC, abstractmethod
 from typing import Callable, NamedTuple, Optional
 
-from fastapi import HTTPException, status
+from fastapi import BackgroundTasks, HTTPException, status
 
 from ..common import EnvConfig, constants, generate_cipher_text
 from ..models.mailbox import Mailbox
@@ -72,8 +73,9 @@ class Store(ABC):
 
     supports_reset = False
 
-    def __init__(self, config: EnvConfig):
+    def __init__(self, config: EnvConfig, logger: logging.Logger):
         self.config = config
+        self.logger = logger
 
     def get_mailboxes_data_dir(self) -> str:
         raise NotImplementedError()
@@ -142,19 +144,19 @@ class Store(ABC):
         return mailbox
 
     @abstractmethod
-    async def send_message(self, message: Message, body: Optional[bytes] = None):
+    async def send_message(self, message: Message, body: bytes, background_tasks: BackgroundTasks):
         pass
 
     @abstractmethod
-    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes):
+    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes, background_tasks: BackgroundTasks):
         pass
 
     @abstractmethod
-    async def accept_message(self, message: Message):
+    async def accept_message(self, message: Message, background_tasks: BackgroundTasks):
         pass
 
     @abstractmethod
-    async def acknowledge_message(self, message: Message):
+    async def acknowledge_message(self, message: Message, background_tasks: BackgroundTasks):
         pass
 
     @abstractmethod

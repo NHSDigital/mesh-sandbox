@@ -1,6 +1,15 @@
 from typing import Optional, cast
 
-from fastapi import APIRouter, Depends, Header, Path, Query, Request, Response
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    Header,
+    Path,
+    Query,
+    Request,
+    Response,
+)
 from starlette import status
 
 from ..common import MESH_MEDIA_TYPES
@@ -98,13 +107,14 @@ async def list_messages(
     openapi_extra={"spec_order": 220},
 )
 async def acknowledge_message(
+    background_tasks: BackgroundTasks,
     request: Request,
     message_id: str = Depends(normalise_message_id_path),
     accepts_api_version: int = Depends(get_accepts_api_version),
     handler: InboxHandler = Depends(InboxHandler),
 ):
     return await handler.acknowledge_message(
-        cast(Mailbox, request.state.authorised_mailbox), message_id, accepts_api_version
+        background_tasks, cast(Mailbox, request.state.authorised_mailbox), message_id, accepts_api_version
     )
 
 

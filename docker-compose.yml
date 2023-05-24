@@ -4,6 +4,7 @@ version: '3.9'
 services:
 
   mesh_sandbox:
+    container_name: mesh_sandbox
     build: ./
     ports:
       - "8700:443"
@@ -21,6 +22,7 @@ services:
     volumes:
       # mount a different mailboxes.jsonl to pre created mailboxes
       - ./src/mesh_sandbox/store/data/mailboxes.jsonl:/app/mesh_sandbox/store/data/mailboxes.jsonl:ro
+      - ./src/mesh_sandbox/test_plugin:/app/mesh_sandbox/plugins:ro
       # you can mount a directory if you want access the stored messages
 #      - ./messages:/tmp/mesh_store
       # you can also mount different server cert and key if using ssl and you need a trusted certificate
