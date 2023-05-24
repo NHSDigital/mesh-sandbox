@@ -1312,7 +1312,7 @@ testing = ["big-O", "flake8 (<5)", "jaraco.functools", "jaraco.itertools", "more
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "25e4329cb81052285814a83e5949a567b614cd0214da29058320add58d35ae02"
+content-hash = "82908918aa7f0fbc33133a1f40ea406062e3888b00836d46b0bdbd6b553b1da8"
 
 [metadata.files]
 anyio = [
