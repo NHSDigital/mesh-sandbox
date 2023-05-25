@@ -99,7 +99,7 @@ class InboxHandler:
             Headers.Mex_MessageID: message.message_id,
             Headers.Content_Encoding: message.metadata.content_encoding,
             **InboxHandler._get_status_headers(message),
-            Headers.Mex_Content_Compressed: "Y" if message.metadata.is_compressed else None,
+            Headers.Mex_Content_Compressed: "Y" if message.metadata.compressed else None,
             Headers.Mex_Content_Encrypted: "Y" if message.metadata.encrypted else None,
             Headers.Mex_Content_Checksum: message.metadata.checksum,
         }

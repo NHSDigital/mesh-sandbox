@@ -57,7 +57,7 @@ class MexHeaders(NamedTuple):
             "mex_partnerid": message.metadata.partner_id,
             "mex_filename": message.metadata.file_name,
             "mex_content_encrypted": message.metadata.encrypted,
-            "mex_content_compressed": message.metadata.is_compressed,
+            "mex_content_compressed": message.metadata.compressed,
             "mex_content_checksum": message.metadata.checksum,
         }
 
