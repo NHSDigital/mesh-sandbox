@@ -40,7 +40,7 @@ class MessageMetadata:
     partner_id: Optional[str] = field(default=None)
     checksum: Optional[str] = field(default=None)
     encrypted: Optional[bool] = field(default=None)
-    is_compressed: Optional[bool] = field(default=None)
+    compressed: Optional[bool] = field(default=None)
     etag: Optional[str] = field(default=None)
     last_modified: Optional[str] = field(default=None)
 

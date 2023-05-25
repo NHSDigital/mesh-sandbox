@@ -137,7 +137,7 @@ class OutboxHandler:
                 partner_id=mex_headers.mex_partnerid,
                 checksum=mex_headers.mex_content_checksum,
                 encrypted=strtobool(mex_headers.mex_content_encrypted),
-                is_compressed=strtobool(mex_headers.mex_content_compressed),
+                compressed=strtobool(mex_headers.mex_content_compressed),
             ),
         )
 

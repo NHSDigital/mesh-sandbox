@@ -127,7 +127,7 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
         return TrackingV1(
             checksum=message.metadata.checksum or _EMPTY,
             chunkCount=message.total_chunks,
-            compressFlag="Y" if message.metadata.is_compressed else _EMPTY,
+            compressFlag="Y" if message.metadata.compressed else _EMPTY,
             contentEncoding=message.metadata.content_encoding,
             downloadTimestamp=_format_timestamp(message.status_timestamp(MessageStatus.ACKNOWLEDGED)),
             dtsId=message.message_id,
@@ -137,7 +137,7 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
             failureDiagnostic=failure_description,
             fileName=message.metadata.file_name or f"{message.message_id}.dat",
             fileSize=message.file_size,
-            isCompressed="Y" if message.metadata.is_compressed else _EMPTY,
+            isCompressed="Y" if message.metadata.compressed else _EMPTY,
             linkedMsgId=error_event.linked_message_id if error_event else None,
             localId=message.metadata.local_id,
             meshRecipientOdsCode=message.recipient.ods_code,
