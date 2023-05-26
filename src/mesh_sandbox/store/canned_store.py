@@ -1,8 +1,6 @@
-import asyncio
 import json
 import logging
 import os
-import threading
 from collections import defaultdict
 from datetime import datetime
 from json import JSONDecodeError
@@ -10,7 +8,6 @@ from typing import Callable, Optional, cast
 from weakref import WeakValueDictionary
 
 from dateutil.relativedelta import relativedelta
-from fastapi import BackgroundTasks
 
 from ..common import EnvConfig
 from ..models.mailbox import Mailbox
@@ -18,6 +15,10 @@ from ..models.message import Message, MessageStatus, MessageType
 from ..models.workflow import Workflow
 from .base import Store
 from .serialisation import deserialise_model
+
+
+def _accepted_messages(msg: Message) -> bool:
+    return msg.status == MessageStatus.ACCEPTED
 
 
 class CannedStore(Store):
@@ -31,8 +32,6 @@ class CannedStore(Store):
         self._config = config
         self._canned_data_dir = os.path.join(os.path.dirname(__file__), "data")
         self._mailboxes_data_dir = self.get_mailboxes_data_dir()
-        self._sync_lock = threading.Lock()
-        self._lock: Optional[asyncio.Lock] = None
         self._filter_expired = filter_expired
         super().__init__(self._config, logger)
 
@@ -53,18 +52,6 @@ class CannedStore(Store):
         }
         self._fill_boxes()
         self.messages = cast(dict[str, Message], WeakValueDictionary(self.messages))
-
-    @property
-    def lock(self):
-
-        if self._lock is not None:
-            return self._lock
-
-        with self._sync_lock:
-            if self._lock is not None:
-                return self._lock
-            self._lock = asyncio.Lock()
-            return self._lock
 
     def _fill_boxes(self):
         for message in self.messages.values():
@@ -205,25 +192,40 @@ class CannedStore(Store):
         if not mailbox:
             return None
 
-        mailbox.inbox_count = len(await self.get_accepted_inbox_messages(mailbox_id))
+        mailbox.inbox_count = len(await self.get_inbox_messages(mailbox_id, _accepted_messages))
         if accessed:
             mailbox.last_accessed = datetime.utcnow()
         return mailbox
 
-    async def send_message(self, message: Message, body: bytes, background_tasks: BackgroundTasks):
-        pass
-
-    async def accept_message(self, message: Message, background_tasks: BackgroundTasks):
-        pass
-
-    async def acknowledge_message(self, message: Message, background_tasks: BackgroundTasks):
-        pass
-
-    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes, background_tasks: BackgroundTasks):
-        pass
-
     async def get_message(self, message_id: str) -> Optional[Message]:
         return self.messages.get(message_id)
+
+    async def get_file_size(self, message: Message) -> int:
+        return sum(len(chunk or b"") for chunk in self.chunks.get(message.message_id, []))
+
+    async def add_to_outbox(self, message: Message):
+        pass
+
+    async def add_to_inbox(self, message: Message):
+        pass
+
+    async def save_message(self, message: Message):
+        raise NotImplementedError()
+
+    async def get_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
+        parts = self.chunks.get(message.message_id, [])
+        if not parts or len(parts) < chunk_number:
+            return None
+        return parts[chunk_number - 1]
+
+    async def save_chunk(self, message: Message, chunk_number: int, chunk: bytes):
+        raise NotImplementedError()
+
+    async def reset(self):
+        raise NotImplementedError()
+
+    async def reset_mailbox(self, mailbox_id: str):
+        raise NotImplementedError()
 
     async def get_inbox_messages(
         self, mailbox_id: str, predicate: Optional[Callable[[Message], bool]] = None
@@ -239,12 +241,6 @@ class CannedStore(Store):
 
     async def get_by_local_id(self, mailbox_id: str, local_id: str) -> list[Message]:
         return self.local_ids.get(mailbox_id, {}).get(local_id, [])
-
-    async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
-        parts = self.chunks.get(message.message_id, [])
-        if not parts or len(parts) < chunk_number:
-            return None
-        return parts[chunk_number - 1]
 
     async def lookup_by_ods_code_and_workflow_id(self, ods_code: str, workflow_id: str) -> list[Mailbox]:
         return self.endpoints.get(f"{ods_code}/{workflow_id}", [])

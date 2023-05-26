@@ -3,8 +3,8 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, Depends, HTTPException, status
 
-from ..common import EnvConfig
-from ..dependencies import get_env_config, get_store
+from ..common.messaging import Messaging
+from ..dependencies import get_messaging
 from ..models.message import (
     Message,
     MessageEvent,
@@ -13,35 +13,33 @@ from ..models.message import (
     MessageStatus,
     MessageType,
 )
-from ..store.base import Store
 from ..views.admin import PutReportRequest
 
 
 class AdminHandler:
-    def __init__(self, config: EnvConfig = Depends(get_env_config), store: Store = Depends(get_store)):
-        self.config = config
-        self.store = store
+    def __init__(self, messaging: Messaging = Depends(get_messaging)):
+        self.messaging = messaging
 
     async def reset(self, mailbox_id: Optional[str] = None):
 
-        if not self.store.supports_reset:
+        if self.messaging.readonly:
             raise HTTPException(
                 status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
-                detail=f"reset not supported for {self.config.store_mode} store mode",
+                detail="reset not supported for current store mode",
             )
 
         if not mailbox_id:
-            await self.store.reset()
+            await self.messaging.reset()
             return
 
-        mailbox = await self.store.get_mailbox(mailbox_id, accessed=False)
+        mailbox = await self.messaging.get_mailbox(mailbox_id, accessed=False)
         if not mailbox:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mailbox does not exist")
 
-        await self.store.reset_mailbox(mailbox.mailbox_id)
+        await self.messaging.reset_mailbox(mailbox.mailbox_id)
 
     async def put_report(self, request: PutReportRequest, background_tasks: BackgroundTasks) -> Message:
-        recipient = await self.store.get_mailbox(request.mailbox_id, accessed=False)
+        recipient = await self.messaging.get_mailbox(request.mailbox_id, accessed=False)
         if not recipient:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mailbox does not exist")
 
@@ -85,6 +83,6 @@ class AdminHandler:
             ),
         )
 
-        await self.store.send_message(message, b"", background_tasks)
+        await self.messaging.send_message(message=message, body=b"", background_tasks=background_tasks)
 
         return message

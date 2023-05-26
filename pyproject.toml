@@ -39,7 +39,6 @@ pyOpenSSL = "^23.0.0"
 types-pyOpenSSL = "^23.0.0.2"
 lxml = "^4.9.1"
 types-lxml = "^2022.11.8"
-python-semantic-release = "^7.32.2"
 
 [tool.poetry.group.local.dependencies]
 ipython = "^8.11.0"

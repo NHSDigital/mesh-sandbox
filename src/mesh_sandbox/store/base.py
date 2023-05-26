@@ -1,173 +1,59 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Callable, NamedTuple, Optional
+from typing import Callable, Optional
 
-from fastapi import BackgroundTasks, HTTPException, status
-
-from ..common import EnvConfig, constants, generate_cipher_text
+from ..common import EnvConfig
 from ..models.mailbox import Mailbox
-from ..models.message import Message, MessageStatus
-
-
-class AuthoriseHeaderParts(NamedTuple):
-    scheme: str
-    mailbox_id: str
-    nonce: str
-    nonce_count: str
-    timestamp: str
-    cipher_text: str
-    parts: int
-
-    def get_reasons_invalid(self) -> list[str]:
-        reasons = []
-        if self.parts != 5:
-            reasons.append(f"invalid num header parts: {self.parts}")
-
-        if not self.nonce_count.isdigit():
-            reasons.append("nonce count is not digits")
-
-        if self.scheme not in (MESH_AUTH_SCHEME, ""):
-            reasons.append("invalid auth scheme or mailbox_id contains a space")
-
-        if " " in self.mailbox_id:
-            reasons.append("mailbox_id contains a space")
-
-        return reasons
-
-
-_DEFAULT_PARTS_IF_MISSING = ["" for _ in range(5)]
-MESH_AUTH_SCHEME = "NHSMESH"
-
-
-def try_parse_authorisation_token(auth_token: str) -> Optional[AuthoriseHeaderParts]:
-
-    if not auth_token:
-        return None
-
-    auth_token = auth_token.strip()
-
-    scheme = MESH_AUTH_SCHEME if auth_token.upper().startswith(MESH_AUTH_SCHEME) else ""
-
-    if scheme:
-        auth_token = auth_token[len(MESH_AUTH_SCHEME) + 1 :]
-
-    auth_token_parts = auth_token.split(":")
-
-    num_parts = len(auth_token_parts)
-    auth_token_parts = auth_token_parts + _DEFAULT_PARTS_IF_MISSING
-
-    header_parts = AuthoriseHeaderParts(
-        scheme=scheme,
-        mailbox_id=auth_token_parts[0],
-        nonce=auth_token_parts[1],
-        nonce_count=auth_token_parts[2],
-        timestamp=auth_token_parts[3],
-        cipher_text=auth_token_parts[4],
-        parts=num_parts,
-    )
-
-    return header_parts
+from ..models.message import Message
 
 
 class Store(ABC):
 
-    supports_reset = False
+    readonly = True
 
     def __init__(self, config: EnvConfig, logger: logging.Logger):
         self.config = config
         self.logger = logger
 
-    def get_mailboxes_data_dir(self) -> str:
-        raise NotImplementedError()
-
-    async def reset(self):
-        raise NotImplementedError()
-
-    async def reset_mailbox(self, mailbox_id: str):
-        raise NotImplementedError()
-
     @abstractmethod
     async def get_mailbox(self, mailbox_id: str, accessed: bool = False) -> Optional[Mailbox]:
-        pass
-
-    async def _validate_auth_token(self, mailbox_id: str, authorization: str) -> Optional[Mailbox]:
-
-        if self.config.auth_mode == "none":
-            return await self.get_mailbox(mailbox_id, accessed=True)
-
-        authorization = (authorization or "").strip()
-        if not authorization:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_READING_AUTH_HEADER)
-
-        header_parts = try_parse_authorisation_token(authorization)
-        if not header_parts:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_READING_AUTH_HEADER)
-
-        if header_parts.mailbox_id != mailbox_id:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_MAILBOX_TOKEN_MISMATCH)
-
-        if self.config.auth_mode == "canned":
-
-            if header_parts.nonce.upper() != "VALID":
-                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_INVALID_AUTH_TOKEN)
-            return await self.get_mailbox(mailbox_id, accessed=True)
-
-        if header_parts.get_reasons_invalid():
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_READING_AUTH_HEADER)
-
-        mailbox = await self.get_mailbox(mailbox_id, accessed=True)
-
-        if not mailbox:
-            return None
-
-        cypher_text = generate_cipher_text(
-            self.config.shared_key,
-            header_parts.mailbox_id,
-            mailbox.password,
-            header_parts.timestamp,
-            header_parts.nonce,
-            header_parts.nonce_count,
-        )
-
-        if header_parts.cipher_text != cypher_text:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_INVALID_AUTH_TOKEN)
-
-        return mailbox
-
-    async def authorise_mailbox(self, mailbox_id: str, authorization: str) -> Optional[Mailbox]:
-
-        mailbox = await self._validate_auth_token(mailbox_id, authorization)
-
-        if not mailbox:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_NO_MAILBOX_MATCHES)
-
-        return mailbox
-
-    @abstractmethod
-    async def send_message(self, message: Message, body: bytes, background_tasks: BackgroundTasks):
-        pass
-
-    @abstractmethod
-    async def receive_chunk(self, message: Message, chunk_number: int, chunk: bytes, background_tasks: BackgroundTasks):
-        pass
-
-    @abstractmethod
-    async def accept_message(self, message: Message, background_tasks: BackgroundTasks):
-        pass
-
-    @abstractmethod
-    async def acknowledge_message(self, message: Message, background_tasks: BackgroundTasks):
         pass
 
     @abstractmethod
     async def get_message(self, message_id: str) -> Optional[Message]:
         pass
 
-    async def get_accepted_inbox_messages(self, mailbox_id: str) -> list[Message]:
-        def accepted_messages(msg: Message) -> bool:
-            return msg.status == MessageStatus.ACCEPTED
+    @abstractmethod
+    async def save_message(self, message: Message):
+        pass
 
-        return await self.get_inbox_messages(mailbox_id, accepted_messages)
+    @abstractmethod
+    async def get_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
+        pass
+
+    @abstractmethod
+    async def save_chunk(self, message: Message, chunk_number: int, chunk: bytes):
+        pass
+
+    @abstractmethod
+    async def add_to_outbox(self, message: Message):
+        pass
+
+    @abstractmethod
+    async def add_to_inbox(self, message: Message):
+        pass
+
+    @abstractmethod
+    async def get_file_size(self, message: Message) -> int:
+        pass
+
+    @abstractmethod
+    async def reset(self):
+        pass
+
+    @abstractmethod
+    async def reset_mailbox(self, mailbox_id: str):
+        pass
 
     @abstractmethod
     async def get_inbox_messages(
@@ -181,10 +67,6 @@ class Store(ABC):
 
     @abstractmethod
     async def get_by_local_id(self, mailbox_id: str, local_id: str) -> list[Message]:
-        pass
-
-    @abstractmethod
-    async def retrieve_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
         pass
 
     @abstractmethod
