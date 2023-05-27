@@ -8,20 +8,14 @@ from dateutil.tz import tzutc
 from fastapi import BackgroundTasks, Depends, HTTPException, Response, status
 from starlette.responses import JSONResponse
 
-from ..common import (
-    MESH_MEDIA_TYPES,
-    EnvConfig,
-    constants,
-    exclude_none_json_encoder,
-    index_of,
-)
+from ..common import MESH_MEDIA_TYPES, constants, exclude_none_json_encoder, index_of
 from ..common.constants import Headers
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
-from ..dependencies import get_env_config, get_fernet, get_store
+from ..common.messaging import Messaging
+from ..dependencies import get_fernet, get_messaging
 from ..models.mailbox import Mailbox
 from ..models.message import Message, MessageDeliveryStatus, MessageStatus, MessageType
-from ..store.base import Store
 from ..views.inbox import InboxV1, InboxV2, get_rich_inbox_view
 
 HTTP_DATETIME_FORMAT = "%a, %d %b %Y %H:%M:%S %Z"
@@ -39,12 +33,11 @@ def to_http_datetime(maybe_naive_dt: datetime, as_timezone: Optional[tzinfo] = N
 class InboxHandler:
     def __init__(
         self,
-        config: EnvConfig = Depends(get_env_config),
-        store: Store = Depends(get_store),
+        messaging: Messaging = Depends(get_messaging),
         fernet: FernetHelper = Depends(get_fernet),
     ):
-        self.config = config
-        self.store = store
+        self.messaging = messaging
+
         self.fernet = fernet
 
     @staticmethod
@@ -115,7 +108,7 @@ class InboxHandler:
 
     async def head_message(self, mailbox: Mailbox, message_id: str):
 
-        message = await self.store.get_message(message_id)
+        message = await self.messaging.get_message(message_id)
 
         if not message:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
@@ -166,7 +159,7 @@ class InboxHandler:
         chunk_number: int = 1,
         accepts_api_version: int = 1,
     ):
-        message = await self.store.get_message(message_id)
+        message = await self.messaging.get_message(message_id)
 
         if not message:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
@@ -187,7 +180,7 @@ class InboxHandler:
 
         status_code = status.HTTP_200_OK if chunk_number >= message.total_chunks else status.HTTP_206_PARTIAL_CONTENT
 
-        chunk = await self.store.retrieve_chunk(message, chunk_number)
+        chunk = await self.messaging.get_chunk(message, chunk_number)
 
         if chunk is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
@@ -218,7 +211,7 @@ class InboxHandler:
         self, background_tasks: BackgroundTasks, mailbox: Mailbox, message_id: str, accepts_api_version: int = 1
     ):
 
-        message = await self.store.get_message(message_id)
+        message = await self.messaging.get_message(message_id)
         if not message:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
 
@@ -234,7 +227,7 @@ class InboxHandler:
         if message.status != MessageStatus.ACCEPTED:
             return response()
 
-        await self.store.acknowledge_message(message, background_tasks)
+        await self.messaging.acknowledge_message(message=message, background_tasks=background_tasks)
 
         return response()
 
@@ -248,9 +241,9 @@ class InboxHandler:
     ) -> tuple[list[Message], Optional[dict]]:
 
         messages = (
-            await self.store.get_inbox_messages(mailbox.mailbox_id)
+            await self.messaging.get_inbox_messages(mailbox.mailbox_id)
             if rich
-            else await self.store.get_accepted_inbox_messages(mailbox.mailbox_id)
+            else await self.messaging.get_accepted_inbox_messages(mailbox.mailbox_id)
         )
 
         if message_filter:

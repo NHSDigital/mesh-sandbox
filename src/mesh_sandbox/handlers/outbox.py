@@ -9,12 +9,13 @@ from fastapi import BackgroundTasks, Depends, HTTPException, Request
 from fastapi import status as http_status
 from fastapi.responses import JSONResponse
 
-from ..common import EnvConfig, constants, index_of, strtobool
+from ..common import constants, index_of, strtobool
 from ..common.exceptions import MessagingException
 from ..common.fernet import FernetHelper
 from ..common.handler_helpers import get_handler_uri
+from ..common.messaging import Messaging
 from ..common.mex_headers import MexHeaders
-from ..dependencies import get_env_config, get_fernet, get_logger, get_store
+from ..dependencies import get_fernet, get_logger, get_messaging
 from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
@@ -24,7 +25,6 @@ from ..models.message import (
     MessageStatus,
     MessageType,
 )
-from ..store.base import Store
 from ..views.outbox import (
     get_rich_outbox_view,
     send_message_response,
@@ -60,13 +60,11 @@ class OutboxHandler:
     # pylint: disable=too-many-arguments
     def __init__(
         self,
-        config: EnvConfig = Depends(get_env_config),
-        store: Store = Depends(get_store),
+        messaging: Messaging = Depends(get_messaging),
         fernet: FernetHelper = Depends(get_fernet),
         logger: logging.Logger = Depends(get_logger),
     ):
-        self.config = config
-        self.store = store
+        self.messaging = messaging
         self.fernet = fernet
         self.logger = logger
 
@@ -96,7 +94,7 @@ class OutboxHandler:
                 status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail=constants.ERROR_INVALID_HEADER_CHUNKS
             )
 
-        recipient = await self.store.get_mailbox(mex_headers.mex_to)
+        recipient = await self.messaging.get_mailbox(mex_headers.mex_to)
         if not recipient:
             raise HTTPException(
                 status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail=constants.ERROR_UNREGISTERED_RECIPIENT
@@ -145,7 +143,7 @@ class OutboxHandler:
         if len(body) == 0:
             raise HTTPException(status_code=http_status.HTTP_417_EXPECTATION_FAILED, detail="MissingDataFile")
 
-        await self.store.send_message(message, body, background_tasks)
+        await self.messaging.send_message(message=message, body=body, background_tasks=background_tasks)
 
         self.logger.info(
             (
@@ -184,7 +182,7 @@ class OutboxHandler:
                 detail=constants.ERROR_INVALID_HEADER_CHUNKS,
                 message_id=message_id,
             )
-        message: Optional[Message] = await self.store.get_message(message_id)
+        message: Optional[Message] = await self.messaging.get_message(message_id)
 
         if not message:
             raise HTTPException(status_code=http_status.HTTP_404_NOT_FOUND)
@@ -205,12 +203,18 @@ class OutboxHandler:
                 message_id=message_id,
             )
 
-        await self.store.receive_chunk(message, chunk_number, await request.body(), background_tasks)
+        chunk = await request.body()
+
+        await self.messaging.save_chunk(
+            message=message, chunk_number=chunk_number, chunk=chunk, background_tasks=background_tasks
+        )
 
         if chunk_number < message.total_chunks:
             return upload_chunk_response(message, chunk_number, accepts_api_version)
 
-        await self.store.accept_message(message, background_tasks)
+        file_size = await self.messaging.get_file_size(message)
+
+        await self.messaging.accept_message(message=message, file_size=file_size, background_tasks=background_tasks)
 
         return upload_chunk_response(message, chunk_number, accepts_api_version)
 
@@ -228,7 +232,7 @@ class OutboxHandler:
         if continue_from:
             last_key = self.fernet.decode_dict(continue_from)
 
-        messages: list[Message] = cast(list[Message], await self.store.get_outbox(mailbox.mailbox_id))
+        messages: list[Message] = cast(list[Message], await self.messaging.get_outbox(mailbox.mailbox_id))
 
         def message_filter(message: Message) -> bool:
             return message.created_timestamp > from_date

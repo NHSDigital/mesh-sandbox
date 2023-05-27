@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 from uvicorn import Config, Server  # type: ignore[import]
 
 from .api import app
-from .dependencies import get_env_config, get_store
+from .dependencies import get_env_config, get_messaging, get_store
 from .tests.helpers import temp_env_vars
 
 
@@ -20,6 +20,7 @@ def setup():
 
     get_store.cache_clear()
     get_env_config.cache_clear()
+    get_messaging.cache_clear()
 
     with temp_env_vars(
         ENV="local",

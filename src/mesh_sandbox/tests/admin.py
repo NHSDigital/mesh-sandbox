@@ -17,7 +17,7 @@ from mesh_sandbox.tests.mesh_api_helpers import (
 
 from ..common.constants import Headers
 from ..models.message import MessageStatus, MessageType
-from ..views.admin import PutReportRequest
+from ..views.admin import AddMessageEventRequest, CreateReportRequest
 from .helpers import generate_auth_token, temp_env_vars
 
 
@@ -241,7 +241,7 @@ def test_put_report_in_inbox(app: TestClient, tmp_path: str):
 
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
 
-        request = PutReportRequest(
+        request = CreateReportRequest(
             mailbox_id=recipient,
             status=MessageStatus.ERROR,
             workflow_id=uuid4().hex,
@@ -298,3 +298,64 @@ def test_put_report_in_inbox(app: TestClient, tmp_path: str):
         )
         messages = res.json().get("messages", [])
         assert not messages
+
+
+def test_add_message_event(app: TestClient, tmp_path: str):
+
+    recipient = _CANNED_MAILBOX1
+
+    with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
+
+        create_report_request = CreateReportRequest(
+            mailbox_id=recipient,
+            status=MessageStatus.ERROR,
+            workflow_id=uuid4().hex,
+            code="21",
+            description="my error",
+            subject=f"my subject {uuid4().hex}",
+            local_id=f"my local id {uuid4().hex}",
+            file_name=f"my filename {uuid4().hex}",
+            linked_message_id=uuid4().hex,
+        )
+
+        res = app.post("/messageexchange/report", json=create_report_request.dict())
+        assert res.status_code == status.HTTP_200_OK
+
+        result = res.json()
+        assert result
+        message_id = result["message_id"]
+        assert message_id
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        messages = res.json().get("messages", [])
+        assert messages
+        assert messages[0] == message_id
+
+        res = app.put(
+            f"/messageexchange/{recipient}/inbox/{message_id}/status/acknowledged",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        assert res.status_code == status.HTTP_200_OK
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        messages = res.json().get("messages", [])
+        assert not messages
+
+        # move the message to accepted again
+        add_event_request = AddMessageEventRequest(status=MessageStatus.ACCEPTED)
+
+        res = app.post(f"/messageexchange/message/{message_id}/event", json=add_event_request.dict())
+        assert res.status_code == status.HTTP_200_OK
+
+        res = app.get(
+            f"/messageexchange/{recipient}/inbox",
+            headers={Headers.Authorization: generate_auth_token(recipient)},
+        )
+        messages = res.json().get("messages", [])
+        assert messages == [message_id]

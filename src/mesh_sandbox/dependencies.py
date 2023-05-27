@@ -8,6 +8,7 @@ from fastapi import Depends, Header, HTTPException, Path, Query, Request
 from .common import EnvConfig
 from .common.constants import Headers
 from .common.fernet import FernetHelper
+from .common.messaging import Messaging
 from .store.base import Store
 from .store.canned_store import CannedStore
 from .store.file_store import FileStore
@@ -133,6 +134,11 @@ def get_store() -> Store:
 
 
 @lru_cache()
+def get_messaging() -> Messaging:
+    return Messaging(store=get_store())
+
+
+@lru_cache()
 def get_fernet() -> FernetHelper:
     return FernetHelper()
 
@@ -149,7 +155,6 @@ async def authorised_mailbox(
         ),
         default="",
     ),
-    store: Store = Depends(get_store),
+    messaging: Messaging = Depends(get_messaging),
 ):
-
-    request.state.authorised_mailbox = await store.authorise_mailbox(mailbox_id, authorization)
+    request.state.authorised_mailbox = await messaging.authorise_mailbox(mailbox_id, authorization)
