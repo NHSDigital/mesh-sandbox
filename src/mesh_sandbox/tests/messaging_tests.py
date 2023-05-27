@@ -57,7 +57,7 @@ async def test_canned_messaging_does_not_raise_no_bgt(message: Message):
     with temp_env_vars(STORE_MODE="canned"):
         messaging = get_messaging()
         messaging.register_plugin(TestPlugin)
-        await messaging._save_message(message=message)  # pylint: disable=protected-access
+        await messaging.save_message(message=message)
 
     assert len(calls) == 1
     assert calls[0][0] == "before_save_message"
@@ -77,9 +77,7 @@ async def test_canned_messaging_does_not_raise_with_bgt(message: Message, backgr
     with temp_env_vars(STORE_MODE="canned"):
         messaging = get_messaging()
         messaging.register_plugin(Test2Plugin)
-        await messaging._save_message(  # pylint: disable=protected-access
-            message=message, background_tasks=background_tasks
-        )
+        await messaging.save_message(message=message, background_tasks=background_tasks)
 
     await background_tasks()
 
@@ -102,9 +100,7 @@ async def test_messaging_does_not_raise_with_bgt(message: Message, background_ta
     with temp_env_vars(STORE_MODE="memory"):
         messaging = get_messaging()
         messaging.register_plugin(Test2Plugin)
-        await messaging._save_message(  # pylint: disable=protected-access
-            message=message, background_tasks=background_tasks
-        )
+        await messaging.save_message(message=message, background_tasks=background_tasks)
 
     await background_tasks()
 
@@ -127,9 +123,7 @@ async def test_error_events_raised_with_bgt(message: Message, background_tasks: 
     with temp_env_vars(STORE_MODE="memory"):
         messaging = get_messaging()
         messaging.register_plugin(Test2Plugin)
-        await messaging._save_message(  # pylint: disable=protected-access
-            message=message, background_tasks=background_tasks
-        )
+        await messaging.save_message(message=message, background_tasks=background_tasks)
 
     await background_tasks()
 

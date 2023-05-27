@@ -204,10 +204,10 @@ class CannedStore(Store):
         return sum(len(chunk or b"") for chunk in self.chunks.get(message.message_id, []))
 
     async def add_to_outbox(self, message: Message):
-        pass
+        """does nothing on this readonly store..."""
 
     async def add_to_inbox(self, message: Message):
-        pass
+        """does nothing on this readonly store..."""
 
     async def save_message(self, message: Message):
         raise NotImplementedError()

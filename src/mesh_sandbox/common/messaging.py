@@ -2,7 +2,6 @@ import asyncio
 import importlib
 import inspect
 import pkgutil
-import threading
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import wraps
@@ -14,7 +13,7 @@ from starlette.background import BackgroundTasks
 
 from .. import plugins as plugins_ns
 from ..models.mailbox import Mailbox
-from ..models.message import Message, MessageEvent, MessageStatus
+from ..models.message import Message, MessageEvent, MessageStatus, MessageType
 from ..store.base import Store
 from . import constants, generate_cipher_text
 
@@ -121,22 +120,8 @@ class Messaging:
         self._plugin_registry: dict[str, list[type[_SandboxPlugin]]] = defaultdict(list)
         self._plugin_instances: dict[str, list[_SandboxPlugin]] = {}
         self._find_plugins(plugins_module)
-        self._sync_lock = threading.Lock()
-        self._lock: Optional[asyncio.Lock] = None
 
-    @property
-    def lock(self):
-
-        if self._lock is not None:
-            return self._lock
-
-        with self._sync_lock:
-            if self._lock is not None:
-                return self._lock
-            self._lock = asyncio.Lock()
-            return self._lock
-
-    class _OnEvent:
+    class _TriggersEvent:
         def __init__(self, event_name: str):
             self.event_name = event_name
 
@@ -216,7 +201,7 @@ class Messaging:
 
         msg_args = (
             f"plugin: {plugin_type.__name__} on_event expected args "
-            f"(event: str, event_args: dict, error = None) .. not loading"
+            f"(event: str, event_args: dict[str, Any], error: Exception = None) .. not loading"
         )
 
         if not on_event_args:
@@ -226,7 +211,7 @@ class Messaging:
         if not isinstance(inspect.getattr_static(plugin_type, "on_event"), staticmethod):
             on_event_args.pop(0)
 
-        if not len(on_event_args) in (2, 3):
+        if len(on_event_args) not in (2, 3):
             self.logger.warning(msg_args)
             return
 
@@ -258,79 +243,74 @@ class Messaging:
     def readonly(self) -> bool:
         return self.store.readonly
 
-    @_OnEvent(event_name="send_message")
+    @_TriggersEvent(event_name="send_message")
     async def send_message(self, message: Message, body: bytes, background_tasks: BackgroundTasks) -> Message:
 
-        async with self.lock:
+        if message.total_chunks > 0:
+            await self.save_chunk(message=message, chunk_number=1, chunk=body, background_tasks=background_tasks)
 
-            if message.total_chunks > 0:
-                await self._save_chunk(message=message, chunk_number=1, chunk=body, background_tasks=background_tasks)
+        if message.total_chunks == 1 or message.message_type == MessageType.REPORT:
+            await self.accept_message(message=message, file_size=len(body), background_tasks=background_tasks)
+        else:
+            await self.save_message(message=message, background_tasks=background_tasks)
 
-            await self.store.add_to_outbox(message)
-
-            if message.status != MessageStatus.ACCEPTED:
-                await self._save_message(message=message, background_tasks=background_tasks)
-            else:
-                await self._accept_message(message=message, background_tasks=background_tasks)
+        await self.store.add_to_outbox(message)
 
         return message
 
-    async def accept_message(self, message: Message, background_tasks: BackgroundTasks):
-        async with self.lock:
-            await self._accept_message(message=message, background_tasks=background_tasks)
+    @_TriggersEvent(event_name="accept_message")
+    @_IfNotReadonly()
+    async def accept_message(self, message: Message, file_size: int, background_tasks: BackgroundTasks):
 
-    @_OnEvent(event_name="acknowledge_message")
+        if message.status != MessageStatus.ACCEPTED:
+            message.events.insert(0, MessageEvent(status=MessageStatus.ACCEPTED))
+
+        message.file_size = file_size
+
+        await self.save_message(message=message, background_tasks=background_tasks)
+        await self.store.add_to_inbox(message)
+
+    @_TriggersEvent(event_name="acknowledge_message")
     @_IfNotReadonly()
     async def acknowledge_message(self, message: Message, background_tasks: BackgroundTasks) -> Message:
-        async with self.lock:
-            if message.status == MessageStatus.ACCEPTED:
-                message.events.insert(0, MessageEvent(status=MessageStatus.ACKNOWLEDGED))
-            await self._save_message(message=message, background_tasks=background_tasks)
+        if message.status != MessageStatus.ACCEPTED:
+            return message
+
+        message.events.insert(0, MessageEvent(status=MessageStatus.ACKNOWLEDGED))
+        await self.save_message(message=message, background_tasks=background_tasks)
 
         return message
 
-    async def send_chunk(self, message: Message, chunk_number: int, chunk: bytes, background_tasks: BackgroundTasks):
-        async with self.lock:
-            return await self._save_chunk(
-                message=message, chunk_number=chunk_number, chunk=chunk, background_tasks=background_tasks
-            )
+    async def add_message_event(
+        self, message: Message, event: MessageEvent, background_tasks: BackgroundTasks
+    ) -> Message:
 
-    @_OnEvent(event_name="save_chunk")
+        message.events.insert(0, event)
+        await self.save_message(message=message, background_tasks=background_tasks)
+
+        return message
+
+    @_TriggersEvent(event_name="save_chunk")
     @_IfNotReadonly()
-    async def _save_chunk(
+    async def save_chunk(
         self, message: Message, chunk_number: int, chunk: bytes, background_tasks: BackgroundTasks
     ):  # pylint: disable=unused-argument
         return await self.store.save_chunk(message=message, chunk_number=chunk_number, chunk=chunk)
 
-    @_OnEvent(event_name="save_message")
+    @_TriggersEvent(event_name="save_message")
     @_IfNotReadonly()
-    async def _save_message(
+    async def save_message(
         self, message: Message, background_tasks: Optional[BackgroundTasks] = None
     ):  # pylint: disable=unused-argument
         return await self.store.save_message(message)
 
-    @_OnEvent(event_name="accept_message")
-    @_IfNotReadonly()
-    async def _accept_message(
-        self, message: Message, background_tasks: BackgroundTasks
-    ):  # pylint: disable=unused-argument
-
-        if message.status != MessageStatus.ACCEPTED:
-            message.events.insert(0, MessageEvent(status=MessageStatus.ACCEPTED))
-        message.file_size = await self.store.get_file_size(message)
-
-        await self.store.add_to_inbox(message)
-        await self._save_message(message=message, background_tasks=background_tasks)
-
     @_IfNotReadonly()
     async def reset(self):
-        async with self.lock:
-            await self.store.reset()
+        await self.store.reset()
 
     @_IfNotReadonly()
     async def reset_mailbox(self, mailbox_id: str):
-        async with self.lock:
-            await self.store.reset_mailbox(mailbox_id=mailbox_id)
+        await self.store.reset_mailbox(mailbox_id=mailbox_id)
 
     async def get_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
         return await self.store.get_chunk(message=message, chunk_number=chunk_number)
@@ -413,3 +393,6 @@ class Messaging:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_NO_MAILBOX_MATCHES)
 
         return mailbox
+
+    async def get_file_size(self, message: Message) -> int:
+        return await self.store.get_file_size(message)

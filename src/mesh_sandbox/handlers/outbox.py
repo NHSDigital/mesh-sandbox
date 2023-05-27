@@ -203,12 +203,18 @@ class OutboxHandler:
                 message_id=message_id,
             )
 
-        await self.messaging.send_chunk(message, chunk_number, await request.body(), background_tasks)
+        chunk = await request.body()
+
+        await self.messaging.save_chunk(
+            message=message, chunk_number=chunk_number, chunk=chunk, background_tasks=background_tasks
+        )
 
         if chunk_number < message.total_chunks:
             return upload_chunk_response(message, chunk_number, accepts_api_version)
 
-        await self.messaging.accept_message(message, background_tasks)
+        file_size = await self.messaging.get_file_size(message)
+
+        await self.messaging.accept_message(message=message, file_size=file_size, background_tasks=background_tasks)
 
         return upload_chunk_response(message, chunk_number, accepts_api_version)
 

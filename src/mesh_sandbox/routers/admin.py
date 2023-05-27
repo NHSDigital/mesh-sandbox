@@ -1,8 +1,13 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 
-from ..dependencies import EnvConfig, get_env_config, normalise_mailbox_id_path
+from ..dependencies import (
+    EnvConfig,
+    get_env_config,
+    normalise_mailbox_id_path,
+    normalise_message_id_path,
+)
 from ..handlers.admin import AdminHandler
-from ..views.admin import PutReportRequest
+from ..views.admin import AddMessageEventRequest, CreateReportRequest
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -75,10 +80,32 @@ async def reset_mailbox(
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
 )
-async def put_report(
-    request: PutReportRequest,
+async def create_report(
+    new_report: CreateReportRequest,
     background_tasks: BackgroundTasks,
     handler: AdminHandler = Depends(AdminHandler),
 ):
-    message = await handler.put_report(request, background_tasks)
+    message = await handler.create_report(new_report, background_tasks)
     return {"message_id": message.message_id}
+
+
+@router.post(
+    "/admin/message/{message_id}/event",
+    summary=f"appends a status event to a given message, if exists. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+@router.post(
+    "/messageexchange/message/{message_id}/event",
+    summary=f"appends a status event to a given message, if exists. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+async def add_message_event(
+    new_event: AddMessageEventRequest,
+    background_tasks: BackgroundTasks,
+    message_id: str = Depends(normalise_message_id_path),
+    handler: AdminHandler = Depends(AdminHandler),
+):
+    await handler.add_message_event(message_id, new_event, background_tasks)
+    return Response()

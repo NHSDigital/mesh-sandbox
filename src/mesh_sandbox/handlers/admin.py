@@ -13,7 +13,7 @@ from ..models.message import (
     MessageStatus,
     MessageType,
 )
-from ..views.admin import PutReportRequest
+from ..views.admin import AddMessageEventRequest, CreateReportRequest
 
 
 class AdminHandler:
@@ -38,7 +38,7 @@ class AdminHandler:
 
         await self.messaging.reset_mailbox(mailbox.mailbox_id)
 
-    async def put_report(self, request: PutReportRequest, background_tasks: BackgroundTasks) -> Message:
+    async def create_report(self, request: CreateReportRequest, background_tasks: BackgroundTasks) -> Message:
         recipient = await self.messaging.get_mailbox(request.mailbox_id, accessed=False)
         if not recipient:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mailbox does not exist")
@@ -84,5 +84,25 @@ class AdminHandler:
         )
 
         await self.messaging.send_message(message=message, body=b"", background_tasks=background_tasks)
+
+        return message
+
+    async def add_message_event(
+        self, message_id: str, new_event: AddMessageEventRequest, background_tasks: BackgroundTasks
+    ):
+
+        message = await self.messaging.get_message(message_id)
+        if not message:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        event = MessageEvent(
+            status=new_event.status,
+            code=new_event.code,
+            event=new_event.event,
+            description=new_event.description,
+            linked_message_id=new_event.linked_message_id,
+        )
+
+        message = await self.messaging.add_message_event(message, event, background_tasks)
 
         return message
