@@ -32,7 +32,7 @@ def test_send_receive_chunked_message():
         assert message_id
 
         with MeshClient(
-            url=base_uri, mailbox=recipient_mailbox_id, password=_PASSWORD, shared_key=_SHARED_KEY
+            url=base_uri, mailbox=recipient_mailbox_id, password=_PASSWORD, shared_key=_SHARED_KEY, verify=False
         ) as recipient:
             message_ids = recipient.list_messages()
             assert message_ids == [message_id]
