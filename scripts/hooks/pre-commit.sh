@@ -5,8 +5,8 @@ PWD="$(pwd)"
 
 ps -ocommand= -p "${PPID}"
 
-if ! scripts/check-secrets.sh; then
-  echo "scripts/check-secrets.sh failed"
+if ! make check-secrets-all; then
+  echo "make check-secrets-all failed"
   exit 1
 fi
 
