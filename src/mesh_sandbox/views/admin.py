@@ -2,6 +2,7 @@ from typing import Optional
 
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
+from mesh_sandbox.models.mailbox import Mailbox
 from mesh_sandbox.models.message import MessageStatus
 
 
@@ -23,3 +24,23 @@ class AddMessageEventRequest(BaseModel):
     event: str = Field(description="error event (SEND/TRANSFER) etc)", default=None)
     description: str = Field(description="error description", default=None)
     linked_message_id: Optional[str] = Field(description="linked message id", default=None)
+
+
+class GetMailbox(BaseModel):
+    mailbox_id: str = Field(description="mailbox id")
+    mailbox_name: str = Field(description="mailbox name")
+    billing_entity: Optional[str] = Field(default=None, description="billing entity")
+    ods_code: str = Field(default="", description="ODS code")
+    org_code: str = Field(default="", description="Org (organisation) code")
+    org_name: str = Field(default="", description="Org (organisation) name")
+
+    @classmethod
+    def from_mailbox(cls, mailbox: Mailbox):
+        return cls(
+            mailbox_id=mailbox.mailbox_id,
+            mailbox_name=mailbox.mailbox_name,
+            billing_entity=mailbox.billing_entity,
+            ods_code=mailbox.ods_code,
+            org_code=mailbox.org_code,
+            org_name=mailbox.org_name,
+        )

@@ -7,7 +7,7 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.admin import AdminHandler
-from ..views.admin import AddMessageEventRequest, CreateReportRequest
+from ..views.admin import AddMessageEventRequest, CreateReportRequest, GetMailbox
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -109,3 +109,17 @@ async def add_message_event(
 ):
     await handler.add_message_event(message_id, new_event, background_tasks)
     return Response()
+
+
+@router.get(
+    "/admin/mailbox/{mailbox_id}",
+    summary=f"Get mailbox details. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+async def get_mailbox(
+    mailbox_id: str,
+    handler: AdminHandler = Depends(AdminHandler),
+) -> GetMailbox:
+    mailbox = await handler.get_mailbox(mailbox_id)
+    return mailbox

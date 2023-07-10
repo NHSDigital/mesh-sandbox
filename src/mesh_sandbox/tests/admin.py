@@ -17,7 +17,7 @@ from mesh_sandbox.tests.mesh_api_helpers import (
 
 from ..common.constants import Headers
 from ..models.message import MessageStatus, MessageType
-from ..views.admin import AddMessageEventRequest, CreateReportRequest
+from ..views.admin import AddMessageEventRequest, CreateReportRequest, GetMailbox
 from .helpers import generate_auth_token, temp_env_vars
 
 
@@ -359,3 +359,26 @@ def test_add_message_event(app: TestClient, tmp_path: str):
         )
         messages = res.json().get("messages", [])
         assert messages == [message_id]
+
+
+def test_get_mailbox_invalid_mailbox_returns_404(app: TestClient):
+
+    with temp_env_vars(STORE_MODE="canned"):
+
+        res = app.get("/admin/mailbox/NotAMailboxId")
+        assert res.status_code == status.HTTP_404_NOT_FOUND
+
+
+def test_get_mailbox_happy_path(app: TestClient):
+
+    with temp_env_vars(STORE_MODE="canned"):
+
+        res = app.get(f"/admin/mailbox/{_CANNED_MAILBOX1}")
+        assert res.status_code == status.HTTP_200_OK
+
+        get_mailbox = res.json()
+        assert isinstance(get_mailbox, GetMailbox)
+
+        assert get_mailbox.mailbox_id == _CANNED_MAILBOX1
+        assert get_mailbox.mailbox_name == "TODO"
+        # all props...
