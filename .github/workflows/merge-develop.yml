@@ -20,8 +20,14 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: install poetry
-        run: make install-poetry
+      - name: setup poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.5.1
+
+      - name: add poetry plugins
+        run: |
+          poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
         uses: actions/cache@v3
@@ -63,14 +69,14 @@ jobs:
           thresholdAll: 0.85
 
       - name: setup java
-        if: success() || failure()
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
         uses: actions/setup-java@v3
         with:
           distribution: "corretto"
           java-version: "17"
 
       - name: provision sonar-scanner
-        if: success() || failure()
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
         run: |
           export SONAR_VERSION="4.7.0.2747"
           wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
@@ -79,7 +85,7 @@ jobs:
           scripts/sonar_tests.py
 
       - name: run sonar scan
-        if: success() || failure()
+        if: github.actor != 'dependabot[bot]' && (success() || failure())
         run: |
           PATH="$PWD/sonar-scanner/bin:$PATH"
           sonar-scanner
@@ -101,7 +107,7 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
-    if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
+    if: github.repository == 'NHSDigital/mesh-sandbox'  && github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
         uses: actions/checkout@v3
@@ -118,8 +124,14 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: install poetry
-        run: make install-poetry
+      - name: setup poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.5.1
+
+      - name: add poetry plugins
+        run: |
+          poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: poetry build
         run: |
@@ -127,10 +139,6 @@ jobs:
           echo "RELEASE_VERSION=$version" >> $GITHUB_ENV
           git tag $version
           poetry build --format=wheel
-
-      - name: poetry config
-        run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
       - name: create release
         id: create_release
@@ -141,6 +149,10 @@ jobs:
         with:
           tag_name: ${{ env.RELEASE_VERSION }}
           release_name: ${{ env.RELEASE_VERSION }}
+
+      - name: poetry config
+        run: |
+          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
 
       - name: poetry publish
         run: poetry publish
