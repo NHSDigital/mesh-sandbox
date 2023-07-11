@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Response, status
 
 from ..dependencies import (
     EnvConfig,
@@ -7,7 +7,7 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.admin import AdminHandler
-from ..views.admin import AddMessageEventRequest, CreateReportRequest, GetMailbox
+from ..views.admin import AddMessageEventRequest, CreateReportRequest, MailboxDetails
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -118,8 +118,8 @@ async def add_message_event(
     response_model_exclude_none=True,
 )
 async def get_mailbox(
-    mailbox_id: str,
+    mailbox_id: str = Path(..., title="mailbox_id", description="The Mailbox ID of the mailbox to retrieve"),
     handler: AdminHandler = Depends(AdminHandler),
-) -> GetMailbox:
+) -> MailboxDetails:
     mailbox = await handler.get_mailbox(mailbox_id)
     return mailbox

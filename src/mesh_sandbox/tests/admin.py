@@ -17,7 +17,7 @@ from mesh_sandbox.tests.mesh_api_helpers import (
 
 from ..common.constants import Headers
 from ..models.message import MessageStatus, MessageType
-from ..views.admin import AddMessageEventRequest, CreateReportRequest, GetMailbox
+from ..views.admin import AddMessageEventRequest, CreateReportRequest
 from .helpers import generate_auth_token, temp_env_vars
 
 
@@ -377,8 +377,12 @@ def test_get_mailbox_happy_path(app: TestClient):
         assert res.status_code == status.HTTP_200_OK
 
         get_mailbox = res.json()
-        assert isinstance(get_mailbox, GetMailbox)
 
-        assert get_mailbox.mailbox_id == _CANNED_MAILBOX1
-        assert get_mailbox.mailbox_name == "TODO"
+        assert len(get_mailbox) == 6
+        assert get_mailbox["mailbox_id"] == _CANNED_MAILBOX1
+        assert get_mailbox["mailbox_name"] == "TESTMB1"
+        assert get_mailbox["billing_entity"] == "England"
+        assert get_mailbox["ods_code"] == "X26"
+        assert get_mailbox["org_code"] == "X26"
+        assert get_mailbox["org_name"] == ""
         # all props...

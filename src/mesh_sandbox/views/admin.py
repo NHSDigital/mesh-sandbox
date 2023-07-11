@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional
 
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
@@ -26,16 +28,16 @@ class AddMessageEventRequest(BaseModel):
     linked_message_id: Optional[str] = Field(description="linked message id", default=None)
 
 
-class GetMailbox(BaseModel):
+class MailboxDetails(BaseModel):
     mailbox_id: str = Field(description="mailbox id")
     mailbox_name: str = Field(description="mailbox name")
     billing_entity: Optional[str] = Field(default=None, description="billing entity")
     ods_code: str = Field(default="", description="ODS code")
-    org_code: str = Field(default="", description="Org (organisation) code")
-    org_name: str = Field(default="", description="Org (organisation) name")
+    org_code: str = Field(default="", description="Organisation code")
+    org_name: str = Field(default="", description="Organisation name")
 
     @classmethod
-    def from_mailbox(cls, mailbox: Mailbox):
+    def from_mailbox(cls, mailbox: Mailbox) -> MailboxDetails:
         return cls(
             mailbox_id=mailbox.mailbox_id,
             mailbox_name=mailbox.mailbox_name,
