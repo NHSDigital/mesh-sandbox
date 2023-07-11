@@ -377,7 +377,7 @@ def test_get_mailbox_happy_path(app: TestClient):
         assert res.status_code == status.HTTP_200_OK
 
         get_mailbox = res.json()
-        assert len(get_mailbox) == 6
+        assert len(get_mailbox) == 7
 
         assert get_mailbox["mailbox_id"] == _CANNED_MAILBOX1
         assert get_mailbox["mailbox_name"] == "TESTMB1"
@@ -385,3 +385,4 @@ def test_get_mailbox_happy_path(app: TestClient):
         assert get_mailbox["ods_code"] == "X26"
         assert get_mailbox["org_code"] == "X26"
         assert get_mailbox["org_name"] == ""
+        assert get_mailbox["active"] is True

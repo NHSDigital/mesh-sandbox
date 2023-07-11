@@ -35,6 +35,7 @@ class MailboxDetails(BaseModel):
     ods_code: str = Field(default="", description="ODS code")
     org_code: str = Field(default="", description="Organisation code")
     org_name: str = Field(default="", description="Organisation name")
+    active: bool = Field(default=True, description="Mailbox active flag")
 
     @classmethod
     def from_mailbox(cls, mailbox: Mailbox) -> MailboxDetails:
@@ -45,4 +46,5 @@ class MailboxDetails(BaseModel):
             ods_code=mailbox.ods_code,
             org_code=mailbox.org_code,
             org_name=mailbox.org_name,
+            active=mailbox.active,
         )

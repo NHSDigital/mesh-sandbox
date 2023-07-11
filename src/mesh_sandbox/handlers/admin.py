@@ -108,7 +108,7 @@ class AdminHandler:
 
         return message
 
-    async def get_mailbox(self, mailbox_id: str) -> MailboxDetails:
+    async def get_mailbox_details(self, mailbox_id: str) -> MailboxDetails:
         mailbox: Optional[Mailbox] = await self.messaging.get_mailbox(mailbox_id)
         if not mailbox:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

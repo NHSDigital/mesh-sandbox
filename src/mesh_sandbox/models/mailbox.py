@@ -13,6 +13,7 @@ class Mailbox:
     org_code: str = field(default="")
     org_name: str = field(default="")
     password: str = field(default="")
+    active: bool = field(default=True)
 
     _last_accessed: Optional[datetime] = None
     _inbox_count: Optional[int] = None

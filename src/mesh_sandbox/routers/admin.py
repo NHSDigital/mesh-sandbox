@@ -117,9 +117,9 @@ async def add_message_event(
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
 )
-async def get_mailbox(
+async def get_mailbox_details(
     mailbox_id: str = Path(..., title="mailbox_id", description="The Mailbox ID of the mailbox to retrieve"),
     handler: AdminHandler = Depends(AdminHandler),
 ) -> MailboxDetails:
-    mailbox = await handler.get_mailbox(mailbox_id)
+    mailbox = await handler.get_mailbox_details(mailbox_id)
     return mailbox
