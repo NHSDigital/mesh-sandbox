@@ -377,12 +377,11 @@ def test_get_mailbox_happy_path(app: TestClient):
         assert res.status_code == status.HTTP_200_OK
 
         get_mailbox = res.json()
-
         assert len(get_mailbox) == 6
+
         assert get_mailbox["mailbox_id"] == _CANNED_MAILBOX1
         assert get_mailbox["mailbox_name"] == "TESTMB1"
         assert get_mailbox["billing_entity"] == "England"
         assert get_mailbox["ods_code"] == "X26"
         assert get_mailbox["org_code"] == "X26"
         assert get_mailbox["org_name"] == ""
-        # all props...
