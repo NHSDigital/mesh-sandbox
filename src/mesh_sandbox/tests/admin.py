@@ -365,7 +365,7 @@ def test_get_mailbox_invalid_mailbox_returns_404(app: TestClient):
 
     with temp_env_vars(STORE_MODE="canned"):
 
-        res = app.get("/admin/mailbox/NotAMailboxId")
+        res = app.get("/mailbox/NotAMailboxId")
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -373,7 +373,7 @@ def test_get_mailbox_happy_path(app: TestClient):
 
     with temp_env_vars(STORE_MODE="canned"):
 
-        res = app.get(f"/admin/mailbox/{_CANNED_MAILBOX1}")
+        res = app.get(f"/mailbox/{_CANNED_MAILBOX1}")
         assert res.status_code == status.HTTP_200_OK
 
         get_mailbox = res.json()

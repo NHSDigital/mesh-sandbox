@@ -112,7 +112,7 @@ async def add_message_event(
 
 
 @router.get(
-    "/admin/mailbox/{mailbox_id}",
+    "/mailbox/{mailbox_id}",
     summary=f"Get mailbox details. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
