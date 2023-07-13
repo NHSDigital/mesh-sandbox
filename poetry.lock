@@ -830,13 +830,13 @@ files = [
 
 [[package]]
 name = "mesh-client"
-version = "2.1.1"
+version = "2.1.2"
 description = "Client for NHS England's MESH messaging system"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "Mesh-Client-2.1.1.tar.gz", hash = "sha256:4608241eb01032ebae667e786542980a1f783e995af01f3a3f63373d687813ff"},
-    {file = "Mesh_Client-2.1.1-py2.py3-none-any.whl", hash = "sha256:f9b7ae5d361c97e312e13d28cfc50ca2e5780e5c453ec51e936261a47dd821eb"},
+    {file = "Mesh-Client-2.1.2.tar.gz", hash = "sha256:dc8e508910fcce0074e32bc7b9759cc58336edf42bc7abef0e4ec4df1e018704"},
+    {file = "Mesh_Client-2.1.2-py2.py3-none-any.whl", hash = "sha256:f4ca127d2c022a23456efee80dd3f1aac6d2c14e69fcf7ba857b137123e31058"},
 ]
 
 [package.dependencies]
