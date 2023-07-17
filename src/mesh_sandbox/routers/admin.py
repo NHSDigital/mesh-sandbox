@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Response, status
 
 from ..dependencies import (
     EnvConfig,
@@ -7,7 +7,7 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.admin import AdminHandler
-from ..views.admin import AddMessageEventRequest, CreateReportRequest
+from ..views.admin import AddMessageEventRequest, CreateReportRequest, MailboxDetails
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -42,7 +42,7 @@ async def ping(config: EnvConfig = Depends(get_env_config)):
     response_model_exclude_none=True,
 )
 @router.delete(
-    "/messageexchange/reset",
+    "/messageexchange/admin/reset",
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
     response_model_exclude_none=True,
@@ -61,7 +61,7 @@ async def reset(
     response_model_exclude_none=True,
 )
 @router.delete(
-    "/messageexchange/reset/{mailbox_id}",
+    "/messageexchange/admin/reset/{mailbox_id}",
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
     response_model_exclude_none=True,
@@ -75,7 +75,7 @@ async def reset_mailbox(
 
 
 @router.post(
-    "/messageexchange/report",
+    "/messageexchange/admin/report",
     summary=f"Put a report messages into a particular inbox. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
@@ -96,7 +96,7 @@ async def create_report(
     response_model_exclude_none=True,
 )
 @router.post(
-    "/messageexchange/message/{message_id}/event",
+    "/messageexchange/admin/message/{message_id}/event",
     summary=f"appends a status event to a given message, if exists. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
@@ -109,3 +109,23 @@ async def add_message_event(
 ):
     await handler.add_message_event(message_id, new_event, background_tasks)
     return Response()
+
+
+@router.get(
+    "/admin/mailbox/{mailbox_id}",
+    summary=f"Get mailbox details. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+@router.get(
+    "/messageexchange/admin/mailbox/{mailbox_id}",
+    summary=f"Get mailbox details. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+async def get_mailbox_details(
+    mailbox_id: str = Path(..., title="mailbox_id", description="The Mailbox ID of the mailbox to retrieve"),
+    handler: AdminHandler = Depends(AdminHandler),
+) -> MailboxDetails:
+    mailbox = await handler.get_mailbox_details(mailbox_id)
+    return mailbox
