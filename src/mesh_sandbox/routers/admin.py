@@ -42,7 +42,7 @@ async def ping(config: EnvConfig = Depends(get_env_config)):
     response_model_exclude_none=True,
 )
 @router.delete(
-    "/messageexchange/reset",
+    "/messageexchange/admin/reset",
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
     response_model_exclude_none=True,
@@ -61,7 +61,7 @@ async def reset(
     response_model_exclude_none=True,
 )
 @router.delete(
-    "/messageexchange/reset/{mailbox_id}",
+    "/messageexchange/admin/reset/{mailbox_id}",
     status_code=status.HTTP_200_OK,
     include_in_schema=False,
     response_model_exclude_none=True,
@@ -75,7 +75,7 @@ async def reset_mailbox(
 
 
 @router.post(
-    "/messageexchange/report",
+    "/messageexchange/admin/report",
     summary=f"Put a report messages into a particular inbox. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
@@ -96,7 +96,7 @@ async def create_report(
     response_model_exclude_none=True,
 )
 @router.post(
-    "/messageexchange/message/{message_id}/event",
+    "/messageexchange/admin/message/{message_id}/event",
     summary=f"appends a status event to a given message, if exists. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
@@ -112,7 +112,13 @@ async def add_message_event(
 
 
 @router.get(
-    "/mailbox/{mailbox_id}",
+    "/admin/mailbox/{mailbox_id}",
+    summary=f"Get mailbox details. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+@router.get(
+    "/messageexchange/admin/mailbox/{mailbox_id}",
     summary=f"Get mailbox details. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
