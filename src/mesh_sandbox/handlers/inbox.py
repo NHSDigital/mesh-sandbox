@@ -1,5 +1,4 @@
 import gzip
-import operator
 from datetime import datetime, tzinfo
 from typing import Any, Callable, Optional, cast
 
