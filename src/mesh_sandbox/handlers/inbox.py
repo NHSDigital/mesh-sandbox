@@ -1,4 +1,5 @@
 import gzip
+import operator
 from datetime import datetime, tzinfo
 from typing import Any, Callable, Optional, cast
 
@@ -258,6 +259,7 @@ class InboxHandler:
         last_key = None
 
         if len(messages) > max_results:
+            messages = sorted(messages, key=lambda message: message.created_timestamp, reverse=True)
             messages = messages[:max_results]
             if messages:
                 last_key = {"message_id": messages[-1].message_id}
