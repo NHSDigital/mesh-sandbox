@@ -245,6 +245,7 @@ class InboxHandler:
             if rich
             else await self.messaging.get_accepted_inbox_messages(mailbox.mailbox_id)
         )
+        messages = sorted(messages, key=lambda message: message.created_timestamp, reverse=True)
 
         if message_filter:
             messages = list(filter(message_filter, messages))
@@ -258,7 +259,6 @@ class InboxHandler:
         last_key = None
 
         if len(messages) > max_results:
-            messages = sorted(messages, key=lambda message: message.created_timestamp, reverse=True)
             messages = messages[:max_results]
             if messages:
                 last_key = {"message_id": messages[-1].message_id}

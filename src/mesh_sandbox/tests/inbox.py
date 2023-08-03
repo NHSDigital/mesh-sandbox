@@ -93,6 +93,8 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
         assert message_id
         message_ids.append(message_id)
 
+    message_ids.reverse()  # message_ids now contains the messages in sent order descending
+
     # inbox
 
     res = app.get(
@@ -151,8 +153,6 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
         f"/messageexchange/{sender}/outbox/rich?max_results={page_size}",
         headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
     )
-
-    message_ids = list(reversed(message_ids))
 
     assert res.status_code == status.HTTP_200_OK
     response = res.json()
@@ -359,3 +359,4 @@ def test_rich_inbox_returns_most_recent_messages(app: TestClient):
     for messages_in_inbox_index in range(100):
         assert messages[messages_in_inbox_index]["message_id"] == message_ids[message_sent_index]
         message_sent_index -= 1
+

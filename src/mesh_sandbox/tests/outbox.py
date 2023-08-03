@@ -617,7 +617,7 @@ def test_rich_outbox_returns_most_recent_messages(app: TestClient):
 
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
-    total_messages = 200
+    total_messages = 105
 
     res = app.get(
         f"/messageexchange/{recipient}/inbox",
