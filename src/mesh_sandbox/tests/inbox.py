@@ -359,4 +359,3 @@ def test_rich_inbox_returns_most_recent_messages(app: TestClient):
     for messages_in_inbox_index in range(100):
         assert messages[messages_in_inbox_index]["message_id"] == message_ids[message_sent_index]
         message_sent_index -= 1
-
