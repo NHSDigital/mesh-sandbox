@@ -124,6 +124,7 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
         assert response["messages"] == message_ids[page_size : page_size * 2]
 
     # rich inbox
+    message_ids = list(reversed(message_ids))
 
     res = app.get(
         f"/messageexchange/{recipient}/inbox/rich?max_results={page_size}",
@@ -151,8 +152,6 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
         f"/messageexchange/{sender}/outbox/rich?max_results={page_size}",
         headers={Headers.Authorization: generate_auth_token(sender), Headers.Accept: accept},
     )
-
-    message_ids = list(reversed(message_ids))
 
     assert res.status_code == status.HTTP_200_OK
     response = res.json()
@@ -318,3 +317,44 @@ def test_rich_inbox_includes_acknowledged_messages(app: TestClient):
     messages = res.json().get("messages", [])
     assert len(messages) == 5
     assert acknowledged_message_id in [m["message_id"] for m in messages]
+
+
+def test_rich_inbox_returns_most_recent_messages(app: TestClient):
+
+    sender = _CANNED_MAILBOX1
+    recipient = _CANNED_MAILBOX2
+    total_messages = 105
+
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox",
+        headers={Headers.Authorization: generate_auth_token(recipient)},
+    )
+    assert res.json()["messages"] == []
+
+    message_ids = {}
+    for index in range(total_messages):
+
+        resp = mesh_api_send_message(
+            app,
+            sender_mailbox_id=sender,
+            recipient_mailbox_id=recipient,
+        )
+
+        assert resp.status_code == status.HTTP_202_ACCEPTED
+        result = resp.json()
+        message_id = result["messageID"]
+        assert message_id
+        message_ids[index] = message_id
+
+    res = app.get(
+        f"/messageexchange/{recipient}/inbox/rich",
+        headers={Headers.Authorization: generate_auth_token(recipient)},
+    )
+    assert res.status_code == status.HTTP_200_OK
+    messages = res.json().get("messages", [])
+    assert len(messages) == 100  # the default limit
+
+    message_sent_index = total_messages - 1
+    for messages_in_inbox_index in range(100):
+        assert messages[messages_in_inbox_index]["message_id"] == message_ids[message_sent_index]
+        message_sent_index -= 1
