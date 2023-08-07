@@ -241,11 +241,14 @@ class InboxHandler:
     ) -> tuple[list[Message], Optional[dict]]:
 
         messages = (
-            await self.messaging.get_inbox_messages(mailbox.mailbox_id)
+            sorted(
+                await self.messaging.get_inbox_messages(mailbox.mailbox_id),
+                key=lambda message: message.created_timestamp,
+                reverse=True,
+            )
             if rich
             else await self.messaging.get_accepted_inbox_messages(mailbox.mailbox_id)
         )
-        messages = sorted(messages, key=lambda message: message.created_timestamp, reverse=True)
 
         if message_filter:
             messages = list(filter(message_filter, messages))

@@ -93,8 +93,6 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
         assert message_id
         message_ids.append(message_id)
 
-    message_ids.reverse()  # message_ids now contains the messages in sent order descending
-
     # inbox
 
     res = app.get(
@@ -126,6 +124,7 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
         assert response["messages"] == message_ids[page_size : page_size * 2]
 
     # rich inbox
+    message_ids = list(reversed(message_ids))
 
     res = app.get(
         f"/messageexchange/{recipient}/inbox/rich?max_results={page_size}",
