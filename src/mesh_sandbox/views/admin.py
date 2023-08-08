@@ -22,9 +22,9 @@ class CreateReportRequest(BaseModel):
 
 class AddMessageEventRequest(BaseModel):
     status: str = Field(description="new message status")
-    code: str = Field(description="error code", default=None)
-    event: str = Field(description="error event (SEND/TRANSFER) etc)", default=None)
-    description: str = Field(description="error description", default=None)
+    code: Optional[str] = Field(description="error code", default=None)
+    event: Optional[str] = Field(description="error event (SEND/TRANSFER) etc)", default=None)
+    description: Optional[str] = Field(description="error description", default=None)
     linked_message_id: Optional[str] = Field(description="linked message id", default=None)
 
 

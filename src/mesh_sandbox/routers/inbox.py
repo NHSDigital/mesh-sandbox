@@ -60,13 +60,14 @@ async def list_messages(
         title="Continue From",
         description="if more results exist than 'max_results', use continue_from to "
         "continue retrieving results from links.next",
-        examples={
-            f"accept: {MESH_MEDIA_TYPES[2]}": {
-                "value": "eyJwayI6ICJNQiNNU0cjTUIjMTIzNEhDMTIzNCMiLCAic2siOiAiTUIjT"
-                "VNHIzIwMjIwMjI4MTc0MzIzMTIzX0FDREVEMSMifQ%3D%3D"
+        examples=[
+            {
+                "name": f"accept: {MESH_MEDIA_TYPES[2]}",
+                "continue_from": "eyJwayI6ICJNQiNNU0cjTUIjMTIzNEhDMTIzNCMiLCAic2siOiAiTUIjT"
+                "VNHIzIwMjIwMjI4MTc0MzIzMTIzX0FDREVEMSMifQ%3D%3D",
             },
-            f"accept: {MESH_MEDIA_TYPES[1]}": {"value": "20220228174323123_ACDED1"},
-        },
+            {"name": f"accept: {MESH_MEDIA_TYPES[1]}", "continue_from": "20220228174323123_ACDED1"},
+        ],
         min_length=24,
         max_length=1000,
     ),
