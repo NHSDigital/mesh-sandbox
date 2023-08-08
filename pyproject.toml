@@ -24,7 +24,7 @@ python-dateutil = "^2.8.2"
 [tool.poetry.group.dev.dependencies]
 # ci / testing dependencies
 petname = "^2.6"
-black = ">=22.11,<23.0"
+black = ">=22.11,<24.0"
 isort = "^5.10.1"
 pylint = "^2.11.1"
 pytest = "^7.2.0"
