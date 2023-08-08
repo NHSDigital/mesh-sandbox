@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass, field
 from functools import partial
 from hashlib import sha256
-from typing import Any, Callable, Final, Optional, TypeVar
+from typing import Any, Callable, Final, Optional, TypeVar, Union
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
@@ -88,23 +88,23 @@ class LogConfig(BaseModel):
     LOG_LEVEL: str = "DEBUG"
 
     # Logging config
-    version = 1
-    disable_existing_loggers = False
-    formatters = {
+    version: int = 1
+    disable_existing_loggers: bool = False
+    formatters: dict = {
         "default": {
             "()": "uvicorn.logging.DefaultFormatter",
             "fmt": LOG_FORMAT,
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },
     }
-    handlers = {
+    handlers: dict = {
         "default": {
             "formatter": "default",
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
         },
     }
-    loggers = {
+    loggers: dict = {
         "mesh-sandbox": {"handlers": ["default"], "level": LOG_LEVEL},
     }
 
