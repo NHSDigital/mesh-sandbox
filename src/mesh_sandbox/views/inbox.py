@@ -75,6 +75,7 @@ class InboxMessageV1(RichMessageV1):
             status_code=error_event.code if error_event else None,
             workflow_id=message.workflow_id,
             sent_date=accepted_event.timestamp if accepted_event else None,
+            total_chunks=message.total_chunks,
         )
 
 
@@ -106,10 +107,11 @@ class RichInboxView(BaseModel):
                         "recipient_name": "Recip mailbox",
                         "sender": "X26HC006",
                         "sender_name": "APIM bebop",
-                        "sentDate": "2021-11-22T14:35:52.29Z",
+                        "sent_date": "2021-11-22T14:35:52.29Z",
                         "status": "Accepted",
                         "status_code": None,
                         "workflow_id": "API-DOCS-TEST",
+                        "total_chunks": 1,
                     }
                 ],
                 "links": {
