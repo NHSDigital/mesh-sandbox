@@ -100,6 +100,7 @@ def map_to_outbox_message(messages: list[Message]) -> list[OutboxMessageV1]:
                 status=msg.status,
                 status_code=msg.last_event.code,
                 workflow_id=msg.workflow_id,
+                total_chunks=msg.total_chunks,
             ),
             messages,
         )
