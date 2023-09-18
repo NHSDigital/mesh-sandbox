@@ -82,6 +82,7 @@ class InboxHandler:
             Headers.Mex_To: message.recipient.mailbox_id,
             Headers.Mex_WorkflowID: message.workflow_id,
             Headers.Mex_Chunk_Range: f"{chunk_number}:{message.total_chunks}",
+            Headers.Mex_Total_Chunks: f"{message.total_chunks}",
             Headers.Mex_AddressType: "ALL",
             Headers.Mex_LocalID: message.metadata.local_id,
             Headers.Mex_PartnerID: message.metadata.partner_id,

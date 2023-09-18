@@ -17,6 +17,7 @@ class Headers:
     Mex_From: Final[str] = "mex-From"
     Mex_To: Final[str] = "mex-To"
     Mex_Chunk_Range: Final[str] = "mex-Chunk-Range"
+    Mex_Total_Chunks: Final[str] = "mex-Total-Chunks"
     Mex_StatusCode: Final[str] = "mex-StatusCode"
     Mex_StatusEvent: Final[str] = "mex-StatusEvent"
     Mex_StatusDescription: Final[str] = "mex-StatusDescription"
