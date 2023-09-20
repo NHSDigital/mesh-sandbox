@@ -19,3 +19,4 @@ class RichMessageV1(BaseModel):
     status: str = Field(description="message status e.g. 'acknowledged' 'accepted'")
     status_code: Optional[str] = Field(description="message status code")
     workflow_id: Optional[str] = Field(description="message workflow identifier")
+    total_chunks: int = Field(description="Number of message chunks")
