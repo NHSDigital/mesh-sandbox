@@ -75,7 +75,7 @@ class InboxMessageV1(RichMessageV1):
             status_code=error_event.code if error_event else None,
             workflow_id=message.workflow_id,
             sent_date=accepted_event.timestamp if accepted_event else None,
-            total_chunks=message.total_chunks,
+            total_chunks=message.total_chunks or 0,
         )
 
 
