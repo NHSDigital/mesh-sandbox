@@ -22,41 +22,31 @@ from .helpers import generate_auth_token, temp_env_vars
 
 
 def test_reset_canned_store_should_return_bad_request(app: TestClient):
-
     with temp_env_vars(STORE_MODE="canned"):
-
         res = app.delete("/messageexchange/admin/reset")
         assert res.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
 def test_reset_canned_store_with_valid_mailbox_id_should_return_bad_request(app: TestClient):
-
     with temp_env_vars(STORE_MODE="canned"):
-
         res = app.delete(f"/messageexchange/admin/reset/{_CANNED_MAILBOX1}")
         assert res.status_code == status.HTTP_405_METHOD_NOT_ALLOWED
 
 
 def test_reset_memory_store_with_invalid_mailbox_id_should_return_bad_request(app: TestClient):
-
     with temp_env_vars(STORE_MODE="memory"):
-
         res = app.delete(f"/messageexchange/admin/reset/{uuid4().hex}")
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_reset_file_store_with_invalid_mailbox_id_should_return_bad_request(app: TestClient):
-
     with temp_env_vars(STORE_MODE="file"):
-
         res = app.delete(f"/messageexchange/admin/reset/{uuid4().hex}")
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
 
 def test_reset_memory_store_should_clear_all_mailboxes(app: TestClient):
-
     with temp_env_vars(STORE_MODE="memory"):
-
         msg_1to2_id = mesh_api_send_message_and_return_message_id(app, _CANNED_MAILBOX1, _CANNED_MAILBOX2)
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX2) == 1
 
@@ -78,9 +68,7 @@ def test_reset_memory_store_should_clear_all_mailboxes(app: TestClient):
 
 
 def test_reset_memory_store_should_clear_specified_mailbox_only(app: TestClient):
-
     with temp_env_vars(STORE_MODE="memory"):
-
         msg_1to2_id = mesh_api_send_message_and_return_message_id(app, _CANNED_MAILBOX1, _CANNED_MAILBOX2)
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX2) == 1
 
@@ -142,9 +130,7 @@ def test_reset_memory_store_should_clear_specified_mailbox_only(app: TestClient)
 
 
 def test_reset_file_store_should_clear_all_mailboxes_and_maybe_files(app: TestClient, tmp_path: str):
-
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         msg_1to2_id = mesh_api_send_message_and_return_message_id(app, _CANNED_MAILBOX1, _CANNED_MAILBOX2)
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX2) == 1
 
@@ -185,9 +171,7 @@ def test_reset_file_store_should_clear_all_mailboxes_and_maybe_files(app: TestCl
 
 
 def test_reset_file_store_should_clear_specified_mailbox_only_and_maybe_files(app: TestClient, tmp_path: str):
-
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         msg_1to2_id = mesh_api_send_message_and_return_message_id(app, _CANNED_MAILBOX1, _CANNED_MAILBOX2)
         assert mesh_api_get_inbox_size(app, _CANNED_MAILBOX2) == 1
 
@@ -224,9 +208,7 @@ def test_reset_file_store_should_clear_specified_mailbox_only_and_maybe_files(ap
 def test_reset_file_store_should_not_error_if_folder_does_not_exist_yet(
     app: TestClient, clear_disk: str, tmp_path: str
 ):
-
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         inbox_folder = os.path.join(tmp_path, _CANNED_MAILBOX1, "in")
         assert not os.path.exists(inbox_folder)
 
@@ -236,11 +218,9 @@ def test_reset_file_store_should_not_error_if_folder_does_not_exist_yet(
 
 
 def test_put_report_in_inbox(app: TestClient, tmp_path: str):
-
     recipient = _CANNED_MAILBOX1
 
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         request = CreateReportRequest(
             mailbox_id=recipient,
             status=MessageStatus.ERROR,
@@ -301,11 +281,9 @@ def test_put_report_in_inbox(app: TestClient, tmp_path: str):
 
 
 def test_add_message_event(app: TestClient, tmp_path: str):
-
     recipient = _CANNED_MAILBOX1
 
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         create_report_request = CreateReportRequest(
             mailbox_id=recipient,
             status=MessageStatus.ERROR,
@@ -363,18 +341,14 @@ def test_add_message_event(app: TestClient, tmp_path: str):
 
 @pytest.mark.parametrize("root_path", ["/admin/mailbox", "/messageexchange/admin/mailbox"])
 def test_get_mailbox_invalid_mailbox_returns_404(app: TestClient, root_path: str):
-
     with temp_env_vars(STORE_MODE="canned"):
-
         res = app.get(f"{root_path}/NotAMailboxId")
         assert res.status_code == status.HTTP_404_NOT_FOUND
 
 
 @pytest.mark.parametrize("root_path", ["/admin/mailbox", "/messageexchange/admin/mailbox"])
 def test_get_mailbox_happy_path(app: TestClient, root_path: str):
-
     with temp_env_vars(STORE_MODE="canned"):
-
         res = app.get(f"{root_path}/{_CANNED_MAILBOX1}")
         assert res.status_code == status.HTTP_200_OK
 

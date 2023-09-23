@@ -17,7 +17,6 @@ _CANNED_MAILBOX2 = "X26ABC2"
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_inbox_count(app: TestClient, accept: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -79,7 +78,6 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
 
     message_ids = []
     for _ in range(page_size * 3):
-
         resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,
@@ -105,7 +103,6 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
     assert messages == message_ids[:page_size]
 
     if accept == APP_V1_JSON:
-
         res = app.get(
             f"/messageexchange/{recipient}/inbox?max_results={page_size}&continue_from={messages[-1]}",
             headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
@@ -170,9 +167,7 @@ def test_paginated_inbox_outbox(app: TestClient, accept: str):
 
 
 def test_receive_canned_chunked_message(app: TestClient):
-
     with temp_env_vars(STORE_MODE="canned"):
-
         recipient = _CANNED_MAILBOX2
 
         res = app.get(
@@ -205,9 +200,7 @@ def test_receive_canned_chunked_message(app: TestClient):
 
 
 def test_receive_canned_simple_message(app: TestClient):
-
     with temp_env_vars(STORE_MODE="canned"):
-
         recipient = _CANNED_MAILBOX1
 
         res = app.get(
@@ -234,12 +227,10 @@ def test_receive_canned_simple_message(app: TestClient):
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_receive_canned_undelivered_message(app: TestClient, accept: str):
-
     recipient = _CANNED_MAILBOX1
     sender = _CANNED_MAILBOX2
 
     with temp_env_vars(STORE_MODE="canned"):
-
         res = app.get(
             f"/messageexchange/{recipient}/inbox",
             headers={Headers.Accept: accept, Headers.Authorization: generate_auth_token(recipient)},
@@ -263,7 +254,6 @@ def test_receive_canned_undelivered_message(app: TestClient, accept: str):
 
 
 def test_rich_inbox_includes_acknowledged_messages(app: TestClient):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -276,7 +266,6 @@ def test_rich_inbox_includes_acknowledged_messages(app: TestClient):
     acknowledged_message_id = ""
     message_ids = []
     for index in range(5):
-
         resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,
@@ -320,7 +309,6 @@ def test_rich_inbox_includes_acknowledged_messages(app: TestClient):
 
 
 def test_rich_inbox_returns_most_recent_messages(app: TestClient):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
     total_messages = 105
@@ -333,7 +321,6 @@ def test_rich_inbox_returns_most_recent_messages(app: TestClient):
 
     message_ids = {}
     for index in range(total_messages):
-
         resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,

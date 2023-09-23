@@ -1,12 +1,12 @@
+from collections.abc import Generator
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Final, Generator, Optional
+from typing import Callable, Final, Optional
 
 from dateutil.relativedelta import relativedelta
 
 
 class MessageStatus:
-
     UPLOADING: Final[str] = "uploading"  # still uploading chunks
     ACCEPTED: Final[str] = "accepted"  # finished uploading
     ACKNOWLEDGED: Final[str] = "acknowledged"  # client has acknowledged the message
@@ -17,7 +17,6 @@ class MessageStatus:
 
 
 class MessageType:
-
     REPORT: Final[str] = "REPORT"
     DATA: Final[str] = "DATA"
 
@@ -31,7 +30,6 @@ class MessageDeliveryStatus:
 
 @dataclass
 class MessageMetadata:
-
     subject: Optional[str] = field(default=None)
     content_type: Optional[str] = field(default=None)
     content_encoding: Optional[str] = field(default=None)
@@ -133,6 +131,5 @@ class Message:  # pylint: disable=too-many-public-methods,too-many-instance-attr
                 yield event
 
     def __post_init__(self):
-
         self.message_id = self.message_id.upper()
         self.events = self.events or [MessageEvent(status=MessageStatus.ACCEPTED, timestamp=self.created_timestamp)]

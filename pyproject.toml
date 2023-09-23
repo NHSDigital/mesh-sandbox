@@ -12,21 +12,18 @@ readme = "README.md"
 [tool.poetry.dependencies]
 # core dependencies
 python = "^3.9"
-fastapi = ">=0.94,<0.101"
-gunicorn = "^20.1.0"
-uvicorn = ">=0.21,<0.23"
 types-python-dateutil = "^2.8.9"
-cryptography = ">=39.0.1,<42.0.0"
 python-dateutil = "^2.8.2"
+cryptography = "^41.0.4"
+fastapi = "^0.103.1"
+gunicorn = "^21.2.0"
+uvicorn = "^0.23.2"
 
 
 
 [tool.poetry.group.dev.dependencies]
 # ci / testing dependencies
 petname = "^2.6"
-black = ">=22.11,<23.0"
-isort = "^5.10.1"
-pylint = "^2.11.1"
 pytest = "^7.2.0"
 pytest-asyncio = ">=0.16,<0.22"
 Mesh-Client = "^2.0.1"
@@ -38,6 +35,8 @@ pyOpenSSL = "^23.0.0"
 types-pyOpenSSL = "^23.0.0.2"
 lxml = "^4.9.1"
 types-lxml = ">=2022.11.8,<2024.0.0"
+ruff = "^0.0.291"
+black = "^23.9.1"
 
 
 [tool.poetry.group.local.dependencies]
@@ -107,40 +106,56 @@ py-version = "3.9"
 recursive = true
 extension-pkg-whitelist="lxml"
 
-[tool.pylint.basic]
-good-names = [
-    "_",
-    "a",
-    "e",
-    "f",
-    "i",
-    "j",
-    "ix",
-    "sk",
-    "pk",
-    "ex",
-    "s3",
-    "T",
+[tool.ruff]
+select = [
+    # See https://beta.ruff.rs/docs/rules/ for a full list
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "Q", # flake8-quotes
+    "YTT", # flake8-2020
+    "RSE", # flake8-raise
+    "T10", # flake8-debugger
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
+    "EXE", # flake8-executable
+    "A", # flake8-builtins
+    "UP",  # pyupgrade
+    "PT", # flake8-pytest-style
+    "PERF", # Perflint #
+    "RUF", # Ruff-specific rules
+    "SIM", # flake8-simplify
 ]
+src = ["."]
+ignore = [
+    "PT004",
+    "UP007"
+]
+exclude = [
+    ".git",
+    ".venv",
+]
+unfixable = ["SIM112"]
+line-length = 120
+target-version = "py39"
 
-[tool.pylint.messages_control]
-max-line-length = 120
-max-module-lines = 1000
-max-public-methods = 25
-max-args = 8
-min-similarity-lines = 30
-max-returns = 10
-max-branches = 15
-max-attributes = 15
-disable = [
-    "fixme",
-    "missing-class-docstring",
-    "missing-module-docstring",
-    "missing-function-docstring",
-    "too-few-public-methods",
-    "duplicate-code",
-    "logging-fstring-interpolation"
-]
+[tool.ruff.per-file-ignores]
+"src/mesh_sandbox/routers/*" = ["B008"]
+"src/mesh_sandbox/handlers/*" = ["B008"]
+"src/mesh_sandbox/dependencies.py" = ["B008"]
+"src/mesh_sandbox/views/*" = ["RUF012"]
+
+
+[tool.ruff.isort]
+known-third-party = ["fastapi", "pydantic", "starlette"]
+
+[tool.ruff.mccabe]
+max-complexity = 15
+
 
 [tool.mypy]
 python_version = "3.9"

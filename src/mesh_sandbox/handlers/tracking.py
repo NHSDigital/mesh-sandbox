@@ -17,7 +17,6 @@ class TrackingHandler:
         self.messaging = messaging
 
     async def tracking_by_message_id(self, sender_mailbox: Mailbox, message_id: str, accepts_api_version: int = 1):
-
         message: Optional[Message] = await self.messaging.get_message(message_id)
 
         if not message:
@@ -35,7 +34,6 @@ class TrackingHandler:
         return JSONResponse(content=exclude_none_json_encoder(model), media_type=MESH_MEDIA_TYPES[accepts_api_version])
 
     async def tracking_by_local_id(self, sender_mailbox: Mailbox, local_id: str):
-
         messages: list[Message] = await self.messaging.get_by_local_id(sender_mailbox.mailbox_id, local_id)
 
         if len(messages) == 0:

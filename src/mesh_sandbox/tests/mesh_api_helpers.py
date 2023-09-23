@@ -18,9 +18,8 @@ def mesh_api_send_message(
     test_empty_message_data: bool = False,
     file_name: Optional[str] = None,
 ):
-
     if not test_empty_message_data:
-        message_data = message_data or f"Hello World!\n{uuid4().hex}".encode("utf-8")
+        message_data = message_data or f"Hello World!\n{uuid4().hex}".encode()
 
     headers = {
         Headers.Mex_From: sender_mailbox_id,
@@ -48,7 +47,6 @@ def mesh_api_send_message_and_return_message_id(
     test_empty_message_data: bool = False,
     file_name: Optional[str] = None,
 ):
-
     res = mesh_api_send_message(
         app,
         sender_mailbox_id,
@@ -70,7 +68,6 @@ def mesh_api_get_message(
     message_id: str,
     extra_headers: Optional[dict] = None,
 ):
-
     headers = {Headers.Authorization: generate_auth_token(recipient_mailbox_id)}
     if extra_headers:
         headers.update(extra_headers)
@@ -83,7 +80,6 @@ def mesh_api_get_inbox(
     recipient_mailbox_id: str,
     extra_headers: Optional[dict] = None,
 ):
-
     headers = {Headers.Authorization: generate_auth_token(recipient_mailbox_id)}
     if extra_headers:
         headers.update(extra_headers)
@@ -104,7 +100,6 @@ def mesh_api_get_inbox_size(
 def mesh_api_track_message_by_local_id(
     app: TestClient, sender_mailbox_id: str, local_id: str, extra_headers: Optional[dict] = None
 ):
-
     headers = {Headers.Authorization: generate_auth_token(sender_mailbox_id)}
     if extra_headers:
         headers.update(extra_headers)
@@ -115,7 +110,6 @@ def mesh_api_track_message_by_local_id(
 def mesh_api_track_message_by_message_id(
     app: TestClient, sender_mailbox_id: str, message_id: str, extra_headers: Optional[dict] = None
 ):
-
     headers = {Headers.Authorization: generate_auth_token(sender_mailbox_id)}
     if extra_headers:
         headers.update(extra_headers)
@@ -127,6 +121,5 @@ def mesh_api_track_message_by_message_id(
 def mesh_api_track_message_by_message_id_status(
     app: TestClient, sender_mailbox_id: str, message_id: str, extra_headers: Optional[dict] = None
 ):
-
     res = mesh_api_track_message_by_message_id(app, sender_mailbox_id, message_id, extra_headers=extra_headers)
     return res.status_code

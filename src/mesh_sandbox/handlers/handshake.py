@@ -6,7 +6,6 @@ from ..models.mailbox import Mailbox
 
 
 class HandshakeHandler:
-
     # pylint: disable=too-many-arguments
     async def handshake(
         self,
@@ -20,7 +19,6 @@ class HandshakeHandler:
         mex_osarchitecture: str,
         accepts_api_version: int = 1,
     ):
-
         if accepts_api_version < 2:
             return {"mailboxId": mailbox.mailbox_id}
 

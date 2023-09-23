@@ -6,7 +6,6 @@ from ..store.serialisation import deserialise_model, serialise_model
 
 
 def test_serialise_deserialise_message():
-
     message = Message(
         message_id=uuid4().hex,
         metadata=MessageMetadata(local_id=uuid4().hex),

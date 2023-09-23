@@ -38,7 +38,6 @@ app = FastAPI(
 
 @app.on_event("startup")
 async def startup():
-
     config = get_env_config()
     # pylint: disable=logging-fstring-interpolation
     logger.info(f"startup auth_mode: {config.auth_mode} store_mode: {config.store_mode}")

@@ -43,7 +43,7 @@ def get_chunk_range(chunk_range: str, request_chunk_no: int) -> tuple[Optional[s
         return "bad headers", 0, 0
 
     try:
-        chunk_no, total_chunks = [int(val.strip()) for val in parts]
+        chunk_no, total_chunks = (int(val.strip()) for val in parts)
     except ValueError:
         return "bad header value - chunk values should be numeric", 0, 0
 
@@ -78,7 +78,6 @@ class OutboxHandler:
         content_type: str,
         accepts_api_version: int = 1,
     ):  # pylint: disable=too-many-locals
-
         if not mex_headers.mex_to:
             raise HTTPException(status_code=http_status.HTTP_400_BAD_REQUEST, detail=constants.ERROR_MISSING_TO_ADDRESS)
 
@@ -146,11 +145,9 @@ class OutboxHandler:
         await self.messaging.send_message(message=message, body=body, background_tasks=background_tasks)
 
         self.logger.info(
-            (
-                f"created message: message_id={message.message_id} "
-                f"from={message.sender.mailbox_id} to={message.recipient.mailbox_id} "
-                f"workflow={message.workflow_id or ''}"
-            )
+            f"created message: message_id={message.message_id} "
+            f"from={message.sender.mailbox_id} to={message.recipient.mailbox_id} "
+            f"workflow={message.workflow_id or ''}"
         )
 
         return send_message_response(message, accepts_api_version)
@@ -166,7 +163,6 @@ class OutboxHandler:
         content_encoding: str,
         accepts_api_version: int = 1,
     ):
-
         chunk_range = (mex_chunk_range or "").strip()
         if not chunk_range:
             raise MessagingException(

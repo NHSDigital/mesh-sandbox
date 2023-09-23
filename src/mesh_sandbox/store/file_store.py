@@ -49,7 +49,6 @@ class FileStore(MemoryStore):
             f.write(chunk)
 
     async def get_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
-
         chunk_path = self.chunk_path(message, chunk_number)
         if not os.path.exists(chunk_path):
             return None

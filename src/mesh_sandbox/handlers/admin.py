@@ -22,7 +22,6 @@ class AdminHandler:
         self.messaging = messaging
 
     async def reset(self, mailbox_id: Optional[str] = None):
-
         if self.messaging.readonly:
             raise HTTPException(
                 status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
@@ -91,7 +90,6 @@ class AdminHandler:
     async def add_message_event(
         self, message_id: str, new_event: AddMessageEventRequest, background_tasks: BackgroundTasks
     ):
-
         message = await self.messaging.get_message(message_id)
         if not message:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)

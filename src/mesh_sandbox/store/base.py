@@ -8,7 +8,6 @@ from ..models.message import Message
 
 
 class Store(ABC):
-
     readonly = True
 
     def __init__(self, config: EnvConfig, logger: logging.Logger):

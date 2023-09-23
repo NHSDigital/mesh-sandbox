@@ -9,7 +9,6 @@ _PASSWORD = "password"
 
 
 def test_send_receive_chunked_message():
-
     sender_mailbox_id = _CANNED_MAILBOX1
     recipient_mailbox_id = _CANNED_MAILBOX2
     workflow_id = uuid4().hex
@@ -24,7 +23,6 @@ def test_send_receive_chunked_message():
         max_chunk_size=100,
         verify=False,
     ) as sender:
-
         sent_payload = b"a" * 1000
 
         message_id = sender.send_message(_CANNED_MAILBOX2, sent_payload, workflow_id=workflow_id, subject="change me")

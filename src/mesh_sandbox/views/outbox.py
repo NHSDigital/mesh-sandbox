@@ -14,7 +14,7 @@ class SendMessageV1(BaseModel):
 
     class Config:
         title = "send_message"
-        schema_extra = {"example": {"messageID": "20220228174323222_ABCDEF"}}
+        json_schema_extra = {"example": {"messageID": "20220228174323222_ABCDEF"}}
 
 
 class SendMessageV2(BaseModel):
@@ -22,7 +22,7 @@ class SendMessageV2(BaseModel):
 
     class Config:
         title = "send_message"
-        schema_extra = {"example": {"message_id": "20220228174323222_ABCDEF"}}
+        json_schema_extra = {"example": {"message_id": "20220228174323222_ABCDEF"}}
 
 
 class UploadChunkV1(BaseModel):
@@ -31,11 +31,10 @@ class UploadChunkV1(BaseModel):
 
     class Config:
         title = "upload_chunk"
-        schema_extra = {"example": {"messageID": "20220228174323222_ABCDEF", "blockID": 3}}
+        json_schema_extra = {"example": {"messageID": "20220228174323222_ABCDEF", "blockID": 3}}
 
 
 class OutboxMessageV1(RichMessageV1):
-
     # pylint: disable=E0213
     class Config:
         validate_assignment = True
@@ -53,7 +52,7 @@ class RichOutboxView(BaseModel):
     class Config:
         validate_assignment = True
         title = "rich_outbox"
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "valid_at": "2021-11-22T14:35:52.29Z",
                 "messages": [
@@ -85,26 +84,24 @@ class RichOutboxView(BaseModel):
 
 
 def map_to_outbox_message(messages: list[Message]) -> list[OutboxMessageV1]:
-    return list(
-        map(
-            lambda msg: OutboxMessageV1(
-                message_id=msg.message_id,
-                expiry_timestamp=msg.inbox_expiry_timestamp,
-                local_id=msg.metadata.local_id,
-                message_type=msg.message_type,
-                recipient=msg.recipient.mailbox_id,
-                recipient_name=msg.recipient.mailbox_name,
-                sender=msg.sender.mailbox_id,
-                sender_name=msg.sender.mailbox_name,
-                sent_date=msg.created_timestamp,
-                status=msg.status,
-                status_code=msg.last_event.code,
-                workflow_id=msg.workflow_id,
-                total_chunks=msg.total_chunks or 0,
-            ),
-            messages,
+    return [
+        OutboxMessageV1(
+            message_id=msg.message_id,
+            expiry_timestamp=msg.inbox_expiry_timestamp,
+            local_id=msg.metadata.local_id,
+            message_type=msg.message_type,
+            recipient=msg.recipient.mailbox_id,
+            recipient_name=msg.recipient.mailbox_name,
+            sender=msg.sender.mailbox_id,
+            sender_name=msg.sender.mailbox_name,
+            sent_date=msg.created_timestamp,
+            status=msg.status,
+            status_code=msg.last_event.code,
+            workflow_id=msg.workflow_id,
+            total_chunks=msg.total_chunks or 0,
         )
-    )
+        for msg in messages
+    ]
 
 
 def get_rich_outbox_view(messages: list[Message], links: dict[str, str]) -> JSONResponse:
@@ -121,7 +118,6 @@ def get_rich_outbox_view(messages: list[Message], links: dict[str, str]) -> JSON
 
 
 def send_message_response(message: Message, model_version: int = 1) -> Union[SendMessageV1, SendMessageV2]:
-
     if model_version < 2:
         return SendMessageV1(messageID=message.message_id)
 
@@ -129,7 +125,6 @@ def send_message_response(message: Message, model_version: int = 1) -> Union[Sen
 
 
 def upload_chunk_response(message: Message, chunk_number: int, model_version: int = 1) -> Optional[UploadChunkV1]:
-
     if model_version < 2:
         return UploadChunkV1(messageID=message.message_id, blockID=chunk_number)
 

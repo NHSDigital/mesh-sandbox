@@ -1,18 +1,17 @@
 import logging
 import os.path
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 
 
 class OnMessageAcceptedPlugin:
     def __init__(self):
         self.logger = logging.getLogger("mesh-sandbox")
-        with open(os.path.join(os.path.dirname(__file__), "example_plugin.txt"), encoding="utf-8", mode="r") as f:
+        with open(os.path.join(os.path.dirname(__file__), "example_plugin.txt"), encoding="utf-8") as f:
             self.config_message = f.read().strip()
 
-    triggers = ["before_accept_message"]
+    triggers: ClassVar[list[str]] = ["before_accept_message"]
 
     async def on_event(self, event: str, kwargs: dict[str, Any], err: Optional[Exception] = None):
-
         if err:
             print(f"plugin received error {event}\n{kwargs}\n{err}")
             return

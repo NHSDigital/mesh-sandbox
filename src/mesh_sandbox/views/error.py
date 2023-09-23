@@ -12,7 +12,6 @@ from ..dependencies import parse_accept_header
 
 
 class MeshErrorV1(BaseModel):
-
     messageID: Optional[str] = Field(description="message_id associated with the error", default=None)
     errorEvent: Optional[str] = Field(description="message error phase", default="")
     errorCode: Optional[str] = Field(description="message error code", default="")
@@ -20,7 +19,7 @@ class MeshErrorV1(BaseModel):
 
     class Config:
         title = "mesh_error_v1"
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "messageID": "20220228174323222_ABCDEF",
                 "errorEvent": "SEND",
@@ -31,14 +30,13 @@ class MeshErrorV1(BaseModel):
 
 
 class MeshErrorV2(BaseModel):
-
     message_id: Optional[str] = Field(description="message id associated with the error", default=None)
     internal_id: Optional[str] = Field(description="internal id associated with the error", default=None)
     detail: list[dict] = Field(description="error detail", default_factory=list)
 
     class Config:
         title = "mesh_error_v2"
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "message_id": "20220228174323222_ABCDEF",
                 "internal_id": "20220228174323222_ABCDEF",
@@ -48,7 +46,6 @@ class MeshErrorV2(BaseModel):
 
 
 def get_validation_error_response(_request: Request, exc: RequestValidationError) -> Response:
-
     for err in exc.errors():
         if err["loc"][0] == "header" and cast(str, err["loc"][1]).lower() == Headers.Authorization.lower():
             return Response(status_code=status.HTTP_403_FORBIDDEN)
@@ -67,9 +64,8 @@ def get_error_response(
     status_code: int,
     detail: Union[str, dict, None] = None,
     message_id: Optional[str] = None,
-    headers: dict = None,  # type: ignore[assignment]
+    headers: Optional[dict] = None,  # type: ignore[assignment]
 ) -> JSONResponse:
-
     internal_id = None
     if hasattr(request.state, "internal_id"):
         internal_id = request.state.internal_id

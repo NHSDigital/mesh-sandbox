@@ -15,9 +15,8 @@ from .dependencies import get_env_config, get_messaging, get_store
 from .tests.helpers import temp_env_vars
 
 
-@pytest.fixture(scope="function", autouse=True)
+@pytest.fixture(autouse=True)
 def setup():
-
     get_store.cache_clear()
     get_env_config.cache_clear()
     get_messaging.cache_clear()
@@ -32,9 +31,8 @@ def setup():
         yield
 
 
-@pytest.fixture(scope="function", name="app")
+@pytest.fixture(name="app")
 def test_app() -> TestClient:
-
     return TestClient(app)
 
 
@@ -58,7 +56,6 @@ class StoppableServer:
 
 @pytest.fixture(scope="session", name="base_uri")
 def create_server(unused_tcp_port_factory: Callable[[], int]):
-
     port = unused_tcp_port_factory()
 
     server = StoppableServer(port)
@@ -66,7 +63,6 @@ def create_server(unused_tcp_port_factory: Callable[[], int]):
     server_thread = Thread(target=server.run)
     server_thread.start()
     try:
-
         base_uri = f"http://localhost:{port}"
         timeout = time() + 1
         with httpx.Client(base_url=base_uri) as client:

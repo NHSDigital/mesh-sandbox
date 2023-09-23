@@ -79,20 +79,18 @@ class CannedStore(Store):
             )
 
     def _load_endpoints(self) -> dict[str, list[Mailbox]]:
-
         canned_workflows = os.path.join(self._canned_data_dir, "workflows.jsonl")
         endpoints: dict[str, list[Mailbox]] = defaultdict(list)
 
         if not os.path.exists(canned_workflows):
             return endpoints
 
-        with open(canned_workflows, "r", encoding="utf-8") as f:
-            workflows = list(
+        with open(canned_workflows, encoding="utf-8") as f:
+            workflows = [
                 cast(Workflow, deserialise_model(json.loads(line), Workflow)) for line in f.readlines() if line.strip()
-            )
+            ]
 
             for workflow in workflows:
-
                 receivers = workflow.receivers
                 for receiver in receivers:
                     receiver = (receiver or "").strip().upper()
@@ -109,13 +107,12 @@ class CannedStore(Store):
             return endpoints
 
     def _load_mailboxes(self) -> dict[str, Mailbox]:
-
         canned_mailboxes = os.path.join(self._canned_data_dir, "mailboxes.jsonl")
 
         if not os.path.exists(canned_mailboxes):
             return {}
 
-        with open(canned_mailboxes, "r", encoding="utf-8") as f:
+        with open(canned_mailboxes, encoding="utf-8") as f:
             return {
                 mailbox.mailbox_id: mailbox
                 for mailbox in (
@@ -126,7 +123,6 @@ class CannedStore(Store):
             }
 
     def _load_messages(self) -> dict[str, Message]:
-
         messages: dict[str, Message] = {}
 
         if not os.path.exists(self._mailboxes_data_dir):
@@ -147,12 +143,11 @@ class CannedStore(Store):
                 continue
 
             for message_path in os.scandir(inbox_dir):
-
                 if not message_path.is_file() or not message_path.name.endswith(".json"):
                     continue
 
                 try:
-                    with open(message_path.path, "r", encoding="utf-8") as f:
+                    with open(message_path.path, encoding="utf-8") as f:
                         message = deserialise_model(json.load(f), Message)
                         assert message
                         message_expiry_date = message.created_timestamp + relativedelta(
@@ -168,7 +163,6 @@ class CannedStore(Store):
         return messages
 
     def _load_chunks(self) -> dict[str, list[Optional[bytes]]]:
-
         chunks: dict[str, list[Optional[bytes]]] = defaultdict(list)
 
         for message in self.messages.values():
@@ -210,7 +204,7 @@ class CannedStore(Store):
         """does nothing on this readonly store..."""
 
     async def save_message(self, message: Message):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def get_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
         parts = self.chunks.get(message.message_id, [])
@@ -219,13 +213,13 @@ class CannedStore(Store):
         return parts[chunk_number - 1]
 
     async def save_chunk(self, message: Message, chunk_number: int, chunk: bytes):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def reset(self):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def reset_mailbox(self, mailbox_id: str):
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def get_inbox_messages(
         self, mailbox_id: str, predicate: Optional[Callable[[Message], bool]] = None

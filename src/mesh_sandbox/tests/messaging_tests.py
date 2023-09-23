@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, ClassVar, Optional
 from uuid import uuid4
 
 import pytest
@@ -17,8 +17,8 @@ from ..models.message import (
 from .helpers import temp_env_vars
 
 
-@pytest.fixture(name="message", scope="function")
-def _create_message() -> Message:
+@pytest.fixture(name="message")
+def create_message() -> Message:
     message = Message(
         message_id=uuid4().hex.upper(),
         workflow_id=uuid4().hex.upper(),
@@ -30,26 +30,24 @@ def _create_message() -> Message:
     return message
 
 
-@pytest.fixture(name="background_tasks", scope="function")
-def _background_tasks() -> BackgroundTasks:
+@pytest.fixture(name="background_tasks")
+def background_tasks() -> BackgroundTasks:
     return BackgroundTasks()
 
 
 async def test_canned_store_raises_for_save_message(message: Message):
+    with temp_env_vars(STORE_MODE="canned"):
+        store = get_store()
 
-    with pytest.raises(NotImplementedError):
-        with temp_env_vars(STORE_MODE="canned"):
-            store = get_store()
+        with pytest.raises(NotImplementedError):
             await store.save_message(message)
 
 
 async def test_canned_messaging_does_not_raise_no_bgt(message: Message):
-
     calls = []
 
     class TestPlugin:
-
-        triggers = ["before_save_message", "after_save_message", "save_message_error"]
+        triggers: ClassVar[list[str]] = ["before_save_message", "after_save_message", "save_message_error"]
 
         async def on_event(self, event: str, args: dict[str, Any], exception: Optional[Exception] = None):
             calls.append((event, args, exception))
@@ -64,12 +62,10 @@ async def test_canned_messaging_does_not_raise_no_bgt(message: Message):
 
 
 async def test_canned_messaging_does_not_raise_with_bgt(message: Message, background_tasks: BackgroundTasks):
-
     calls = []
 
     class Test2Plugin:
-
-        triggers = ["before_save_message", "after_save_message", "save_message_error"]
+        triggers: ClassVar[list[str]] = ["before_save_message", "after_save_message", "save_message_error"]
 
         async def on_event(self, event: str, args: dict[str, Any], exception: Optional[Exception] = None):
             calls.append((event, args, exception))
@@ -87,12 +83,10 @@ async def test_canned_messaging_does_not_raise_with_bgt(message: Message, backgr
 
 
 async def test_messaging_does_not_raise_with_bgt(message: Message, background_tasks: BackgroundTasks):
-
     calls = []
 
     class Test2Plugin:
-
-        triggers = ["before_save_message", "after_save_message", "save_message_error"]
+        triggers: ClassVar[list[str]] = ["before_save_message", "after_save_message", "save_message_error"]
 
         async def on_event(self, event: str, args: dict[str, Any], exception: Optional[Exception] = None):
             calls.append((event, args, exception))
@@ -110,12 +104,10 @@ async def test_messaging_does_not_raise_with_bgt(message: Message, background_ta
 
 
 async def test_error_events_raised_with_bgt(message: Message, background_tasks: BackgroundTasks):
-
     calls = []
 
     class Test2Plugin:
-
-        triggers = ["before_save_message", "after_save_message", "save_message_error"]
+        triggers: ClassVar[list[str]] = ["before_save_message", "after_save_message", "save_message_error"]
 
         async def on_event(self, event: str, args: dict[str, Any], exception: Optional[Exception] = None):
             calls.append((event, args, exception))
@@ -133,15 +125,13 @@ async def test_error_events_raised_with_bgt(message: Message, background_tasks: 
 
 
 class TestDiscoveredPlugin:
-
-    triggers = ["before_accept_message"]
+    triggers: ClassVar[list[str]] = ["before_accept_message"]
 
     async def on_event(self, event: str, args: dict[str, Any], err: Optional[Exception] = None):
         pass
 
 
 async def test_plugin_discovery(monkeypatch):
-
     messaging = Messaging(store=get_store(), plugins_module=tests_module)
 
     calls = []

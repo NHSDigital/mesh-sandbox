@@ -48,7 +48,6 @@ def temp_env_vars(**kwargs):
 
 
 def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pylint: disable=too-many-locals
-
     install_dir = os.path.join(base_dir, version)
 
     client_dir = os.path.join(install_dir, "client")
@@ -135,7 +134,6 @@ def create_certificate(  # pylint: disable=too-many-arguments
     serial=0,
     valid_seconds=10 * 365 * 24 * 60 * 60,
 ):
-
     combined_file = os.path.join(output_dir, f"{common_name}.combined.pem")
 
     key = crypto.PKey()
@@ -184,7 +182,6 @@ def ensure_keystore(base_dir: str) -> str:
 
 
 def ensure_java_client(version: str):
-
     java_home = os.environ.get("JAVA_HOME")
     java_path = f"{java_home}/bin/java" if java_home else "java"
 

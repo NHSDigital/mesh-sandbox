@@ -13,7 +13,7 @@ _CANNED_MAILBOX3 = "X26ABC3"
 
 
 @pytest.mark.parametrize(
-    "workflow_id, ods_code, accepts, expected",
+    ("workflow_id", "ods_code", "accepts", "expected"),
     [
         ("TEST_WORKFLOW", "X26", APP_V1_JSON, {_CANNED_MAILBOX2}),
         ("TEST_WORKFLOW", "X26", APP_V2_JSON, {_CANNED_MAILBOX2}),
@@ -30,7 +30,6 @@ _CANNED_MAILBOX3 = "X26ABC3"
     ],
 )
 def test_endpoint_lookup(app: TestClient, workflow_id: str, ods_code: str, accepts: str, expected: list[str]):
-
     res = app.get(
         f"/messageexchange/endpointlookup/{ods_code}/{workflow_id}",
         headers={Headers.Accept: accepts},
@@ -49,7 +48,7 @@ def test_endpoint_lookup(app: TestClient, workflow_id: str, ods_code: str, accep
 
 
 @pytest.mark.parametrize(
-    "workflow_id, accepts, expected",
+    ("workflow_id", "accepts", "expected"),
     [
         ("TEST_WORKFLOW", APP_V1_JSON, {_CANNED_MAILBOX2}),
         ("TEST_WORKFLOW", APP_V2_JSON, {_CANNED_MAILBOX2}),
@@ -62,7 +61,6 @@ def test_endpoint_lookup(app: TestClient, workflow_id: str, ods_code: str, accep
     ],
 )
 def test_workflow_search(app: TestClient, workflow_id: str, accepts: str, expected: list[str]):
-
     res = app.get(
         f"/messageexchange/workflowsearch/{workflow_id}",
         headers={Headers.Accept: accepts},

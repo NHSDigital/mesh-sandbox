@@ -68,11 +68,6 @@ docker-build:
 mypy:
 	poetry run mypy . --exclude '(^|/)(build|dist|scripts)/.*\.py'
 
-pylint:
-	poetry run pylint .
-
-pylint-ci:
-	poetry run pylint --output-format=parseable --score=no .
 
 shellcheck:
 	@# Only swallow checking errors (rc=1), not fatal problems (rc=2)
@@ -82,7 +77,17 @@ hadolint:
 	@docker run --rm -i -v ${PWD}/:/docker:ro hadolint/hadolint hadolint --config=docker/hadolint.yml docker/Dockerfile | sed 's/:\([0-9]\+\) /:\1:0 /'
 
 
-lint: pylint mypy shellcheck hadolint
+ruff: black
+	poetry run ruff --fix --show-fixes .
+
+ruff-check:
+	poetry run ruff .
+
+ruff-ci:
+	poetry run ruff --format=github .
+
+
+lint: ruff mypy shellcheck hadolint
 
 clean:
 	rm -rf ./dist || true
@@ -104,11 +109,7 @@ purge: clean
 black-check:
 	poetry run black . --check
 
-isort-check:
-	poetry run isort . -c
-
 black:
-	poetry run isort .
 	poetry run black .
 
 run-local:
