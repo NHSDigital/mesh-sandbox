@@ -5,7 +5,6 @@ from ..common.exceptions import try_parse_error
 
 
 def test_parse_simple_error():
-
     res = try_parse_error(constants.ERROR_NO_MAILBOX_MATCHES)
     assert res
     assert res["errorCode"] == "EPL-151"

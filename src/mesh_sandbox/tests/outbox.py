@@ -18,7 +18,6 @@ _CANNED_MAILBOX2 = "X26ABC2"
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_memory_send_message_with_local_id(app: TestClient, accept: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -130,12 +129,10 @@ def test_memory_send_message_with_local_id(app: TestClient, accept: str):
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_file_send_message_with_local_id(app: TestClient, accept: str, tmp_path: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         res = app.get(
             f"/messageexchange/{recipient}/inbox",
             headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
@@ -193,7 +190,6 @@ def test_file_send_message_with_local_id(app: TestClient, accept: str, tmp_path:
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_memory_send_chunked_message(app: TestClient, accept: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -313,12 +309,10 @@ def test_memory_send_chunked_message(app: TestClient, accept: str):
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):  # pylint: disable=too-many-statements
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
     with temp_env_vars(STORE_MODE="file", MAILBOXES_DATA_DIR=tmp_path):
-
         res = app.get(
             f"/messageexchange/{recipient}/inbox",
             headers={Headers.Authorization: generate_auth_token(recipient), Headers.Accept: accept},
@@ -462,7 +456,6 @@ def test_file_send_chunked_message(app: TestClient, accept: str, tmp_path: str):
     ],
 )
 def test_mex_content_compress_validation(app: TestClient, value: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -500,7 +493,6 @@ def test_mex_content_compress_validation(app: TestClient, value: str):
     ],
 )
 def test_mex_content_encrypted_validation(app: TestClient, value: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -538,7 +530,6 @@ def test_mex_content_encrypted_validation(app: TestClient, value: str):
     ],
 )
 def test_mex_content_compressed_validation(app: TestClient, value: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -547,7 +538,7 @@ def test_mex_content_compressed_validation(app: TestClient, value: str):
 
 
 @pytest.mark.parametrize(
-    "mex_content_checksum, expected_response_status",
+    ("mex_content_checksum", "expected_response_status"),
     [
         ("", status.HTTP_202_ACCEPTED),
         ("b10a8db164e0754105b7a99be72e3fe5", status.HTTP_202_ACCEPTED),
@@ -559,7 +550,6 @@ def test_mex_content_compressed_validation(app: TestClient, value: str):
     ],
 )
 def test_mex_content_checksum_validation(app: TestClient, mex_content_checksum: str, expected_response_status: int):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -571,7 +561,6 @@ def test_mex_content_checksum_validation(app: TestClient, mex_content_checksum: 
 
 
 def test_mex_local_id_validation(app: TestClient):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
 
@@ -584,7 +573,6 @@ def test_mex_local_id_validation(app: TestClient):
 
 @pytest.mark.parametrize("accept", [APP_V1_JSON, APP_V2_JSON])
 def test_checksum_is_returned(app: TestClient, accept: str):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
     checksum = uuid4().hex
@@ -614,7 +602,6 @@ def test_checksum_is_returned(app: TestClient, accept: str):
 
 
 def test_rich_outbox_returns_most_recent_messages(app: TestClient):
-
     sender = _CANNED_MAILBOX1
     recipient = _CANNED_MAILBOX2
     total_messages = 105
@@ -627,7 +614,6 @@ def test_rich_outbox_returns_most_recent_messages(app: TestClient):
 
     message_ids = {}
     for index in range(total_messages):
-
         resp = mesh_api_send_message(
             app,
             sender_mailbox_id=sender,

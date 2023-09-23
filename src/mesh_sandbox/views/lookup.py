@@ -13,7 +13,7 @@ class EndpointLookupItemV1(BaseModel):
 
     class Config:
         title = "endpoint_lookup_item_v1"
-        schema_extra = {
+        json_schema_extra = {
             "example": {"address": "X2612345", "description": "this is a test mailbox", "endpoint_type": "MESH"}
         }
 
@@ -24,7 +24,7 @@ class EndpointLookupV1(BaseModel):
 
     class Config:
         title = "endpoint_lookup_v1"
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "query_id": "20220228174323222_ABCDEF",
                 "results": {"address": "X2612345", "description": "this is a test mailbox", "endpoint_type": "MESH"},
@@ -38,7 +38,7 @@ class MailboxLookupItem(BaseModel):
 
     class Config:
         title = "lookup_item_v2"
-        schema_extra = {"example": {"mailbox_id": "X2612345", "mailbox_name": "this is a test mailbox"}}
+        json_schema_extra = {"example": {"mailbox_id": "X2612345", "mailbox_name": "this is a test mailbox"}}
 
 
 class MailboxLookupV2(BaseModel):
@@ -46,13 +46,14 @@ class MailboxLookupV2(BaseModel):
 
     class Config:
         title = "lookup_v2"
-        schema_extra = {"example": {"results": {"mailbox_id": "X2612345", "mailbox_name": "this is a test mailbox"}}}
+        json_schema_extra = {
+            "example": {"results": {"mailbox_id": "X2612345", "mailbox_name": "this is a test mailbox"}}
+        }
 
 
 def endpoint_lookup_response(
     mailboxes: list[Mailbox], model_version: int = 1
 ) -> Union[EndpointLookupV1, MailboxLookupV2]:
-
     if model_version < 2:
         return EndpointLookupV1(
             query_id=uuid4().hex,
@@ -75,7 +76,6 @@ def endpoint_lookup_response(
 
 # pylint: disable=unused-argument
 def workflow_search_response(mailboxes: list[Mailbox], model_version: int = 1) -> MailboxLookupV2:
-
     return MailboxLookupV2(
         results=[
             MailboxLookupItem(

@@ -18,7 +18,6 @@ _ACCEPTABLE_ACCEPTS = re.compile(r"^application/vnd\.mesh\.v(\d+)\+json$")
 
 
 def parse_accept_header(accept: Optional[str]) -> Optional[int]:
-
     if not accept:
         return 1
 
@@ -107,17 +106,17 @@ async def normalise_content_type(
     return (content_type or "").strip().lower()
 
 
-@lru_cache()
+@lru_cache
 def get_env_config() -> EnvConfig:
     return EnvConfig()
 
 
-@lru_cache()
+@lru_cache
 def get_logger() -> logging.Logger:
     return logging.getLogger("mesh-sandbox")
 
 
-@lru_cache()
+@lru_cache
 def get_store() -> Store:
     logger = get_logger()
     config = get_env_config()
@@ -133,12 +132,12 @@ def get_store() -> Store:
     raise ValueError(f"unrecognised store mode {config.store_mode}")
 
 
-@lru_cache()
+@lru_cache
 def get_messaging() -> Messaging:
     return Messaging(store=get_store())
 
 
-@lru_cache()
+@lru_cache
 def get_fernet() -> FernetHelper:
     return FernetHelper()
 

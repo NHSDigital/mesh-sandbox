@@ -10,7 +10,6 @@ from .constants import Headers
 
 
 def ensure_text(text: str, encoding="utf-8", errors="strict"):
-
     if isinstance(text, str):
         return text
 

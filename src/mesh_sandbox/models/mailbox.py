@@ -5,7 +5,6 @@ from typing import Optional
 
 @dataclass
 class Mailbox:
-
     mailbox_id: str
     mailbox_name: str
     billing_entity: Optional[str] = field(default=None)
@@ -35,5 +34,4 @@ class Mailbox:
         self._inbox_count = inbox_count
 
     def __post_init__(self):
-
         self.mailbox_id = self.mailbox_id.upper()

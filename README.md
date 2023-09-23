@@ -52,35 +52,4 @@ services:
 
 Guidance for contributors
 -------------------------
-
-this project uses
-
-- python 3.9
-- java coretto11
-- poetry > 1.2
-
-Setup
------
-
-using asdf
-[install asdf](https://asdf-vm.com/guide/getting-started.html#_3-install-asdf)
-
-get the required plugins
-
-```bash
-asdf plugin add python
-asdf plugin add java
-asdf plugin add poetry
-```
-
-install the tools
-
-```bash
-asdf install
-```
-
-install the dependencies
-
-```bash
-make install
-```
+[contributing](CONTRIBUTING.md)

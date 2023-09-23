@@ -15,7 +15,6 @@ from .helpers import ensure_java_client
 
 
 def configure_client(base_uri: str, version: str):
-
     base_dir = ensure_java_client(version)
 
     java_client_config_path = f"{base_dir}/client/meshclient.cfg"
@@ -62,7 +61,6 @@ def configure_client(base_uri: str, version: str):
 
 
 def run_process_and_terminate_after(args: list[str], sleep_for: int = 1):
-
     process = subprocess.Popen(args)  # pylint: disable=consider-using-with
     # need to hard wait some time for process to start & messages to be sent/received
     # in future we may want to read the log file to determine state
@@ -80,7 +78,6 @@ def run_process_and_terminate_after(args: list[str], sleep_for: int = 1):
 
 
 def configure_mailboxes(base_dir: str, mailboxes: list[str]):
-
     java_client_config_path = f"{base_dir}/client/meshclient.cfg"
     parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
     root = cast(_ElementTree, etree.parse(java_client_config_path, parser)).getroot()
@@ -155,7 +152,6 @@ _CANNED_MAILBOX2 = "X26ABC2"
 
 
 def find_sent_message_id(ctl_file: str) -> str:
-
     parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
     root = cast(_ElementTree, etree.parse(ctl_file, parser)).getroot()
     message_id = root.find("DTSId")
@@ -165,14 +161,13 @@ def find_sent_message_id(ctl_file: str) -> str:
 
 @pytest.mark.parametrize("version", ["6.3.6"])
 def test_basic_send_and_receive(base_uri: str, version: str):  # pylint: disable=too-many-locals
-
     base_dir, client_args = configure_client(base_uri, version)
 
     sender, recipient = _CANNED_MAILBOX1, _CANNED_MAILBOX2
 
     configure_mailboxes(base_dir, [sender, recipient])
 
-    message = f"test-{uuid4().hex}".encode(encoding="utf-8")
+    message = f"test-{uuid4().hex}".encode()
     workflow_id = uuid4().hex
     subject = uuid4().hex
     local_id = uuid4().hex

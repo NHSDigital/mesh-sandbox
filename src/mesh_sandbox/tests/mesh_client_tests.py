@@ -47,30 +47,25 @@ def _mesh_client_track_message_by_message_id(base_uri: str, sender_mailbox_id: s
 
 
 def test_app_health(base_uri: str):
-
     with httpx.Client(base_url=base_uri) as client:
         res = client.get("/health")
         assert res.status_code == status.HTTP_200_OK
 
 
 def test_handshake(base_uri: str):
-
     with MeshClient(url=base_uri, mailbox=_CANNED_MAILBOX1, password=_PASSWORD, shared_key=_SHARED_KEY) as client:
         res = client.handshake()
         assert res == b"hello"
 
 
 def test_handshake_bad_password(base_uri: str):
-
     with MeshClient(url=base_uri, mailbox=_CANNED_MAILBOX1, password="BAD", shared_key=_SHARED_KEY) as client:
-
         with pytest.raises(HTTPError) as err:
             client.handshake()
         assert err.value.response.status_code == status.HTTP_403_FORBIDDEN
 
 
 def test_send_receive_chunked_message(base_uri: str):
-
     workflow_id = uuid4().hex
     sent_payload = b"a" * 1000
     message_id = _mesh_client_send_message(base_uri, _CANNED_MAILBOX1, _CANNED_MAILBOX2, workflow_id, sent_payload)
@@ -90,7 +85,6 @@ def test_send_receive_chunked_message(base_uri: str):
 
 
 def test_track_message_by_message_id(base_uri: str):
-
     workflow_id = uuid4().hex
     sent_payload = b"a" * 1000
     message_id = _mesh_client_send_message(base_uri, _CANNED_MAILBOX1, _CANNED_MAILBOX2, workflow_id, sent_payload)

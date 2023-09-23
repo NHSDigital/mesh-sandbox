@@ -1,6 +1,6 @@
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime
-from typing import Any, Optional, Type, TypeVar, cast, get_args, get_origin
+from typing import Any, Optional, TypeVar, cast, get_args, get_origin
 
 _NoneType = type(None)
 
@@ -62,7 +62,6 @@ def serialise_model(model) -> Optional[dict[str, Any]]:
     result: dict[str, Any] = {}
 
     for field in fields(model):
-
         value = getattr(model, field.name)
         if value is None:
             # don't store None values.
@@ -116,7 +115,7 @@ def _deserialise_value(field_type, value):
 TModel = TypeVar("TModel")  # pylint: disable=invalid-name
 
 
-def deserialise_model(model_dict: dict[str, Any], model_type: Type[TModel]) -> Optional[TModel]:
+def deserialise_model(model_dict: dict[str, Any], model_type: type[TModel]) -> Optional[TModel]:
     if model_dict is None:
         return None
 

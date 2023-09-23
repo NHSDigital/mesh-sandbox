@@ -9,7 +9,6 @@ _EMPTY: Final[str] = ""
 
 
 class TrackingV1(BaseModel):
-
     addressType: Optional[str] = "ALL"
     checksum: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
     chunkCount: Optional[int] = Field(description="number of message chunks")
@@ -62,7 +61,6 @@ class TrackingV1(BaseModel):
 
 
 class TrackingV2(BaseModel):
-
     message_id: str = Field(description="message identifier")
     local_id: Optional[str] = Field(description="local identifier supplied by sender")
     workflow_id: Optional[str] = Field(description="message workflow identifier")
@@ -98,7 +96,6 @@ def _format_timestamp(timestamp: Optional[datetime]) -> str:
 
 
 def create_tracking_response(message: Message, model_version: int = 1) -> Union[TrackingV1, TrackingV2]:
-
     error_event = message.error_event
 
     successful = bool(message.message_type == MessageType.DATA and not error_event)
@@ -123,7 +120,6 @@ def create_tracking_response(message: Message, model_version: int = 1) -> Union[
             status_timestamp_string = _format_timestamp(status_timestamp)
 
     if model_version < 2:
-
         return TrackingV1(
             checksum=message.metadata.checksum or _EMPTY,
             chunkCount=message.total_chunks,

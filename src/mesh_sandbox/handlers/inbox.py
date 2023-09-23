@@ -42,7 +42,6 @@ class InboxHandler:
 
     @staticmethod
     def _get_status_headers(message: Message) -> dict[str, Optional[str]]:
-
         status_timestamp = (
             message.status_timestamp(MessageStatus.ACCEPTED, MessageStatus.ERROR) or datetime.utcnow()
         ).strftime("%Y%m%d%H%M%S")
@@ -50,7 +49,6 @@ class InboxHandler:
         error_event = message.error_event
 
         if message.message_type == MessageType.DATA and not error_event:
-
             return {
                 Headers.Mex_StatusCode: "00",
                 Headers.Mex_StatusEvent: "TRANSFER",
@@ -76,7 +74,6 @@ class InboxHandler:
 
     @staticmethod
     def _get_response_headers(message: Message, chunk_number: int):
-
         headers = {
             Headers.Mex_From: message.sender.mailbox_id,
             Headers.Mex_To: message.recipient.mailbox_id,
@@ -108,7 +105,6 @@ class InboxHandler:
         return {h: v for h, v in headers.items() if v}
 
     async def head_message(self, mailbox: Mailbox, message_id: str):
-
         message = await self.messaging.get_message(message_id)
 
         if not message:
@@ -211,7 +207,6 @@ class InboxHandler:
     async def acknowledge_message(
         self, background_tasks: BackgroundTasks, mailbox: Mailbox, message_id: str, accepts_api_version: int = 1
     ):
-
         message = await self.messaging.get_message(message_id)
         if not message:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=constants.ERROR_MESSAGE_DOES_NOT_EXIST)
@@ -240,7 +235,6 @@ class InboxHandler:
         message_filter: Optional[Callable[[Message], bool]] = None,
         rich: bool = False,
     ) -> tuple[list[Message], Optional[dict]]:
-
         messages = (
             sorted(
                 await self.messaging.get_inbox_messages(mailbox.mailbox_id),
@@ -270,8 +264,7 @@ class InboxHandler:
         return messages, last_key
 
     @staticmethod
-    def _get_workflow_filter(workflow_filter: Optional[str]) -> Optional[Callable[[Message], bool]]:
-
+    def _get_workflow_filter(workflow_filter: Optional[str]) -> Optional[Callable[[Message], bool]]:  # noqa: C901
         workflow_id_filter = (workflow_filter or "").strip()
         if not workflow_id_filter:
             return None
@@ -332,7 +325,6 @@ class InboxHandler:
         continue_from: Optional[str] = None,
         workflow_filter: Optional[str] = None,
     ) -> Response:
-
         last_key: Optional[dict] = None
 
         if continue_from:
@@ -379,7 +371,6 @@ class InboxHandler:
         continue_from: Optional[str],
         max_results: int = 100,
     ) -> JSONResponse:
-
         last_key: Optional[dict] = None
         if continue_from:
             last_key = self.fernet.decode_dict(continue_from)

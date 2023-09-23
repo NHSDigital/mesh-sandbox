@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from collections import defaultdict
 from functools import wraps
 from types import ModuleType
-from typing import Any, Callable, Literal, NamedTuple, Optional, TypeVar, cast
+from typing import Any, Callable, ClassVar, Literal, NamedTuple, Optional, TypeVar, cast
 
 from fastapi import HTTPException, status
 from starlette.background import BackgroundTasks
@@ -19,24 +19,25 @@ from . import constants, generate_cipher_text
 
 
 class _SandboxPlugin(ABC):
-
-    triggers: list[
-        Literal[
-            "before_accept_message",
-            "after_accept_message",
-            "accept_message_error",
-            "before_save_message",
-            "after_save_message",
-            "save_message_error",
-            "before_send_message",
-            "after_send_message",
-            "send_message_error",
-            "before_acknowledge_message",
-            "after_acknowledge_message",
-            "acknowledge_message_error",
-            "before_save_chunk",
-            "after_save_chunk",
-            "save_chunk_error",
+    triggers: ClassVar[
+        list[
+            Literal[
+                "before_accept_message",
+                "after_accept_message",
+                "accept_message_error",
+                "before_save_message",
+                "after_save_message",
+                "save_message_error",
+                "before_send_message",
+                "after_send_message",
+                "send_message_error",
+                "before_acknowledge_message",
+                "after_acknowledge_message",
+                "acknowledge_message_error",
+                "before_save_chunk",
+                "after_save_chunk",
+                "save_chunk_error",
+            ]
         ]
     ] = []
 
@@ -83,7 +84,6 @@ MESH_AUTH_SCHEME = "NHSMESH"
 
 
 def try_parse_authorisation_token(auth_token: str) -> Optional[AuthoriseHeaderParts]:
-
     if not auth_token:
         return None
 
@@ -126,7 +126,6 @@ class Messaging:
             self.event_name = event_name
 
         def __call__(self, func):
-
             if not inspect.iscoroutinefunction(func):
                 raise ValueError(f"wrapped function is not awaitable: {func}")
 
@@ -155,7 +154,6 @@ class Messaging:
 
     class _IfNotReadonly:
         def __call__(self, func):
-
             if not inspect.iscoroutinefunction(func):
                 raise ValueError(f"wrapped function is not awaitable: {func}")
 
@@ -170,18 +168,15 @@ class Messaging:
             return _async_inner
 
     def _find_plugins(self, package: ModuleType):
-
         for _, name, _ in pkgutil.iter_modules(package.__path__, package.__name__ + "."):
             module = importlib.import_module(name)
             for _, plugin_type in inspect.getmembers(module):
-
                 if not inspect.isclass(plugin_type) or not plugin_type.__name__.endswith("Plugin"):
                     continue
 
                 self.register_plugin(plugin_type)
 
     def register_plugin(self, plugin_type: type):
-
         self.logger.info(f"potential plugin: {plugin_type.__name__} found")
         if not hasattr(plugin_type, "triggers"):
             self.logger.warning(f"plugin: {plugin_type.__name__} has no class attr triggers .. not loading")
@@ -224,7 +219,6 @@ class Messaging:
         return created
 
     async def on_event(self, event: str, event_args: dict[str, Any], exception: Optional[Exception] = None):
-
         instances = self._plugin_instances.get(event, [])
         if not instances:
             registered = self._plugin_registry.get(event, [])
@@ -245,7 +239,6 @@ class Messaging:
 
     @_TriggersEvent(event_name="send_message")
     async def send_message(self, message: Message, body: bytes, background_tasks: BackgroundTasks) -> Message:
-
         if message.total_chunks > 0:
             await self.save_chunk(message=message, chunk_number=1, chunk=body, background_tasks=background_tasks)
 
@@ -261,7 +254,6 @@ class Messaging:
     @_TriggersEvent(event_name="accept_message")
     @_IfNotReadonly()
     async def accept_message(self, message: Message, file_size: int, background_tasks: BackgroundTasks):
-
         if message.status != MessageStatus.ACCEPTED:
             message.events.insert(0, MessageEvent(status=MessageStatus.ACCEPTED))
 
@@ -284,7 +276,6 @@ class Messaging:
     async def add_message_event(
         self, message: Message, event: MessageEvent, background_tasks: BackgroundTasks
     ) -> Message:
-
         message.events.insert(0, event)
         await self.save_message(message=message, background_tasks=background_tasks)
 
@@ -342,7 +333,6 @@ class Messaging:
         return await self.get_inbox_messages(mailbox_id, _accepted_messages)
 
     async def _validate_auth_token(self, mailbox_id: str, authorization: str) -> Optional[Mailbox]:
-
         if self.config.auth_mode == "none":
             return await self.get_mailbox(mailbox_id, accessed=True)
 
@@ -358,7 +348,6 @@ class Messaging:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_MAILBOX_TOKEN_MISMATCH)
 
         if self.config.auth_mode == "canned":
-
             if header_parts.nonce.upper() != "VALID":
                 raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_INVALID_AUTH_TOKEN)
             return await self.get_mailbox(mailbox_id, accessed=True)
@@ -386,7 +375,6 @@ class Messaging:
         return mailbox
 
     async def authorise_mailbox(self, mailbox_id: str, authorization: str) -> Optional[Mailbox]:
-
         mailbox = await self._validate_auth_token(mailbox_id, authorization)
 
         if not mailbox:

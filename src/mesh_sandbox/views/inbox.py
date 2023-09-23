@@ -10,16 +10,14 @@ from . import RichMessageV1
 
 
 class InboxV1(BaseModel):
-
     messages: list[str] = Field(description="list of message ids in the inbox, up to 'max_results'")
 
     class Config:
         title = "inbox_v1"
-        schema_extra = {"example": {"messages": ["20220228174323222_ABCDEF", "20220228174323333_ABCDEF"]}}
+        json_schema_extra = {"example": {"messages": ["20220228174323222_ABCDEF", "20220228174323333_ABCDEF"]}}
 
 
 class InboxV2(BaseModel):
-
     messages: list[str] = Field(description="list of message ids in the inbox, up to 'max_results'")
     links: Optional[dict[str, str]] = Field(description="map of links, e.g. links.next if more results exist")
     approx_inbox_count: Optional[int] = Field(
@@ -31,7 +29,7 @@ class InboxV2(BaseModel):
 
     class Config:
         title = "inbox_v2"
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "messages": ["20220228174323222_ABCDEF", "20220228174323333_ABCDEF"],
                 "links": {
@@ -45,12 +43,11 @@ class InboxV2(BaseModel):
 
 
 class AcknowledgeV1(BaseModel):
-
     messageId: str = Field(description="message_id as passed in on the url")
 
     class Config:
         title = "acknowledge_message"
-        schema_extra = {"example": {"messageId": ["20220228174323222_ABCDEF"]}}
+        json_schema_extra = {"example": {"messageId": ["20220228174323222_ABCDEF"]}}
 
 
 class InboxMessageV1(RichMessageV1):
@@ -94,7 +91,7 @@ class RichInboxView(BaseModel):
 
     class Config:
         title = "rich_inbox"
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "valid_at": "2021-11-22T14:35:52.29Z",
                 "messages": [

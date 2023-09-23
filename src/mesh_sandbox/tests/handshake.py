@@ -13,7 +13,7 @@ _CANNED_MAILBOX2 = "X26ABC2"
 
 
 @pytest.mark.parametrize(
-    "mailbox_id, accepts",
+    ("mailbox_id", "accepts"),
     [
         (_CANNED_MAILBOX1, APP_JSON),
         (_CANNED_MAILBOX1, APP_V1_JSON),
@@ -24,7 +24,6 @@ _CANNED_MAILBOX2 = "X26ABC2"
     ],
 )
 def test_handshake_no_auth_mailbox_exists(app: TestClient, mailbox_id: str, accepts: str):
-
     with temp_env_vars(AUTH_MODE="none"):
         res = app.get(
             f"/messageexchange/{mailbox_id}",
@@ -54,7 +53,6 @@ def test_handshake_no_auth_mailbox_exists(app: TestClient, mailbox_id: str, acce
     ],
 )
 def test_handshake_no_auth_mailbox_does_not_exist(app: TestClient, accepts: str):
-
     with temp_env_vars(AUTH_MODE="none"):
         res = app.get(
             f"/messageexchange/{uuid4().hex}",
@@ -70,7 +68,7 @@ def test_handshake_no_auth_mailbox_does_not_exist(app: TestClient, accepts: str)
 
 
 @pytest.mark.parametrize(
-    "mailbox_id, accepts",
+    ("mailbox_id", "accepts"),
     [
         (_CANNED_MAILBOX1, APP_JSON),
         (_CANNED_MAILBOX1, APP_V1_JSON),
@@ -81,7 +79,6 @@ def test_handshake_no_auth_mailbox_does_not_exist(app: TestClient, accepts: str)
     ],
 )
 def test_handshake_canned_auth_mailbox_exists(app: TestClient, mailbox_id: str, accepts: str):
-
     with temp_env_vars(AUTH_MODE="canned"):
         res = app.get(
             f"/messageexchange/{mailbox_id}",
@@ -105,7 +102,6 @@ def test_handshake_canned_auth_mailbox_exists(app: TestClient, mailbox_id: str, 
 
 @pytest.mark.parametrize("mailbox_id", [_CANNED_MAILBOX1, _CANNED_MAILBOX2])
 def test_handshake_canned_invalid_auth_mailbox_exists(app: TestClient, mailbox_id: str):
-
     with temp_env_vars(AUTH_MODE="canned"):
         res = app.get(
             f"/messageexchange/{mailbox_id}",
@@ -121,7 +117,7 @@ def test_handshake_canned_invalid_auth_mailbox_exists(app: TestClient, mailbox_i
 
 
 @pytest.mark.parametrize(
-    "mailbox_id, accepts",
+    ("mailbox_id", "accepts"),
     [
         (_CANNED_MAILBOX1, APP_JSON),
         (_CANNED_MAILBOX1, APP_V1_JSON),
@@ -132,7 +128,6 @@ def test_handshake_canned_invalid_auth_mailbox_exists(app: TestClient, mailbox_i
     ],
 )
 def test_handshake_full_auth_mailbox_exists(app: TestClient, mailbox_id: str, accepts: str):
-
     with temp_env_vars(AUTH_MODE="full"):
         res = app.get(
             f"/messageexchange/{mailbox_id}",
@@ -155,7 +150,6 @@ def test_handshake_full_auth_mailbox_exists(app: TestClient, mailbox_id: str, ac
 
 
 def test_handshake_full_auth_mailbox_does_not_exist(app: TestClient):
-
     mailbox_id = uuid4().hex
 
     with temp_env_vars(AUTH_MODE="full"):
@@ -173,7 +167,6 @@ def test_handshake_full_auth_mailbox_does_not_exist(app: TestClient):
 
 
 def test_handshake_full_auth_mailbox_bad_password(app: TestClient):
-
     mailbox_id = uuid4().hex
 
     with temp_env_vars(AUTH_MODE="full"):
@@ -191,7 +184,6 @@ def test_handshake_full_auth_mailbox_bad_password(app: TestClient):
 
 
 def test_handshake_full_auth_mailbox_bad_key(app: TestClient):
-
     mailbox_id = uuid4().hex
 
     with temp_env_vars(AUTH_MODE="full"):

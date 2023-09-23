@@ -205,7 +205,7 @@ async def rich_inbox(
         },
         status.HTTP_206_PARTIAL_CONTENT: {
             "description": (
-                "Partial Content – Indicates that chunk has been downloaded "
+                "Partial Content - Indicates that chunk has been downloaded "
                 "successfully and that there are further chunks."
             ),
             "content": {"application/octet-stream": None},
@@ -244,7 +244,7 @@ async def retrieve_message(
         },
         status.HTTP_206_PARTIAL_CONTENT: {
             "description": (
-                "Partial Content – Indicates that chunk has been downloaded "
+                "Partial Content - Indicates that chunk has been downloaded "
                 "successfully and that there are further chunks."
             ),
             "content": {"application/octet-stream": None},

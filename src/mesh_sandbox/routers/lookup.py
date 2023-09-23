@@ -35,7 +35,6 @@ async def lookup_by_ods_code_and_workflow_id(
     accepts_api_version: int = Depends(get_accepts_api_version),
     handler: LookupHandler = Depends(LookupHandler),
 ):
-
     return await handler.lookup_by_ods_code_and_workflow(ods_code, workflow_id, accepts_api_version)
 
 

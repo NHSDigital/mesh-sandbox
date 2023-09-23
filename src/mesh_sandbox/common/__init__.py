@@ -4,7 +4,7 @@ import os
 from dataclasses import dataclass, field
 from functools import partial
 from hashlib import sha256
-from typing import Any, Callable, Final, Optional, TypeVar, Union
+from typing import Any, Callable, Final, Optional, TypeVar
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel  # pylint: disable=no-name-in-module
@@ -47,7 +47,6 @@ def strtobool(val: Any) -> Optional[bool]:
 
 @dataclass
 class EnvConfig:
-
     env: str = field(default="local")
     build_label: str = field(default="latest")
     auth_mode: str = field(default="no_auth")
@@ -72,7 +71,6 @@ T = TypeVar("T")
 
 
 def index_of(items: list[T], find: Callable[[T], bool]) -> int:
-
     for index, elem in enumerate(items):
         if find(elem):
             return index
