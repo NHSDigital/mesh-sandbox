@@ -38,6 +38,19 @@ class AdminHandler:
 
         await self.messaging.reset_mailbox(mailbox.mailbox_id)
 
+    async def create_mailbox(self, mailbox_id: str):
+        if self.messaging.readonly:
+            raise HTTPException(
+                status_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+                detail="reset not supported for current store mode",
+            )
+
+        mailbox = await self.messaging.get_mailbox(mailbox_id, accessed=False)
+        if mailbox:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="mailbox already exists")
+
+        await self.messaging.create_mailbox(mailbox_id)
+
     async def create_report(self, request: CreateReportRequest, background_tasks: BackgroundTasks) -> Message:
         recipient = await self.messaging.get_mailbox(request.mailbox_id, accessed=False)
         if not recipient:

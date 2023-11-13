@@ -1,26 +1,17 @@
-MESH Sandbox
-===========
+# MESH Sandbox
 
 MESH sandbox for local testing of [NHS Digital's MESH API](https://digital.nhs.uk/developer/api-catalogue/message-exchange-for-social-care-and-health-api).
 
-Installation
-------------
+## Installation and example use
 
-Example use
------------
-
-pip
----
-
+#### pip
 ```bash
 pip install mesh-sandbox
 STORE_MODE=file MAILBOXES_DATA_DIR=/tmp/mesh uvicorn mesh_sandbox.api:app --reload --port 8700 --workers=1
 curl http://localhost:8700/health
 ```
 
-docker compose
---------------
-
+#### docker compose
 ```yaml
 version: '3.9'
 
@@ -50,6 +41,35 @@ services:
 
 ```
 
-Guidance for contributors
--------------------------
+
+## Ways to use mesh-sandbox
+
+#### Store Mode
+
+Store mode is set using environment variable `STORE_MODE`
+
+Accepted parameters:
+ - **canned** - Read only mailboxes
+ - **memory** - Mailbox state persists only while instance is active.
+ - **file** - Mailbox state persists using files which are stored in location defined by environment variable `FILE_STORE_DIR`
+
+> Note: Initial state of mailboxes is defined in `src/mesh_sandbox/store/data`
+
+#### Authentication Mode
+
+Authentication mode is set using environment variable: `AUTH_MODE`
+
+Accepted parameters:
+ - **none** - No authentication against passwords
+ - **full** - Requires valid password and certificates
+
+
+#### Admin endpoints
+Admin endpoints that can be used for testing purposes:
+
+- Reset all mailboxes: `/admin/reset`
+- Reset single mailbox: `/admin/reset/{mailbox_id}`
+- Create new mailbox: `/admin/create/{mailbox_id}`
+
+## Guidance for contributors
 [contributing](CONTRIBUTING.md)
