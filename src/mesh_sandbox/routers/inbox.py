@@ -35,8 +35,8 @@ router = APIRouter(
     responses={
         status.HTTP_200_OK: {
             "content": {
-                MESH_MEDIA_TYPES[2]: {"schema": InboxV2.schema()},
-                MESH_MEDIA_TYPES[1]: {"schema": InboxV1.schema()},
+                MESH_MEDIA_TYPES[2]: {"schema": InboxV2.model_json_schema()},
+                MESH_MEDIA_TYPES[1]: {"schema": InboxV1.model_json_schema()},
             }
         },
         status.HTTP_403_FORBIDDEN: {"description": "Authentication failed", "content": None},
@@ -149,7 +149,7 @@ async def head_message(
         status.HTTP_200_OK: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": RichInboxView.schema(),
+                    "schema": RichInboxView.model_json_schema(),
                 }
             },
         }

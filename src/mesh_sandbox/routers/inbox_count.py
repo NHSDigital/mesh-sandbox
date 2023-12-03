@@ -24,10 +24,10 @@ router = APIRouter(
         200: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": InboxCountV2.schema(),
+                    "schema": InboxCountV2.model_json_schema(),
                 },
                 MESH_MEDIA_TYPES[1]: {
-                    "schema": InboxCountV1.schema(),
+                    "schema": InboxCountV1.model_json_schema(),
                 },
             }
         }

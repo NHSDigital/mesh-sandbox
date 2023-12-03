@@ -258,8 +258,27 @@ jobs:
         with:
           python-version: "3.9"
 
-      - name: install poetry
-        run: make install-poetry
+      - name: setup poetry
+        uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: 1.5.1
+
+      - name: add poetry plugins
+        run: |
+          poetry self add "poetry-dynamic-versioning[plugin]"
+
+      - name: cache virtualenv
+        uses: actions/cache@v3
+        with:
+          path: |
+            .venv
+          key: ${{ runner.os }}-poetry-v2-${{ hashFiles('./poetry.lock') }}
+
+      - name: git reset
+        run: git reset --hard
+
+      - name: install dependencies
+        run: make install-ci
 
       - name: poetry build
         run: |

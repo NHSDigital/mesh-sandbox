@@ -19,10 +19,10 @@ router = APIRouter(
         status.HTTP_200_OK: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": MailboxLookupV2.schema(),
+                    "schema": MailboxLookupV2.model_json_schema(),
                 },
                 MESH_MEDIA_TYPES[1]: {
-                    "schema": EndpointLookupV1.schema(),
+                    "schema": EndpointLookupV1.model_json_schema(),
                 },
             }
         }
@@ -45,7 +45,7 @@ async def lookup_by_ods_code_and_workflow_id(
         status.HTTP_200_OK: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": MailboxLookupV2.schema(),
+                    "schema": MailboxLookupV2.model_json_schema(),
                 }
             }
         }

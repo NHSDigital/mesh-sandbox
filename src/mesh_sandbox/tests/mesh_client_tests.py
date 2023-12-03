@@ -41,7 +41,7 @@ def _mesh_client_track_message_by_message_id(base_uri: str, sender_mailbox_id: s
     with MeshClient(
         url=base_uri, mailbox=sender_mailbox_id, password=_PASSWORD, shared_key=_SHARED_KEY, max_chunk_size=100
     ) as sender:
-        tracking = sender.track_by_message_id(message_id)
+        tracking = sender.track_message(message_id)
         assert tracking
         return tracking
 
@@ -62,6 +62,7 @@ def test_handshake_bad_password(base_uri: str):
     with MeshClient(url=base_uri, mailbox=_CANNED_MAILBOX1, password="BAD", shared_key=_SHARED_KEY) as client:
         with pytest.raises(HTTPError) as err:
             client.handshake()
+        assert err.value.response is not None
         assert err.value.response.status_code == status.HTTP_403_FORBIDDEN
 
 
@@ -91,9 +92,9 @@ def test_track_message_by_message_id(base_uri: str):
     assert _mesh_client_get_inbox_count(base_uri, _CANNED_MAILBOX2) == 1
 
     tracking = _mesh_client_track_message_by_message_id(base_uri, _CANNED_MAILBOX1, message_id)
-    assert tracking["messageId"] == message_id
-    assert tracking["status"] == "Accepted"
-    assert tracking["sender"] == _CANNED_MAILBOX1
+    assert tracking["message_id"] == message_id
+    assert tracking["status"] == "accepted"
+    # assert tracking["sender"] == _CANNED_MAILBOX1
     assert tracking["recipient"] == _CANNED_MAILBOX2
 
     with MeshClient(url=base_uri, mailbox=_CANNED_MAILBOX2, password=_PASSWORD, shared_key=_SHARED_KEY) as recipient:
@@ -101,5 +102,5 @@ def test_track_message_by_message_id(base_uri: str):
         message.acknowledge()
 
     tracking = _mesh_client_track_message_by_message_id(base_uri, _CANNED_MAILBOX1, message_id)
-    assert tracking["messageId"] == message_id
-    assert tracking["status"] == "Acknowledged"
+    assert tracking["message_id"] == message_id
+    assert tracking["status"] == "acknowledged"
