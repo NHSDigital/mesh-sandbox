@@ -27,10 +27,10 @@ router = APIRouter(
         200: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": TrackingV2.schema(),
+                    "schema": TrackingV2.model_json_schema(),
                 },
                 MESH_MEDIA_TYPES[1]: {
-                    "schema": TrackingV1.schema(),
+                    "schema": TrackingV1.model_json_schema(),
                 },
             }
         }
