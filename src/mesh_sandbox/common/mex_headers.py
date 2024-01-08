@@ -37,6 +37,7 @@ class MexHeaders(NamedTuple):
     mex_content_encrypted: bool
     mex_content_compressed: bool
     mex_content_checksum: Optional[str]
+    mex_content_type: Optional[str]
 
     def update(self, **kwargs):
         if not kwargs:
@@ -58,6 +59,7 @@ class MexHeaders(NamedTuple):
             "mex_content_encrypted": message.metadata.encrypted,
             "mex_content_compressed": message.metadata.compressed,
             "mex_content_checksum": message.metadata.checksum,
+            "mex_content_type": message.metadata.content_type,
         }
 
         if kwargs:
@@ -151,6 +153,17 @@ def send_message_mex_headers(
         example="b10a8db164e0754105b7a99be72e3fe5",
         max_length=100,
     ),
+    mex_content_type: str = Header(
+        title=Headers.Mex_Content_Type,
+        default="",
+        description=(
+            "Content Type of the overall message, overrides Content-Type and "
+            "is passed through to recipient, for chunked messages Content-Type will "
+            "always be application/octet-stream but Mex-Content-Type will be preserved"
+        ),
+        example="application/json",
+        max_length=100,
+    ),
 ) -> MexHeaders:
     mex_headers = MexHeaders(
         mex_to=(mex_to or "").upper().strip(),
@@ -163,6 +176,7 @@ def send_message_mex_headers(
         mex_content_encrypted=strtobool(mex_content_encrypted) or False,
         mex_content_compressed=strtobool(mex_content_compressed) or False,
         mex_content_checksum=mex_content_checksum,
+        mex_content_type=mex_content_type,
     )
     _validate_headers(mex_headers=mex_headers)
     return mex_headers

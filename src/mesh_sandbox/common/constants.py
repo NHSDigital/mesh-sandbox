@@ -28,6 +28,7 @@ class Headers:
     Mex_Content_Encrypted: Final[str] = "mex-Content-Encrypted"
     Mex_Content_Compressed: Final[str] = "mex-Content-Compressed"
     Mex_Content_Checksum: Final[str] = "mex-Content-Checksum"
+    Mex_Content_Type: Final[str] = "mex-Content-Type"
     Mex_MessageType: Final[str] = "mex-MessageType"
     Mex_MessageID: Final[str] = "mex-MessageID"
     Mex_LocalID: Final[str] = "mex-LocalID"

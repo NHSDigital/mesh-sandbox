@@ -127,7 +127,7 @@ class OutboxHandler:
             workflow_id=mex_headers.mex_workflow_id,
             metadata=MessageMetadata(
                 subject=mex_headers.mex_subject,
-                content_type=content_type,
+                content_type=mex_headers.mex_content_type or content_type,
                 content_encoding=content_encoding,
                 file_name=mex_headers.mex_filename or f"{message_id}.dat",
                 local_id=mex_headers.mex_localid,

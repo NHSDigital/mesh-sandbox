@@ -93,6 +93,7 @@ class InboxHandler:
             Headers.Mex_Content_Compressed: "Y" if message.metadata.compressed else None,
             Headers.Mex_Content_Encrypted: "Y" if message.metadata.encrypted else None,
             Headers.Mex_Content_Checksum: message.metadata.checksum,
+            Headers.Mex_Content_Type: message.metadata.content_type,
         }
 
         if message.message_type == MessageType.REPORT:
@@ -197,11 +198,15 @@ class InboxHandler:
         if headers.get(Headers.Content_Encoding) == "gzip":
             headers[Headers.Mex_Content_Compressed] = "Y"
 
+        media_type = "application/octet-stream"
+        if accepts_api_version > 1 and message.total_chunks < 2 and message.metadata.content_type:
+            media_type = message.metadata.content_type
+
         return Response(
             status_code=status_code,
             content=chunk,
             headers=headers,
-            media_type="application/octet-stream",
+            media_type=media_type,
         )
 
     async def acknowledge_message(
