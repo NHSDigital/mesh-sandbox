@@ -4,7 +4,11 @@ WORKDIR /app
 
 COPY ./requirements.txt /requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /requirements.txt \
+RUN apt-get update \
+    && apt-get install curl -yq --no-install-recommends \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install --no-cache-dir --upgrade -r /requirements.txt \
     && mkdir -p /tmp/mesh_store
 
 

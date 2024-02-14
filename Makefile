@@ -48,11 +48,6 @@ install:
 install-ci:
 	poetry install --without local --sync
 
-install-poetry:
-	python3 -m pip install --user --upgrade pip && \
-	python3 -m pip install --user poetry==1.3.2 && \
-	poetry self add "poetry-dynamic-versioning[plugin]"
-
 update:
 	poetry update
 
@@ -84,7 +79,7 @@ ruff-check:
 	poetry run ruff .
 
 ruff-ci:
-	poetry run ruff --format=github .
+	poetry run ruff --output-format=github .
 
 
 lint: ruff mypy shellcheck hadolint

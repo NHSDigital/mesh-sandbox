@@ -40,10 +40,10 @@ router = APIRouter(
         status.HTTP_202_ACCEPTED: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": SendMessageV2.schema(),
+                    "schema": SendMessageV2.model_json_schema(),
                 },
                 MESH_MEDIA_TYPES[1]: {
-                    "schema": SendMessageV1.schema(),
+                    "schema": SendMessageV1.model_json_schema(),
                 },
             }
         },
@@ -111,7 +111,7 @@ async def send_chunk(
         200: {
             "content": {
                 MESH_MEDIA_TYPES[2]: {
-                    "schema": RichOutboxView.schema(),
+                    "schema": RichOutboxView.model_json_schema(),
                 }
             }
         }
