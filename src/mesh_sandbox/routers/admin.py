@@ -1,4 +1,4 @@
-from fastapi import APIRouter, BackgroundTasks, Depends, Path, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Response, status
 
 from ..dependencies import (
     EnvConfig,
@@ -7,7 +7,7 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.admin import AdminHandler
-from ..views.admin import AddMessageEventRequest, CreateReportRequest, MailboxDetails
+from ..views.admin import AddMessageEventRequest, CreateReportRequest
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -109,29 +109,3 @@ async def add_message_event(
 ):
     await handler.add_message_event(message_id, new_event, background_tasks)
     return Response()
-
-
-@router.get(
-    "/admin/mailbox/{mailbox_id}",
-    summary=f"Get mailbox details. {TESTING_ONLY}",
-    status_code=status.HTTP_200_OK,
-    response_model_exclude_none=True,
-)
-@router.get(
-    "/messageexchange/admin/mailbox/{mailbox_id}",
-    summary=f"Get mailbox details. {TESTING_ONLY}",
-    status_code=status.HTTP_200_OK,
-    response_model_exclude_none=True,
-)
-@router.get(
-    "/messageexchange/mailbox/{mailbox_id}",
-    summary="Get mailbox details.",
-    status_code=status.HTTP_200_OK,
-    response_model_exclude_none=True,
-)
-async def get_mailbox_details(
-    mailbox_id: str = Path(..., title="mailbox_id", description="The Mailbox ID of the mailbox to retrieve"),
-    handler: AdminHandler = Depends(AdminHandler),
-) -> MailboxDetails:
-    mailbox = await handler.get_mailbox_details(mailbox_id)
-    return mailbox

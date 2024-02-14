@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 from uuid import uuid4
 
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
@@ -84,4 +84,40 @@ def workflow_search_response(mailboxes: list[Mailbox], model_version: int = 1) -
             )
             for mailbox in mailboxes
         ]
+    )
+
+
+class MailboxInfoView(BaseModel):
+    mailbox_id: str
+    mailbox_name: str
+    active: bool
+    billing_entity: Optional[str] = None
+    ods_code: Optional[str] = ""
+    org_code: Optional[str] = ""
+    org_name: Optional[str] = ""
+
+    class Config:
+        title = "mailbox-info"
+        json_schema_extra = {
+            "example": {
+                "mailbox_id": "X26OT0ABC1",
+                "mailbox_name": "This is a mailbox for messages",
+                "active": True,
+                "billing_entity": "England",
+                "ods_code": "X26",
+                "org_code": "X36001",
+                "org_name": "SuperOrg",
+            }
+        }
+
+
+def mailbox_info_response(mailbox: Mailbox, _accepts_api_version: int = 2) -> MailboxInfoView:
+    return MailboxInfoView(
+        mailbox_id=mailbox.mailbox_id,
+        mailbox_name=mailbox.mailbox_name,
+        active=mailbox.active,
+        billing_entity=mailbox.billing_entity,
+        ods_code=mailbox.ods_code,
+        org_code=mailbox.org_code,
+        org_name=mailbox.org_name,
     )
