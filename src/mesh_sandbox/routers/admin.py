@@ -125,7 +125,7 @@ async def add_message_event(
 )
 @router.get(
     "/messageexchange/mailbox/{mailbox_id}",
-    summary=f"Get mailbox details. {TESTING_ONLY}",
+    summary="Get mailbox details.",
     status_code=status.HTTP_200_OK,
     response_model_exclude_none=True,
 )
