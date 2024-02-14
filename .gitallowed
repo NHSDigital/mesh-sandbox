@@ -5,3 +5,17 @@ password: str = field\(default=""\)
 password=_PASSWORD
 password="BAD"
 Mailbox\(mailbox_id=mailbox_id, mailbox_name="Unknown", password="password"\)
+
+.github/actions/coverage-and-sonar/action.yml:.*(GITHUB|SONAR)_TOKEN: \$\{\{ inputs.(github|sonar)-token \}\}
+.*(GITHUB|SONAR)_TOKEN: \$\{\{ secrets.(GITHUB|SONAR)_TOKEN \}\}
+poetry.lock:.*asttokens = ">=2.1.0"
+
+.*[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]("|'?)\s*(:|=|!=|==)\s*("|'?)(password|helloworld|str = "password")("|'?)
+.*[Pp][Aa][Ss][Ss][Ww][Oo][Rr][Dd]("|'?)\s*(:|=|!=|==)\s*(""|'')
+.*("|'?)[Tt][Oo][Kk][Ee][Nn]("|'?)\s*(:|=|!=|==)\s*("|'?)(Final = "Invalid Authentication Token"|Final = "Error Duplicated Authentication Token"|auth_token.strip\(\))("|'?)
+.*("|'?)[Tt][Oo][Kk][Ee][Nn]("|'?)\s*(:|=|!=|==)\s*(:|=|!=|==)\s*(""|'')
+
+.*secret_key: str, mailbox_id: str, mailbox_password: str, timestamp: str, nonce: str, nonce_count: str
+
+src/mesh_sandbox/common/messaging.py:.*def try_parse_authorisation_token\(auth_token: str\) -> Optional\[AuthoriseHeaderParts\]:
+src/mesh_sandbox/common/messaging.py:.*auth_token = auth_token.*
