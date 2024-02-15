@@ -5,7 +5,6 @@ from fastapi import BackgroundTasks, Depends, HTTPException, status
 
 from ..common.messaging import Messaging
 from ..dependencies import get_messaging
-from ..models.mailbox import Mailbox
 from ..models.message import (
     Message,
     MessageEvent,
@@ -14,7 +13,7 @@ from ..models.message import (
     MessageStatus,
     MessageType,
 )
-from ..views.admin import AddMessageEventRequest, CreateReportRequest, MailboxDetails
+from ..views.admin import AddMessageEventRequest, CreateReportRequest
 
 
 class AdminHandler:
@@ -105,10 +104,3 @@ class AdminHandler:
         message = await self.messaging.add_message_event(message, event, background_tasks)
 
         return message
-
-    async def get_mailbox_details(self, mailbox_id: str) -> MailboxDetails:
-        mailbox: Optional[Mailbox] = await self.messaging.get_mailbox(mailbox_id)
-        if not mailbox:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
-
-        return MailboxDetails.from_mailbox(mailbox)

@@ -12,6 +12,7 @@ from .routers import (
     inbox,
     inbox_count,
     lookup,
+    mailbox_info,
     outbox,
     tracking,
     update,
@@ -123,5 +124,12 @@ app.include_router(
     update.router,
     prefix="/messageexchange/{mailbox_id}/update",
     tags=["update"],
+    responses={status.HTTP_403_FORBIDDEN: {"description": "Forbidden"}},
+)
+
+app.include_router(
+    mailbox_info.router,
+    prefix="/messageexchange/mailbox",
+    tags=["Mailbox"],
     responses={status.HTTP_403_FORBIDDEN: {"description": "Forbidden"}},
 )
