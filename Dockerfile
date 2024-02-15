@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY ./requirements.txt /requirements.txt
 
-RUN apt-get update && echo "j" \
+RUN apt-get update \
     && apt-get install curl -yq --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
