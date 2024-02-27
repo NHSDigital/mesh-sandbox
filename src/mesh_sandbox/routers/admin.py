@@ -80,6 +80,26 @@ async def reset_mailbox(
 
 
 @router.post(
+    "/admin/create/{mailbox_id}",
+    summary=f"Create new mailbox. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model_exclude_none=True,
+)
+@router.post(
+    "/messageexchange/admin/create/{mailbox_id}",
+    status_code=status.HTTP_200_OK,
+    include_in_schema=False,
+    response_model_exclude_none=True,
+)
+async def create_mailbox(
+    mailbox_id: str = Depends(normalise_mailbox_id_path),
+    handler: AdminHandler = Depends(AdminHandler),
+):
+    await handler.create_mailbox(mailbox_id)
+    return {"message": f"created new mailbox {mailbox_id}"}
+
+
+@router.post(
     "/messageexchange/admin/report",
     summary=f"Put a report messages into a particular inbox. {TESTING_ONLY}",
     status_code=status.HTTP_200_OK,
