@@ -61,17 +61,16 @@ class MailboxDetails(BaseModel):
 class MessageDetails(BaseModel):
     checksum: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
     chunk_count: Optional[int] = Field(description="number of message chunks")
-    compress_flag: Optional[str] = None
     content_encoding: Optional[str] = _EMPTY
     download_timestamp: Optional[datetime] = Field(description="timestamp the message was acknowledged")
-    encrypted_flag: Optional[str] = None
     expiry_time: Optional[datetime] = Field(description="timestamp that the message will expire from the inbox")
     failure_date: Optional[datetime] = None
     failure_diagnostic: Optional[str] = None
     filename: Optional[str] = Field(description="local filename as supplied by the sender")
-    file_size: int = Field(description="the uploaded file size")
+    file_size: Optional[int] = Field(description="the uploaded file size")
 
-    is_compressed: Optional[str] = _EMPTY
+    is_compressed: Optional[bool] = False
+    is_encrypted: Optional[bool] = False
     linked_msg_id: Optional[str] = Field(description="related message id")
     local_id: Optional[str] = Field(description="local identifier supplied by sender")
     message_id: str = Field(description="message identifier of the sent message")
@@ -126,16 +125,15 @@ class MessageDetails(BaseModel):
         return cls(
             checksum=message.metadata.checksum or _EMPTY,
             chunk_count=message.total_chunks,
-            compress_flag="Y" if message.metadata.compressed else _EMPTY,
             content_encoding=message.metadata.content_encoding,
             download_timestamp=message.status_timestamp(MessageStatus.ACKNOWLEDGED),
-            encrypted_flag="Y" if message.metadata.encrypted else _EMPTY,
             expiry_time=message.inbox_expiry_timestamp,
             failure_date=failure_date,
             failure_diagnostic=failure_description,
             filename=message.metadata.file_name or f"{message.message_id}.dat",
             file_size=message.file_size,
-            is_compressed="Y" if message.metadata.compressed else _EMPTY,
+            is_compressed=message.metadata.compressed,
+            is_encrypted=message.metadata.encrypted,
             linked_msg_id=message.error_event.linked_message_id if message.error_event else None,
             local_id=message.metadata.local_id,
             recipient_ods_code=message.recipient.ods_code,

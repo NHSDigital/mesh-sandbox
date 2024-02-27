@@ -156,13 +156,6 @@ async def get_mailbox_details(
     response_model=MessageDetails,
     response_model_exclude_none=True,
 )
-@router.get(
-    "/messageexchange/message/{message_id}",
-    summary=f"Get message details matching id from message store. {TESTING_ONLY}",
-    status_code=status.HTTP_200_OK,
-    response_model=MessageDetails,
-    response_model_exclude_none=True,
-)
 async def get_message_details(
     message_id: str = Path(..., title="message_id", description="The ID of the message to retrieve"),
     handler: AdminHandler = Depends(AdminHandler),
