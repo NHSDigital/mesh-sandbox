@@ -1,5 +1,6 @@
 import os
 import shutil
+from datetime import datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -362,3 +363,87 @@ def test_get_mailbox_happy_path(app: TestClient, root_path: str):
         assert get_mailbox["org_code"] == "X26"
         assert get_mailbox["org_name"] == ""
         assert get_mailbox["active"] is True
+
+
+@pytest.mark.parametrize("root_path", ["/admin/message", "/messageexchange/admin/message"])
+def test_get_message(app: TestClient, root_path: str):
+    message_data = b"Hello World123!"
+    msg_id = mesh_api_send_message_and_return_message_id(
+        app, _CANNED_MAILBOX1, _CANNED_MAILBOX2, file_name="helloworld.dat", message_data=message_data
+    )
+    res = app.get(f"{root_path}/{msg_id}")
+
+    assert res.status_code == status.HTTP_200_OK
+
+    message = res.json()
+    upload_date = datetime.now()
+    expiry_date = upload_date + timedelta(days=5)
+
+    assert message["checksum"] == ""
+    assert message["chunk_count"] == 1
+    assert message["content_encoding"] == ""
+    assert message["expiry_time"].startswith(expiry_date.strftime("%Y-%m-%d"))
+    assert message["filename"] == "helloworld.dat"
+    assert message["file_size"] == 15
+    assert not message["is_compressed"]
+    assert not message["is_encrypted"]
+    assert message["local_id"] == ""
+    assert message["message_id"] == msg_id
+    assert message["message_type"] == "Data"
+    assert message["recipient"] == _CANNED_MAILBOX2
+    assert message["recipient_ods_code"] == "X26"
+    assert message["recipient_org_code"] == "X26"
+    assert message["sender"] == _CANNED_MAILBOX1
+    assert message["sender_ods_code"] == "X26"
+    assert message["sender_org_code"] == "X26"
+    assert message["status"] == "Accepted"
+    assert message["status_success"] == "SUCCESS"
+    assert message["subject"] == ""
+    assert message["upload_timestamp"].startswith(upload_date.strftime("%Y-%m-%d"))
+    assert message["workflow_id"] == "TEST_WORKFLOW"
+
+
+@pytest.mark.parametrize("root_path", ["/admin/message", "/messageexchange/admin/message"])
+def test_get_message_report_type(app: TestClient, root_path: str):
+    expected_response = {
+        "status": MessageStatus.ERROR,
+        "workflow_id": uuid4().hex,
+        "code": "21",
+        "description": "my error",
+        "subject": f"my subject {uuid4().hex}",
+        "local_id": f"my local id {uuid4().hex}",
+        "file_name": f"my filename {uuid4().hex}",
+        "linked_message_id": uuid4().hex,
+    }
+
+    request = CreateReportRequest(
+        mailbox_id=_CANNED_MAILBOX1,
+        status=expected_response["status"],
+        workflow_id=expected_response["workflow_id"],
+        code=expected_response["code"],
+        description=expected_response["description"],
+        subject=expected_response["subject"],
+        local_id=expected_response["local_id"],
+        file_name=expected_response["file_name"],
+        linked_message_id=expected_response["linked_message_id"],
+    )
+
+    res = app.post("/messageexchange/admin/report", json=request.dict())
+    assert res.status_code == status.HTTP_200_OK
+    msg_id = res.json()["message_id"]
+
+    res = app.get(f"{root_path}/{msg_id}")
+    message = res.json()
+
+    assert message["message_id"] == msg_id
+    assert message["linked_msg_id"] == expected_response["linked_message_id"]
+    assert message["message_type"] == "Report"
+    assert message["recipient"] == _CANNED_MAILBOX1
+    assert message["status_code"] == expected_response["code"]
+    assert message["status_success"] == "ERROR"
+
+
+@pytest.mark.parametrize("root_path", ["/admin/message", "/messageexchange/admin/message", "/messageexchange/message"])
+def test_get_message_not_found(app: TestClient, root_path: str):
+    res = app.get(f"{root_path}/notfound")
+    assert res.status_code == status.HTTP_404_NOT_FOUND

@@ -14,7 +14,12 @@ from ..models.message import (
     MessageStatus,
     MessageType,
 )
-from ..views.admin import AddMessageEventRequest, CreateReportRequest, MailboxDetails
+from ..views.admin import (
+    AddMessageEventRequest,
+    CreateReportRequest,
+    MailboxDetails,
+    MessageDetails,
+)
 
 
 class AdminHandler:
@@ -112,3 +117,10 @@ class AdminHandler:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
 
         return MailboxDetails.from_mailbox(mailbox)
+
+    async def get_message_details(self, message_id: str) -> MessageDetails:
+        message: Optional[Message] = await self.messaging.get_message(message_id)
+        if not message:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND)
+
+        return MessageDetails.from_message(message)
