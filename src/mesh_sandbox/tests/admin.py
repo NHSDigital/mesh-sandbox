@@ -362,3 +362,33 @@ def test_get_mailbox_happy_path(app: TestClient, root_path: str):
         assert get_mailbox["org_code"] == "X26"
         assert get_mailbox["org_name"] == ""
         assert get_mailbox["active"] is True
+
+
+@pytest.mark.parametrize("root_path", ["/admin/message", "/messageexchange/admin/message", "/messageexchange/message"])
+def test_get_message(app: TestClient, root_path: str):
+    msg_id = mesh_api_send_message_and_return_message_id(
+        app, _CANNED_MAILBOX1, _CANNED_MAILBOX2, file_name="helloworld.dat"
+    )
+    res = app.get(f"{root_path}/{msg_id}")
+
+    assert res.status_code == status.HTTP_200_OK
+
+    message = res.json()
+
+    assert message["message_id"] == msg_id
+    assert message["sender"] == _CANNED_MAILBOX1
+    assert message["sender_ods_code"] == "X26"
+    assert message["sender_org_code"] == "X26"
+    assert message["recipient"] == _CANNED_MAILBOX2
+    assert message["recipient_ods_code"] == "X26"
+    assert message["recipient_org_code"] == "X26"
+    assert message["status"] == "Accepted"
+    assert message["workflow_id"] == "TEST_WORKFLOW"
+    assert message["message_type"] == "Data"
+    assert message["filename"] == "helloworld.dat"
+
+
+@pytest.mark.parametrize("root_path", ["/admin/message", "/messageexchange/admin/message", "/messageexchange/message"])
+def test_get_message_not_found(app: TestClient, root_path: str):
+    res = app.get(f"{root_path}/notfound")
+    assert res.status_code == status.HTTP_404_NOT_FOUND

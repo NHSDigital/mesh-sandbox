@@ -7,7 +7,12 @@ from ..dependencies import (
     normalise_message_id_path,
 )
 from ..handlers.admin import AdminHandler
-from ..views.admin import AddMessageEventRequest, CreateReportRequest, MailboxDetails
+from ..views.admin import (
+    AddMessageEventRequest,
+    CreateReportRequest,
+    MailboxDetails,
+    MessageDetails,
+)
 from .request_logging import RequestLoggingRoute
 
 router = APIRouter(
@@ -135,3 +140,32 @@ async def get_mailbox_details(
 ) -> MailboxDetails:
     mailbox = await handler.get_mailbox_details(mailbox_id)
     return mailbox
+
+
+@router.get(
+    "/admin/message/{message_id}",
+    summary=f"Get message details matching id from message store. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model=MessageDetails,
+    response_model_exclude_none=True,
+)
+@router.get(
+    "/messageexchange/admin/message/{message_id}",
+    summary=f"Get message details matching id from message store. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model=MessageDetails,
+    response_model_exclude_none=True,
+)
+@router.get(
+    "/messageexchange/message/{message_id}",
+    summary=f"Get message details matching id from message store. {TESTING_ONLY}",
+    status_code=status.HTTP_200_OK,
+    response_model=MessageDetails,
+    response_model_exclude_none=True,
+)
+async def get_message_details(
+    message_id: str = Path(..., title="message_id", description="The ID of the message to retrieve"),
+    handler: AdminHandler = Depends(AdminHandler),
+) -> MessageDetails:
+    message = await handler.get_message_details(message_id.upper())
+    return message
