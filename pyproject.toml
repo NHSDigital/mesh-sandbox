@@ -35,7 +35,7 @@ types-pyOpenSSL = "^24.0.0.20240130"
 lxml = "^4.9.1"
 types-lxml = ">=2022.11.8,<2024.0.0"
 ruff = "^0.2.0"
-black = "^23.9.1"
+black = ">=23.9.1,<25.0.0"
 
 
 [tool.poetry.group.local.dependencies]
