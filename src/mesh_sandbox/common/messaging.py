@@ -360,7 +360,7 @@ class Messaging:
         if not mailbox:
             return None
 
-        cypher_text = generate_cipher_text(
+        cipher_text = generate_cipher_text(
             self.config.shared_key,
             header_parts.mailbox_id,
             mailbox.password,
@@ -369,7 +369,7 @@ class Messaging:
             header_parts.nonce_count,
         )
 
-        if header_parts.cipher_text != cypher_text:
+        if header_parts.cipher_text.lower() != cipher_text.lower():
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=constants.ERROR_INVALID_AUTH_TOKEN)
 
         return mailbox
