@@ -1,0 +1,15 @@
+name: Build, Test & Create Release
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  build:
+    name: Build
+    uses: webbhalsa/dave-reusable-workflows/.github/workflows/build-docker.yml@main
+    with:
+      ecsEnabled: false
+    secrets:
+      githubPackagesToken: ${{ secrets.DAVE_GITHUB_PACKAGES_RO_TOKEN }}
+      daveApiKey: ${{ secrets.DAVE_API_KEY }}
