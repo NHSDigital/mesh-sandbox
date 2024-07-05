@@ -18,6 +18,7 @@ cryptography = "^42.0.0"
 fastapi = ">=0.104.1,<0.112.0"
 gunicorn = ">=21.2,<23.0"
 uvicorn = "^0.23.2"
+mesh-client = "^3.2.3"
 
 
 [tool.poetry.group.dev.dependencies]
