@@ -9,7 +9,6 @@ from .serialisation import serialise_model
 
 
 class FileStore(MemoryStore):
-
     """file based store, will store the message payloads in the filesystem"""
 
     load_messages = True
