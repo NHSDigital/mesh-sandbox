@@ -98,15 +98,15 @@ def _deserialise_value(field_type, value):
 
     origin_type = get_origin(field_type)
 
-    if origin_type == list:
+    if origin_type is list:
         item_type = get_args(field_type)[0]
         return [_deserialise_value(item_type, val) for val in value]
 
-    if origin_type == dict:
+    if origin_type is dict:
         val_type = get_args(field_type)[1]
         return {key: _deserialise_value(val_type, val) for key, val in value.items()}
 
-    if origin_type == frozenset:
+    if origin_type is frozenset:
         return frozenset(val for val in value)
 
     return value
