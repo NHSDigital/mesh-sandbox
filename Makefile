@@ -73,13 +73,13 @@ hadolint:
 
 
 ruff: black
-	poetry run ruff --fix --show-fixes .
+	poetry run ruff check --fix --show-fixes .
 
 ruff-check:
-	poetry run ruff .
+	poetry run ruff check .
 
 ruff-ci:
-	poetry run ruff --output-format=github .
+	poetry run ruff check --output-format=github .
 
 
 lint: ruff mypy shellcheck hadolint
