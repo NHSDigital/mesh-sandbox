@@ -77,8 +77,6 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
             with open(installer_rar, "wb+") as f:
                 f.write(res.read())
 
-    print(pathlib.Path(base_dir).glob("*"))
-
     subprocess.check_call(f"unrar x -y {installer_rar} {installer_dir}".split(" "))
 
     found = list(pathlib.Path(installer_dir).glob("**/*-installer-signed.jar"))
