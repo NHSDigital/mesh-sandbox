@@ -26,8 +26,8 @@ class SendMessageV2(BaseModel):
 
 
 class UploadChunkV1(BaseModel):
-    messageID: str = Field(default=None, description="message identifier, as supplied in the request url")
-    blockID: int = Field(default=None, description="chunk number, as supplied in the request url")
+    messageID: Union[str, None] = Field(default=None, description="message identifier, as supplied in the request url")
+    blockID: Union[int, None] = Field(default=None, description="chunk number, as supplied in the request url")
 
     class Config:
         title = "upload_chunk"
