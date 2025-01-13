@@ -7,7 +7,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import uuid4
 
-import httpx
+import cloudscraper  # type: ignore[import-untyped]
 from OpenSSL import crypto
 
 from ..common import MESH_AUTH_SCHEME, generate_cipher_text
@@ -72,10 +72,17 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
             f"/message-exchange-for-social-care-and-health-mesh/mesh-installation-pack-client-{version_dash}.rar"
         )
 
-        with httpx.Client() as client:
-            res = client.get(installer_uri, follow_redirects=True)
-            with open(installer_rar, "wb+") as f:
-                f.write(res.read())
+        print(f"Downloading installer rar from {installer_uri}")
+        # Use cloudscraper to get past the cloudflare protections
+        scraper = cloudscraper.create_scraper()
+        response = scraper.get(installer_uri)
+        response_status = response.status_code
+        print(f"Response status = {response_status}")
+        if response_status == 200:
+            with open(installer_rar, "wb") as f:
+                f.write(response.content)
+
+            print("Installer stat", os.stat(installer_rar))
 
     subprocess.check_call(f"stat {installer_rar}".split(" "))
     subprocess.check_call(f"cat {installer_rar}".split(" "))
