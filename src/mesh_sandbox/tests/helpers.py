@@ -73,9 +73,12 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
         )
 
         with httpx.Client() as client:
-            res = client.get(installer_uri)
+            res = client.get(installer_uri, follow_redirects=True)
             with open(installer_rar, "wb+") as f:
                 f.write(res.read())
+
+    subprocess.check_call(f"stat {installer_rar}".split(" "))
+    subprocess.check_call(f"cat {installer_rar}".split(" "))
 
     subprocess.check_call(f"unrar x -y {installer_rar} {installer_dir}".split(" "))
 
