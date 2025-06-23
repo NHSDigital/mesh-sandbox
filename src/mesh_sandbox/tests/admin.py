@@ -447,3 +447,39 @@ def test_get_message_report_type(app: TestClient, root_path: str):
 def test_get_message_not_found(app: TestClient, root_path: str):
     res = app.get(f"{root_path}/notfound")
     assert res.status_code == status.HTTP_404_NOT_FOUND
+
+
+@pytest.mark.parametrize("root_path", ["/messageexchange/admin/message"])
+def test_generate_ndr(app: TestClient, root_path: str):
+
+    expected_response = {
+        "status": MessageStatus.UNDELIVERABLE,
+        "workflow_id": uuid4().hex,
+        "code": "21",
+        "description": "non delivery reason",
+        "subject": f"my subject {uuid4().hex}",
+        "local_id": f"my local id {uuid4().hex}",
+        "file_name": f"my filename {uuid4().hex}",
+        "linked_message_id": uuid4().hex,
+    }
+
+    request = CreateReportRequest(
+        mailbox_id=_CANNED_MAILBOX1,
+        code=expected_response["code"],
+        description=expected_response["description"],
+        workflow_id=expected_response["workflow_id"],
+        subject=expected_response["subject"],
+        local_id=expected_response["local_id"],
+        status=expected_response["status"],
+        file_name=expected_response["file_name"],
+        linked_message_id=expected_response["linked_message_id"],
+    )
+
+    res = app.post("/messageexchange/admin/report", json=request.model_dump())
+    assert res.status_code == status.HTTP_200_OK
+    msg_id = res.json()["message_id"]
+
+    res = app.get(f"{root_path}/{msg_id}")
+    non_delivery_report = res.json()
+    assert non_delivery_report["status"] == "Accepted"
+    assert non_delivery_report["status_description"] == "Message not collected by recipient after 5 days"

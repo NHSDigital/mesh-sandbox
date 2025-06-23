@@ -1,5 +1,7 @@
 from typing import Any, Optional, Union
+from uuid import uuid4
 
+from ..models.message import Message, MessageEvent, MessageMetadata, MessageParty, MessageStatus, MessageType
 from . import constants
 
 
@@ -44,3 +46,67 @@ def try_parse_error(detail: Union[str, dict, None] = None, message_id: Optional[
     if isinstance(detail, dict):
         return detail
     return {"errorDescription": str(detail)}
+
+
+def get_ndr_error() -> dict:
+    expiry_period = 5
+    error_description = parse_error(
+        detail=constants.ERROR_UNDELIVERED_MESSAGE,
+        format_params=(expiry_period,),
+    )
+
+    return error_description
+
+
+def create_ndr(request, recipient) -> Message:
+    error_description = get_ndr_error()
+    report = create_error_report(request, error_description, recipient)
+    return report
+
+
+def create_error_report(request, error_description: dict, recipient) -> Message:
+
+    error_code = error_description.get("errorCode")
+    error_event = error_description.get("errorEvent")
+    error_message = error_description.get("errorDescription")
+
+    subject = "NDR" if not request.subject else f"NDR: {request.subject}"
+
+    metadata = MessageMetadata(
+        subject=subject,
+        local_id=request.local_id,
+    )
+
+    return Message(
+        events=[
+            MessageEvent(status=MessageStatus.ACCEPTED),
+            MessageEvent(
+                status=MessageStatus.ERROR,
+                code=error_code,
+                event=error_event,
+                description=error_message,
+                linked_message_id=request.linked_message_id,
+            ),
+        ],
+        message_id=uuid4().hex.upper(),
+        sender=MessageParty(
+            mailbox_id="",
+            mailbox_name="Central System Mailbox",
+            ods_code="X26",
+            org_code="X26",
+            org_name="NHS England",
+            billing_entity="England",
+        ),
+        recipient=MessageParty(
+            mailbox_id=recipient.mailbox_id,
+            mailbox_name=recipient.mailbox_name,
+            ods_code=recipient.ods_code,
+            org_code=recipient.org_code,
+            org_name=recipient.org_name,
+            billing_entity=recipient.billing_entity,
+        ),
+        total_chunks=0,
+        message_type=MessageType.REPORT,
+        workflow_id=request.workflow_id,
+        metadata=metadata,
+    )

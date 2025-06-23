@@ -3,6 +3,8 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, Depends, HTTPException, status
 
+from mesh_sandbox.common.exceptions import create_ndr
+
 from ..common.messaging import Messaging
 from ..dependencies import get_messaging
 from ..models.mailbox import Mailbox
@@ -50,43 +52,46 @@ class AdminHandler:
 
         assert request.status in (MessageStatus.UNDELIVERABLE, MessageStatus.ERROR)
 
-        message = Message(
-            events=[
-                MessageEvent(status=MessageStatus.ACCEPTED),
-                MessageEvent(
-                    status=request.status,
-                    event="TRANSFER",
-                    code=request.code,
-                    description=request.description,
-                    linked_message_id=request.linked_message_id,
+        if request.status == MessageStatus.UNDELIVERABLE:
+            message = create_ndr(request, recipient)
+        else:
+            message = Message(
+                events=[
+                    MessageEvent(status=MessageStatus.ACCEPTED),
+                    MessageEvent(
+                        status=request.status,
+                        event="TRANSFER",
+                        code=request.code,
+                        description=request.description,
+                        linked_message_id=request.linked_message_id,
+                    ),
+                ],
+                message_id=uuid4().hex.upper(),
+                sender=MessageParty(
+                    mailbox_id="",
+                    mailbox_name="Central System Mailbox",
+                    ods_code="X26",
+                    org_code="X26",
+                    org_name="NHS England",
+                    billing_entity="England",
                 ),
-            ],
-            message_id=uuid4().hex.upper(),
-            sender=MessageParty(
-                mailbox_id="",
-                mailbox_name="Central System Mailbox",
-                ods_code="X26",
-                org_code="X26",
-                org_name="NHS England",
-                billing_entity="England",
-            ),
-            recipient=MessageParty(
-                mailbox_id=recipient.mailbox_id,
-                mailbox_name=recipient.mailbox_name,
-                ods_code=recipient.ods_code,
-                org_code=recipient.org_code,
-                org_name=recipient.org_name,
-                billing_entity=recipient.billing_entity,
-            ),
-            total_chunks=0,
-            message_type=MessageType.REPORT,
-            workflow_id=request.workflow_id,
-            metadata=MessageMetadata(
-                subject=request.subject,
-                local_id=request.local_id,
-                file_name=request.file_name,
-            ),
-        )
+                recipient=MessageParty(
+                    mailbox_id=recipient.mailbox_id,
+                    mailbox_name=recipient.mailbox_name,
+                    ods_code=recipient.ods_code,
+                    org_code=recipient.org_code,
+                    org_name=recipient.org_name,
+                    billing_entity=recipient.billing_entity,
+                ),
+                total_chunks=0,
+                message_type=MessageType.REPORT,
+                workflow_id=request.workflow_id,
+                metadata=MessageMetadata(
+                    subject=request.subject,
+                    local_id=request.local_id,
+                    file_name=request.file_name,
+                ),
+            )
 
         await self.messaging.send_message(message=message, body=b"", background_tasks=background_tasks)
 
