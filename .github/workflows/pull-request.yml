@@ -72,7 +72,7 @@ jobs:
       - name: installs unrar
         run: |
           sudo apt update
-          sudo apt-get install unrar -yq
+          sudo apt-get install unrar -y
 
       - name: setup java
         if: success() || failure()
