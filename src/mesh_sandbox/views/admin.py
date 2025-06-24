@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Final
+from typing import Final, Optional
 
 from pydantic import BaseModel, Field  # pylint: disable=no-name-in-module
 
@@ -21,25 +21,25 @@ class CreateReportRequest(BaseModel):
     code: str = Field(description="error code")
     description: str = Field(description="error description")
     workflow_id: str = Field(description="report workflow id")
-    subject: str | None = Field(description="report workflow id", default=None)
-    local_id: str | None = Field(description="report message local id", default=None)
+    subject: Optional[str] = Field(description="report workflow id", default=None)
+    local_id: Optional[str] = Field(description="report message local id", default=None)
     status: str = Field(description="report status (error/undeliverable)", default=MessageStatus.UNDELIVERABLE)
-    file_name: str | None = Field(description="file name", default=None)
-    linked_message_id: str | None = Field(description="linked message id", default=None)
+    file_name: Optional[str] = Field(description="file name", default=None)
+    linked_message_id: Optional[str] = Field(description="linked message id", default=None)
 
 
 class AddMessageEventRequest(BaseModel):
     status: str = Field(description="new message status")
-    code: str | None = Field(description="error code", default=None)
-    event: str | None = Field(description="error event (SEND/TRANSFER) etc)", default=None)
-    description: str | None = Field(description="error description", default=None)
-    linked_message_id: str | None = Field(description="linked message id", default=None)
+    code: Optional[str] = Field(description="error code", default=None)
+    event: Optional[str] = Field(description="error event (SEND/TRANSFER) etc)", default=None)
+    description: Optional[str] = Field(description="error description", default=None)
+    linked_message_id: Optional[str] = Field(description="linked message id", default=None)
 
 
 class MailboxDetails(BaseModel):
     mailbox_id: str = Field(description="mailbox id")
     mailbox_name: str = Field(description="mailbox name")
-    billing_entity: str | None = Field(default=None, description="billing entity")
+    billing_entity: Optional[str] = Field(default=None, description="billing entity")
     ods_code: str = Field(default="", description="ODS code")
     org_code: str = Field(default="", description="Organisation code")
     org_name: str = Field(default="", description="Organisation name")
@@ -59,45 +59,45 @@ class MailboxDetails(BaseModel):
 
 
 class MessageDetails(BaseModel):
-    checksum: str | None = Field(description="message status e.g. 'accepted' 'acknowledged'")
-    chunk_count: int | None = Field(description="number of message chunks")
-    content_encoding: str | None = _EMPTY
-    download_timestamp: datetime | None = Field(description="timestamp the message was acknowledged")
-    expiry_time: datetime | None = Field(description="timestamp that the message will expire from the inbox")
-    failure_date: datetime | None = None
-    failure_diagnostic: str | None = None
-    filename: str | None = Field(description="local filename as supplied by the sender")
-    file_size: int | None = Field(description="the uploaded file size")
+    checksum: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
+    chunk_count: Optional[int] = Field(description="number of message chunks")
+    content_encoding: Optional[str] = _EMPTY
+    download_timestamp: Optional[datetime] = Field(description="timestamp the message was acknowledged")
+    expiry_time: Optional[datetime] = Field(description="timestamp that the message will expire from the inbox")
+    failure_date: Optional[datetime] = None
+    failure_diagnostic: Optional[str] = None
+    filename: Optional[str] = Field(description="local filename as supplied by the sender")
+    file_size: Optional[int] = Field(description="the uploaded file size")
 
-    is_compressed: bool | None = False
-    is_encrypted: bool | None = False
-    linked_msg_id: str | None = Field(description="related message id")
-    local_id: str | None = Field(description="local identifier supplied by sender")
+    is_compressed: Optional[bool] = False
+    is_encrypted: Optional[bool] = False
+    linked_msg_id: Optional[str] = Field(description="related message id")
+    local_id: Optional[str] = Field(description="local identifier supplied by sender")
     message_id: str = Field(description="message identifier of the sent message")
-    message_type: str | None = Field(description="DATA or REPORT")
+    message_type: Optional[str] = Field(description="DATA or REPORT")
 
-    recipient: str | None = Field(description="recipient mailbox identifier")
-    recipient_name: str | None = Field(description="recipient mailbox name")
-    recipient_ods_code: str | None = Field(description="recipient organisation ODS code")
-    recipient_org_code: str | None = Field(description="recipient organisation code")
-    recipient_org_name: str | None = Field(description="recipient organisation name")
+    recipient: Optional[str] = Field(description="recipient mailbox identifier")
+    recipient_name: Optional[str] = Field(description="recipient mailbox name")
+    recipient_ods_code: Optional[str] = Field(description="recipient organisation ODS code")
+    recipient_org_code: Optional[str] = Field(description="recipient organisation code")
+    recipient_org_name: Optional[str] = Field(description="recipient organisation name")
 
-    sender: str | None = Field(description="sender mailbox identifier")
-    sender_name: str | None = Field(description="sender mailbox name")
-    sender_ods_code: str | None = Field(description="sender ods code")
-    sender_org_code: str | None = Field(description="sender organisation code")
-    sender_org_name: str | None = Field(description="sender organisation name")
+    sender: Optional[str] = Field(description="sender mailbox identifier")
+    sender_name: Optional[str] = Field(description="sender mailbox name")
+    sender_ods_code: Optional[str] = Field(description="sender ods code")
+    sender_org_code: Optional[str] = Field(description="sender organisation code")
+    sender_org_name: Optional[str] = Field(description="sender organisation name")
 
-    status: str | None = Field(description="message status e.g. 'accepted' 'acknowledged'")
-    status_code: str | None = Field(description="status code")
-    status_description: str | None = Field(description="status description")
-    status_event: str | None = Field(description="status event")
-    status_success: str | None = Field(description="SUCCESS or ERROR if the message accepted")
-    status_timestamp: datetime | None = Field(description="timestamp of the status change")
+    status: Optional[str] = Field(description="message status e.g. 'accepted' 'acknowledged'")
+    status_code: Optional[str] = Field(description="status code")
+    status_description: Optional[str] = Field(description="status description")
+    status_event: Optional[str] = Field(description="status event")
+    status_success: Optional[str] = Field(description="SUCCESS or ERROR if the message accepted")
+    status_timestamp: Optional[datetime] = Field(description="timestamp of the status change")
 
-    subject: str | None = Field(description="message subject")
-    upload_timestamp: datetime | None = Field(description="timestamp that the message was accepted")
-    workflow_id: str | None = Field(description="message workflow identifier")
+    subject: Optional[str] = Field(description="message subject")
+    upload_timestamp: Optional[datetime] = Field(description="timestamp that the message was accepted")
+    workflow_id: Optional[str] = Field(description="message workflow identifier")
 
     @classmethod
     def from_message(cls, message: Message) -> MessageDetails:

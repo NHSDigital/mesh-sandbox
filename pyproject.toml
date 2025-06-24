@@ -133,7 +133,8 @@ lint.select = [
 src = ["."]
 lint.ignore = [
     "PT004",
-    "UP007"
+    "UP007",
+    "UP045"
 ]
 exclude = [
     ".git",
