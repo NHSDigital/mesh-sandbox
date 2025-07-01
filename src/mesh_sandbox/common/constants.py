@@ -45,8 +45,6 @@ class Headers:
     Mex_AddressType = "mex-AddressType"
 
 
-MESSAGE_IN_INBOX_EXPIRY_IN_DAYS = 5
-
 # Error codes
 ERROR_INVALID_FROM_ADDRESS: Final = "Invalid From Address"
 ERROR_MISSING_TO_ADDRESS: Final = "TO_DTS missing"

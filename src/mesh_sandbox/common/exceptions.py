@@ -1,6 +1,8 @@
 from typing import Any, Optional, Union
 from uuid import uuid4
 
+from mesh_sandbox.views.admin import CreateReportRequest
+
 from ..models.message import Message, MessageEvent, MessageMetadata, MessageParty, MessageStatus, MessageType
 from . import constants
 
@@ -58,13 +60,13 @@ def get_ndr_error() -> dict:
     return error_description
 
 
-def create_ndr(request, recipient) -> Message:
+def create_ndr(request: CreateReportRequest, recipient: str) -> Message:
     error_description = get_ndr_error()
     report = create_error_report(request, error_description, recipient)
     return report
 
 
-def create_error_report(request, error_description: dict, recipient) -> Message:
+def create_error_report(request: CreateReportRequest, error_description: dict, recipient: str) -> Message:
 
     error_code = error_description.get("errorCode")
     error_event = error_description.get("errorEvent")
