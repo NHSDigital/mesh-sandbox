@@ -1,3 +1,4 @@
+from mailbox import Mailbox
 from typing import Any, Optional, Union
 from uuid import uuid4
 
@@ -60,13 +61,13 @@ def get_ndr_error() -> dict:
     return error_description
 
 
-def create_ndr(request: CreateReportRequest, recipient: str) -> Message:
+def create_ndr(request: CreateReportRequest, recipient: Mailbox) -> Message:
     error_description = get_ndr_error()
     report = create_error_report(request, error_description, recipient)
     return report
 
 
-def create_error_report(request: CreateReportRequest, error_description: dict, recipient: str) -> Message:
+def create_error_report(request: CreateReportRequest, error_description: dict, recipient: Mailbox) -> Message:
 
     error_code = error_description.get("errorCode")
     error_event = error_description.get("errorEvent")
