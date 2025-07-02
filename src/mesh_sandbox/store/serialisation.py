@@ -85,7 +85,7 @@ def _deserialise_value(field_type, value):
         return value
 
     if is_dataclass(field_type):
-        return deserialise_model(value, field_type)
+        return deserialise_model(value, field_type)  # type: ignore
 
     if field_type in (int, float):
         return field_type(value)
