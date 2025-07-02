@@ -1,7 +1,7 @@
-from mailbox import Mailbox
 from typing import Any, Optional, Union
 from uuid import uuid4
 
+from mesh_sandbox.models.mailbox import Mailbox
 from mesh_sandbox.views.admin import CreateReportRequest
 
 from ..models.message import Message, MessageEvent, MessageMetadata, MessageParty, MessageStatus, MessageType
