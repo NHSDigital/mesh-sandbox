@@ -127,7 +127,7 @@ jobs:
 
       - name: archive reports
         if: success() || failure()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: reports
           path: reports/**/*

@@ -74,6 +74,7 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
 
         with httpx.Client() as client:
             res = client.get(installer_uri)
+            res.raise_for_status()
             with open(installer_rar, "wb+") as f:
                 f.write(res.read())
 
