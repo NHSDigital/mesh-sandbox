@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from fastapi import BackgroundTasks, Depends, HTTPException, status
 
-from mesh_sandbox.common.exceptions import create_ndr
+from mesh_sandbox.common.exceptions import create_ndr_event, create_ndr_metadata
 
 from ..common.messaging import Messaging
 from ..dependencies import get_messaging
@@ -53,45 +53,49 @@ class AdminHandler:
         assert request.status in (MessageStatus.UNDELIVERABLE, MessageStatus.ERROR)
 
         if request.status == MessageStatus.UNDELIVERABLE:
-            message = create_ndr(request, recipient)
+            message_event = create_ndr_event(request)
+            message_metadata = create_ndr_metadata(request)
         else:
-            message = Message(
-                events=[
-                    MessageEvent(status=MessageStatus.ACCEPTED),
-                    MessageEvent(
-                        status=request.status,
-                        event="TRANSFER",
-                        code=request.code,
-                        description=request.description,
-                        linked_message_id=request.linked_message_id,
-                    ),
-                ],
-                message_id=uuid4().hex.upper(),
-                sender=MessageParty(
-                    mailbox_id="",
-                    mailbox_name="Central System Mailbox",
-                    ods_code="X26",
-                    org_code="X26",
-                    org_name="NHS England",
-                    billing_entity="England",
-                ),
-                recipient=MessageParty(
-                    mailbox_id=recipient.mailbox_id,
-                    mailbox_name=recipient.mailbox_name,
-                    ods_code=recipient.ods_code,
-                    org_code=recipient.org_code,
-                    org_name=recipient.org_name,
-                    billing_entity=recipient.billing_entity,
-                ),
-                total_chunks=0,
-                message_type=MessageType.REPORT,
-                workflow_id=request.workflow_id,
-                metadata=MessageMetadata(
-                    subject=request.subject,
-                    local_id=request.local_id,
-                    file_name=request.file_name,
-                ),
+            message_event = MessageEvent(
+                status=request.status,
+                event="TRANSFER",
+                code=request.code,
+                description=request.description,
+                linked_message_id=request.linked_message_id,
             )
+            message_metadata = MessageMetadata(
+                subject=request.subject,
+                local_id=request.local_id,
+                file_name=request.file_name,
+            )
+
+        message = Message(
+            events=[
+                MessageEvent(status=MessageStatus.ACCEPTED),
+                message_event,
+            ],
+            message_id=uuid4().hex.upper(),
+            sender=MessageParty(
+                mailbox_id="",
+                mailbox_name="Central System Mailbox",
+                ods_code="X26",
+                org_code="X26",
+                org_name="NHS England",
+                billing_entity="England",
+            ),
+            recipient=MessageParty(
+                mailbox_id=recipient.mailbox_id,
+                mailbox_name=recipient.mailbox_name,
+                ods_code=recipient.ods_code,
+                org_code=recipient.org_code,
+                org_name=recipient.org_name,
+                billing_entity=recipient.billing_entity,
+            ),
+            total_chunks=0,
+            message_type=MessageType.REPORT,
+            workflow_id=request.workflow_id,
+            metadata=message_metadata,
+        )
 
         await self.messaging.send_message(message=message, body=b"", background_tasks=background_tasks)
 
