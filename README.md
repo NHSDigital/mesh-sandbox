@@ -22,8 +22,6 @@ docker compose
 --------------
 
 ```yaml
-version: '3.9'
-
 
 services:
 
