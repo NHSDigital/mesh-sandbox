@@ -8,7 +8,6 @@ permissions:
   pull-requests: write
 
 jobs:
-
   coverage:
     runs-on: ubuntu-latest
     if: github.repository == 'NHSDigital/mesh-sandbox'
@@ -45,10 +44,10 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v5
         with:
-          python-version-file: 'pyproject.toml'
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -137,7 +136,7 @@ jobs:
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -174,10 +173,10 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v5
         with:
-          python-version-file: 'pyproject.toml'
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -208,20 +207,19 @@ jobs:
         run: make mypy
 
       - name: hadolint
-        uses: hadolint/hadolint-action@master
+        uses: hadolint/hadolint-action@5d0317e9d0d2c15b383fbc7433e9d0aed07ec660
         with:
           dockerfile: "Dockerfile"
           recursive: true
           config: ./hadolint.yml
 
       - name: shellcheck
-        uses: ludeeus/action-shellcheck@master
+        uses: ludeeus/action-shellcheck@00b27aa7cb85167568cb48a3838b75f4265f2bca
         with:
           ignore_paths: .venv build
           ignore_names: git-secrets
         env:
           SHELLCHECK_OPTS: -f gcc -e SC1090,SC1091
-
 
   publish:
     runs-on: ubuntu-latest
@@ -259,10 +257,10 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v5
         with:
-          python-version-file: 'pyproject.toml'
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -288,10 +286,11 @@ jobs:
           poetry build --format=wheel
 
       - name: poetry config
+        env:
+          POETRY_PYPI_TOKEN_TESTPYPI: ${{ secrets.TEST_PYPI_TOKEN }}
         run: |
           poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_TOKEN }}
+          poetry config pypi-token.testpypi "$POETRY_PYPI_TOKEN_TESTPYPI"
 
       - name: poetry test publish
         run: poetry publish -r testpypi
-

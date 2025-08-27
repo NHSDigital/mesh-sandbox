@@ -5,7 +5,6 @@ on:
       - develop
 
 jobs:
-
   coverage:
     runs-on: ubuntu-latest
     if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
@@ -18,10 +17,10 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v5
         with:
-          python-version-file: 'pyproject.toml'
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v4
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -95,7 +94,7 @@ jobs:
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@v5
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -103,7 +102,6 @@ jobs:
       - name: stop docker containers
         if: success() || failure()
         run: make down
-
 
   publish:
     runs-on: ubuntu-latest
@@ -122,7 +120,7 @@ jobs:
       - name: setup python
         uses: actions/setup-python@v5
         with:
-          python-version-file: 'pyproject.toml'
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@v4
@@ -151,8 +149,10 @@ jobs:
           release_name: ${{ env.RELEASE_VERSION }}
 
       - name: poetry config
+        env:
+          POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
         run: |
-          poetry config pypi-token.pypi ${{ secrets.PYPI_TOKEN }}
+          poetry config pypi-token.pypi "$POETRY_PYPI_TOKEN_PYPI"
 
       - name: poetry publish
         run: poetry publish
