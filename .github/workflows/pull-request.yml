@@ -35,11 +35,14 @@ jobs:
       - name: merge into base_branch
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo base branch "${{ github.base_ref }}"
-          echo pr branch "${{ github.head_ref }}"
-          git checkout "${{ github.base_ref }}"
+          echo base branch "$BASE_BRANCH"
+          echo pr branch "$PR_BRANCH"
+          git checkout "$BASE_BRANCH"
           git checkout -b "merging-${{ github.event.number }}"
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
         uses: actions/setup-python@v5
@@ -164,11 +167,14 @@ jobs:
       - name: merge into base_branch
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo base branch "${{ github.base_ref }}"
-          echo pr branch "${{ github.head_ref }}"
-          git checkout "${{ github.base_ref }}"
+          echo base branch "$BASE_BRANCH"
+          echo pr branch "$PR_BRANCH"
+          git checkout "$BASE_BRANCH"
           git checkout -b "merging-${{ github.event.number }}"
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
         uses: actions/setup-python@v5
@@ -248,11 +254,14 @@ jobs:
       - name: merge into base_branch
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo base branch "${{ github.base_ref }}"
-          echo pr branch "${{ github.head_ref }}"
-          git checkout "${{ github.base_ref }}"
+          echo base branch "$BASE_BRANCH"
+          echo pr branch "$PR_BRANCH"
+          git checkout "$BASE_BRANCH"
           git checkout -b "merging-${{ github.event.number }}"
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
         uses: actions/setup-python@v5
