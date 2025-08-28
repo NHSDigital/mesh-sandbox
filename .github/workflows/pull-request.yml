@@ -5,6 +5,8 @@ on:
       - develop
 
 permissions:
+  contents: write
+  checks: write
   pull-requests: write
 
 jobs:
@@ -142,7 +144,7 @@ jobs:
         uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
         with:
           check_name: junit reports
-          report_paths: reports/junit/mesh.xml
+          report_paths: reports/junit/*.xml
 
       - name: stop docker containers
         if: success() || failure()
