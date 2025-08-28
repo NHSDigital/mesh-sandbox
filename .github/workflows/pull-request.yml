@@ -96,7 +96,7 @@ jobs:
 
       - name: code coverage report
         if: ${{ github.event_name == 'pull_request' }}
-        uses: orgoro/coverage@32a2af98e56f47d958cf4c64b1f5e02161f2853e
+        uses: orgoro/coverage@7dbd48c7f7ed09df337ff40058340c85bc93cb3d
         with:
           coverageFile: reports/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -215,7 +215,7 @@ jobs:
         run: make mypy
 
       - name: hadolint
-        uses: hadolint/hadolint-action@5d0317e9d0d2c15b383fbc7433e9d0aed07ec660
+        uses: hadolint/hadolint-action@d292784f8f3eacda47060b259a580467b0ba410c
         with:
           dockerfile: "Dockerfile"
           recursive: true
