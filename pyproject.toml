@@ -14,33 +14,33 @@ readme = "README.md"
 python = ">=3.11,<3.14.0"
 types-python-dateutil = "^2.8.9"
 python-dateutil = "^2.8.2"
-cryptography = ">=42,<44"
-fastapi = ">=0.104.1,<0.116.0"
+cryptography = ">=42,<45"
+fastapi = ">=0.104.1,<0.117.0"
 gunicorn = ">=21.2,<24.0"
-uvicorn = ">=0.23.2,<0.31.0"
+uvicorn = ">=0.23.2,<0.36.0"
 mesh-client = "^4.0.1"
 
 
 [tool.poetry.group.dev.dependencies]
 # ci / testing dependencies
 petname = "^2.6"
-pytest = "^7.2.0"
-pytest-asyncio = ">=0.16,<0.24"
+pytest = ">=7.2,<9.0"
+pytest-asyncio = ">=0.16,<1.2"
 Mesh-Client = "^4.0.1"
 mypy = "^1.1.1"
 coverage = ">=6.5,<8.0"
-httpx = ">=0.27.0,<0.28"
+httpx = ">=0.27.0,<0.29"
 types-requests = "^2.28.11.4"
-pyOpenSSL = "^24.0.0"
+pyOpenSSL = ">=24,<26"
 types-pyOpenSSL = "^24.0.0.20240130"
-lxml = "^4.9.1"
+lxml = ">=4.9.1,<7.0.0"
 types-lxml = ">=2022.11.8,<2026.0.0"
 ruff = "^0"
-black = ">=23.9.1,<25.0.0"
+black = ">=23.9.1,<26.0.0"
 
 
 [tool.poetry.group.local.dependencies]
-ipython = "^8.11.0"
+ipython = ">=8.11,<10.0"
 
 [tool.black]
 line-length = 120
