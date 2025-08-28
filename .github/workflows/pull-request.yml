@@ -4,14 +4,18 @@ on:
     branches:
       - develop
 
-jobs:
+permissions:
+  contents: write
+  checks: write
+  pull-requests: write
 
+jobs:
   coverage:
     runs-on: ubuntu-latest
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -33,19 +37,22 @@ jobs:
       - name: merge into base_branch
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo base branch "${{ github.base_ref }}"
-          echo pr branch "${{ github.head_ref }}"
-          git checkout "${{ github.base_ref }}"
+          echo base branch "$BASE_BRANCH"
+          echo pr branch "$PR_BRANCH"
+          git checkout "$BASE_BRANCH"
           git checkout -b "merging-${{ github.event.number }}"
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -54,7 +61,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .venv
@@ -76,7 +83,7 @@ jobs:
 
       - name: setup java
         if: success() || failure()
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: "corretto"
           java-version: "11"
@@ -97,7 +104,7 @@ jobs:
 
       - name: setup java
         if: github.actor != 'dependabot[bot]' && (success() || failure())
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v5
         with:
           distribution: "corretto"
           java-version: "17"
@@ -134,7 +141,7 @@ jobs:
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@v3
+        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -148,7 +155,7 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -162,19 +169,22 @@ jobs:
       - name: merge into base_branch
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo base branch "${{ github.base_ref }}"
-          echo pr branch "${{ github.head_ref }}"
-          git checkout "${{ github.base_ref }}"
+          echo base branch "$BASE_BRANCH"
+          echo pr branch "$PR_BRANCH"
+          git checkout "$BASE_BRANCH"
           git checkout -b "merging-${{ github.event.number }}"
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -183,7 +193,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .venv
@@ -205,20 +215,19 @@ jobs:
         run: make mypy
 
       - name: hadolint
-        uses: hadolint/hadolint-action@master
+        uses: hadolint/hadolint-action@5d0317e9d0d2c15b383fbc7433e9d0aed07ec660
         with:
           dockerfile: "Dockerfile"
           recursive: true
           config: ./hadolint.yml
 
       - name: shellcheck
-        uses: ludeeus/action-shellcheck@master
+        uses: ludeeus/action-shellcheck@00b27aa7cb85167568cb48a3838b75f4265f2bca
         with:
           ignore_paths: .venv build
           ignore_names: git-secrets
         env:
           SHELLCHECK_OPTS: -f gcc -e SC1090,SC1091
-
 
   publish:
     runs-on: ubuntu-latest
@@ -228,7 +237,7 @@ jobs:
       - lint
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -247,19 +256,22 @@ jobs:
       - name: merge into base_branch
         if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo base branch "${{ github.base_ref }}"
-          echo pr branch "${{ github.head_ref }}"
-          git checkout "${{ github.base_ref }}"
+          echo base branch "$BASE_BRANCH"
+          echo pr branch "$PR_BRANCH"
+          git checkout "$BASE_BRANCH"
           git checkout -b "merging-${{ github.event.number }}"
           git merge --ff-only "${{ github.event.pull_request.head.sha }}"
+        env:
+          BASE_BRANCH: ${{ github.base_ref }}
+          PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.9"
+          python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@v2
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
           poetry-version: 1.5.1
 
@@ -268,7 +280,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             .venv
@@ -285,10 +297,11 @@ jobs:
           poetry build --format=wheel
 
       - name: poetry config
+        env:
+          POETRY_PYPI_TOKEN_TESTPYPI: ${{ secrets.TEST_PYPI_TOKEN }}
         run: |
           poetry config repositories.testpypi https://test.pypi.org/legacy/
-          poetry config pypi-token.testpypi ${{ secrets.TEST_PYPI_TOKEN }}
+          poetry config pypi-token.testpypi "$POETRY_PYPI_TOKEN_TESTPYPI"
 
       - name: poetry test publish
         run: poetry publish -r testpypi
-
