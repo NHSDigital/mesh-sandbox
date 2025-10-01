@@ -47,7 +47,7 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
@@ -179,7 +179,7 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
@@ -215,7 +215,7 @@ jobs:
         run: make mypy
 
       - name: hadolint
-        uses: hadolint/hadolint-action@d292784f8f3eacda47060b259a580467b0ba410c
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
         with:
           dockerfile: "Dockerfile"
           recursive: true
@@ -266,7 +266,7 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 

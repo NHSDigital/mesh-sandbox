@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
@@ -123,7 +123,7 @@ jobs:
           find . -type f | xargs chmod g+w
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
