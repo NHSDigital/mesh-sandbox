@@ -19,4 +19,4 @@ poetry.lock:.*asttokens = ">=2.1.0"
 
 src/mesh_sandbox/common/messaging.py:.*def try_parse_authorisation_token\(auth_token: str\) -> Optional\[AuthoriseHeaderParts\]:
 src/mesh_sandbox/common/messaging.py:.*auth_token = auth_token.*
-poetry.lock:.*:pytokens = ">=0.1.10"
+poetry.lock:.*:pytokens = ".*"
