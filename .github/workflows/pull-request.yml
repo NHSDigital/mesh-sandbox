@@ -47,14 +47,14 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
-          poetry-version: 1.5.1
+          poetry-version: 2.1.2
 
       - name: add poetry plugins
         run: |
@@ -179,14 +179,14 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
-          poetry-version: 1.5.1
+          poetry-version: 2.1.2
 
       - name: add poetry plugins
         run: |
@@ -215,7 +215,7 @@ jobs:
         run: make mypy
 
       - name: hadolint
-        uses: hadolint/hadolint-action@d292784f8f3eacda47060b259a580467b0ba410c
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5
         with:
           dockerfile: "Dockerfile"
           recursive: true
@@ -266,14 +266,14 @@ jobs:
           PR_BRANCH: ${{ github.head_ref }}
 
       - name: setup python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version-file: "pyproject.toml"
 
       - name: setup poetry
         uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
-          poetry-version: 1.5.1
+          poetry-version: 2.1.2
 
       - name: add poetry plugins
         run: |

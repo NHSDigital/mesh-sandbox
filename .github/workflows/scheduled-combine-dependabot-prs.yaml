@@ -3,14 +3,14 @@ name: Combine Dependabot PRs
 on:
   workflow_dispatch: # allows you to manually trigger the workflow
     inputs:
-        ci_required:
-          type: choice
-          description: Require a successful build before branches are included
-          options:
-            - 'YES'
-            - 'NO'
-          required: false
-          default: 'YES'
+      ci_required:
+        type: choice
+        description: Require a successful build before branches are included
+        options:
+          - "YES"
+          - "NO"
+        required: false
+        default: "YES"
 
 # The minimum permissions required to run this Action
 permissions:
@@ -25,7 +25,7 @@ jobs:
     steps:
       - name: combine-prs
         id: combine-prs
-        uses: actions/combine-prs@v5.2.0
+        uses: github/combine-prs@v5.2.0
         with:
           ci_required: ${{ inputs.ci_required == 'YES' }}
           labels: dependencies

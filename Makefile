@@ -43,10 +43,12 @@ delete-hooks:
 refresh-hooks: delete-hooks .git/hooks/pre-commit .git/hooks/commit-msg
 
 install:
-	poetry install --sync
+	poetry install
+	poetry sync
 
 install-ci:
-	poetry install --without local --sync
+	poetry install --without local
+	poetry sync
 
 update:
 	poetry update
