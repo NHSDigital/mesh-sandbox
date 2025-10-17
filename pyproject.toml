@@ -9,9 +9,6 @@ packages = [
 ]
 readme = "README.md"
 
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
 [tool.poetry.dependencies]
 # core dependencies
 
@@ -46,6 +43,11 @@ black = ">=23.9.1,<26.0.0"
 
 [tool.poetry.group.local.dependencies]
 ipython = ">=8.11,<10.0"
+
+[tool.poetry.requires-plugins]
+poetry-plugin-export = ">=1.8"
+
+
 
 [tool.black]
 line-length = 120

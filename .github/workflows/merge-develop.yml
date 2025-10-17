@@ -27,7 +27,7 @@ jobs:
       - name: setup poetry
         uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
-          poetry-version: 1.5.1
+          poetry-version: 2.1.2
 
       - name: add poetry plugins
         run: |
@@ -130,7 +130,7 @@ jobs:
       - name: setup poetry
         uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
         with:
-          poetry-version: 1.5.1
+          poetry-version: 2.1.2
 
       - name: add poetry plugins
         run: |
