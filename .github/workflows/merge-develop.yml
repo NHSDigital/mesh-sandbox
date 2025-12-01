@@ -15,7 +15,7 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -99,7 +99,7 @@ jobs:
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
+        uses: mikepenz/action-junit-report@e08919a3b1fb83a78393dfb775a9c37f17d8eea6
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -113,7 +113,7 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox'  && github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 

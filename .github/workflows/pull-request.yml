@@ -15,7 +15,7 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -134,14 +134,14 @@ jobs:
 
       - name: archive reports
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: reports
           path: reports/**/*
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
+        uses: mikepenz/action-junit-report@e08919a3b1fb83a78393dfb775a9c37f17d8eea6
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -155,7 +155,7 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -237,7 +237,7 @@ jobs:
       - lint
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
