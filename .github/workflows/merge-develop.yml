@@ -4,14 +4,13 @@ on:
     branches:
       - develop
 
-permissions:
-  contents: write
-  checks: write
-  pull-requests: write
-
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
@@ -110,6 +109,10 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox'  && github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout

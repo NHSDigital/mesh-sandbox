@@ -4,14 +4,13 @@ on:
     branches:
       - develop
 
-permissions:
-  contents: write
-  checks: write
-  pull-requests: write
-
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
@@ -152,6 +151,10 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
@@ -231,6 +234,10 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox' && github.actor != 'dependabot[bot]'
     needs:
       - coverage
