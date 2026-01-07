@@ -4,18 +4,17 @@ on:
     branches:
       - develop
 
-permissions:
-  contents: write
-  checks: write
-  pull-requests: write
-
 jobs:
   coverage:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -61,7 +60,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .venv
@@ -113,7 +112,7 @@ jobs:
         if: github.actor != 'dependabot[bot]' && (success() || failure())
         run: |
           export SONAR_VERSION="4.7.0.2747"
-          wget -q "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
+          wget -q --max-redirect=0 "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
           unzip -q ./sonar-scanner.zip
           mv ./sonar-scanner-${SONAR_VERSION} ./sonar-scanner
           scripts/sonar_tests.py
@@ -134,14 +133,14 @@ jobs:
 
       - name: archive reports
         if: success() || failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: reports
           path: reports/**/*
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@3585e9575db828022551b4231f165eb59a0e74e3
+        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -152,10 +151,14 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox'
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -193,7 +196,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .venv
@@ -231,13 +234,17 @@ jobs:
 
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      checks: write
+      pull-requests: write
     if: github.repository == 'NHSDigital/mesh-sandbox' && github.actor != 'dependabot[bot]'
     needs:
       - coverage
       - lint
     steps:
       - name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -280,7 +287,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .venv
