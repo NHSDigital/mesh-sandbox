@@ -10,61 +10,9 @@ on:
       - labeled
 
 jobs:
-  dependabot-make-update:
+  enable-automerge:
     # Only run on Dependabot PRs
     if: github.event.pull_request.user.login == 'dependabot[bot]'
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-
-      - name: Install Python 3.11
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install poetry
-        run: python -m pip install --upgrade pip setuptools wheel poetry
-
-      - name: Install project dependencies
-        run: make install-ci
-
-      - name: Update dependencies (make update)
-        run: make update
-
-      - name: Lint (make lint)
-        run: make lint
-
-      - name: Commit and push changes
-        env:
-          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          if [ -z "$PR_HEAD_REF" ] || ! echo "$PR_HEAD_REF" | grep -Eq '^dependabot/'; then
-            echo "PR head ref '$PR_HEAD_REF' is not a allowed Dependabot branch; skipping push."
-            exit 1
-          fi
-
-          if git status --porcelain | grep .; then
-            git add -A
-            git commit -m "mesh-2092: apply make update changes"
-            git push origin HEAD:"$PR_HEAD_REF"
-          else
-            echo "No changes to commit"
-          fi
-
-  enable-automerge:
-    # Only run on Dependabot PRs after make update succeeds
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
-    needs: dependabot-make-update
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -74,6 +22,12 @@ jobs:
       - name: Fetch Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Auto-approve Dependabot PR
+        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
+        uses: hmarr/auto-approve-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
