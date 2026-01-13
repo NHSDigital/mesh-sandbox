@@ -22,7 +22,6 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ startsWith(github.event.pull_request.head.ref, 'dependabot/') && github.event.pull_request.head.ref || github.ref }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Install Python 3.11
@@ -43,13 +42,21 @@ jobs:
         run: make lint
 
       - name: Commit and push changes
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          if [ -z "$PR_HEAD_REF" ] || ! echo "$PR_HEAD_REF" | grep -Eq '^dependabot/'; then
+            echo "PR head ref '$PR_HEAD_REF' is not a allowed Dependabot branch; skipping push."
+            exit 1
+          fi
+
           if git status --porcelain | grep .; then
             git add -A
             git commit -m "mesh-2092: apply make update changes"
-            git push
+            git push origin HEAD:"$PR_HEAD_REF"
           else
             echo "No changes to commit"
           fi
