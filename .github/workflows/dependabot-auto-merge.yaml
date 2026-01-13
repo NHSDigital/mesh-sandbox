@@ -14,12 +14,16 @@ jobs:
     # Only run on Dependabot PRs
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
 
       - name: Install Python 3.11
         uses: actions/setup-python@v4
@@ -37,6 +41,18 @@ jobs:
 
       - name: Lint (make lint)
         run: make lint
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep .; then
+            git add -A
+            git commit -m "mesh-2092: apply make update changes"
+            git push
+          else
+            echo "No changes to commit"
+          fi
 
   enable-automerge:
     # Only run on Dependabot PRs after make update succeeds
