@@ -19,11 +19,11 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Fetch Dependabot metadata
-        id: metadata
-        uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Fetch Dependabot metadata
+      #   id: metadata
+      #   uses: dependabot/fetch-metadata@d7267f607e9d3fb96fc2fbe83e0af444713e90b7
+      #   with:
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
 
       # - name: Auto-approve Dependabot PR
       #   if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
