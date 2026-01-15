@@ -312,3 +312,19 @@ jobs:
 
       - name: poetry test publish
         run: poetry publish -r testpypi
+
+  slack-notification:
+    runs-on: ubuntu-latest
+    needs:
+      - coverage
+      - lint
+      - publish
+    if: ${{ always() && github.repository == 'NHSDigital/mesh-sandbox' && github.actor == 'dependabot[bot]' && contains(needs.*.result, 'failure') }}
+    steps:
+      - name: Slack Notification
+        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+        with:
+          webhook: ${{ secrets.DEPENDABOT_SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            text : "Dependabot PR checks failed for ${{ github.repository }}:${{ github.ref }} in PR #${{ github.event.number }}"
