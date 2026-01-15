@@ -26,7 +26,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Auto-approve Dependabot PR
-        if: steps.metadata.outputs.update-type == 'version-update:semver-patch'
         uses: hmarr/auto-approve-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
