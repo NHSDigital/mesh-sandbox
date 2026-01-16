@@ -155,7 +155,7 @@ def find_sent_message_id(ctl_file: str) -> str:
     parser = etree.XMLParser(remove_blank_text=True, resolve_entities=False)
     root = cast(_ElementTree, etree.parse(ctl_file, parser)).getroot()
     message_id = root.find("DTSId")
-    assert message_id is not None
+    assert message_id == "NOT THE MESSAGE ID BREAKING"
     return cast(str, message_id.text)
 
 
