@@ -326,4 +326,22 @@ jobs:
           webhook: ${{ secrets.DEPENDABOT_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text : ":alarm: DEPENDABOT PR FAILED for ${{ github.repository }}:${{ github.ref }} in <https://github.com/${{ github.repository }}/pull/${{ github.event.number }}|PR #${{ github.event.number }}> :alarm:"
+            {
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": ":alarm: DEPENDABOT PR FAILED :alarm:",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "Checks failed for ${{ github.repository }}:${{ github.ref }} in <https://github.com/${{ github.repository }}/pull/${{ github.event.number }}|PR #${{ github.event.number }}>"
+                  }
+                }
+              ]
+            }
