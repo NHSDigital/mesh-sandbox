@@ -326,4 +326,4 @@ jobs:
           webhook: ${{ secrets.DEPENDABOT_SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
           payload: |
-            text : ":alarm Dependabot PR checks failed for ${{ github.repository }}:${{ github.ref }} in PR #${{ github.event.number }} :alarm"
+            text : ":alarm: Dependabot PR checks failed for ${{ github.repository }}:${{ github.ref }} in PR #${{ github.event.number }} :alarm:"
