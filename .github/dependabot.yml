@@ -6,7 +6,7 @@ updates:
     commit-message:
       prefix: "MESH-2092 "
     schedule:
-      interval: "monthly"
+      interval: "daily"
     groups:
       dependencies:
         patterns:
@@ -17,7 +17,7 @@ updates:
     commit-message:
       prefix: "MESH-2092 "
     schedule:
-      interval: "monthly"
+      interval: "daily"
     groups:
       dependencies:
         patterns:
