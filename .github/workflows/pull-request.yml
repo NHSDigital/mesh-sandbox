@@ -102,14 +102,14 @@ jobs:
           thresholdAll: 0.85
 
       - name: setup java
-        if: github.actor != 'dependabot[bot]' && (success() || failure())
+        if: success() || failure()
         uses: actions/setup-java@v5
         with:
           distribution: "corretto"
           java-version: "17"
 
       - name: provision sonar-scanner
-        if: github.actor != 'dependabot[bot]' && (success() || failure())
+        if: success() || failure()
         run: |
           export SONAR_VERSION="4.7.0.2747"
           wget -q --max-redirect=0 "https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-${SONAR_VERSION}.zip" -O sonar-scanner.zip
@@ -118,7 +118,7 @@ jobs:
           scripts/sonar_tests.py
 
       - name: run sonar scan
-        if: github.actor != 'dependabot[bot]' && (success() || failure())
+        if: success() || failure()
         run: |
           PATH="$PWD/sonar-scanner/bin:$PATH"
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -318,7 +318,7 @@ jobs:
     needs:
       - coverage
       - lint
-    if: ${{ always() && github.repository == 'NHSDigital/mesh-sandbox' && github.actor == 'dependabot[bot]' && contains(needs.*.result, 'failure') }}
+    if: ${{ always() && github.repository == 'NHSDigital/mesh-sandbox' && github.event.pull_request.user.login == 'dependabot[bot]' && contains(needs.*.result, 'failure') }}
     steps:
       - name: Slack Notification
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
