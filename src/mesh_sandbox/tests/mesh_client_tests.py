@@ -74,7 +74,7 @@ def test_send_receive_chunked_message(base_uri: str):
 
     with MeshClient(url=base_uri, mailbox=_CANNED_MAILBOX2, password=_PASSWORD, shared_key=_SHARED_KEY) as recipient:
         message_ids = recipient.list_messages()
-        assert message_ids == [message_id, 1]
+        assert message_ids == [message_id]
         message = recipient.retrieve_message(message_id)
         assert message.workflow_id == workflow_id  # pylint: disable=no-member
         received_payload = message.read()
