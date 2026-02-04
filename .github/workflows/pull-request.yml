@@ -140,7 +140,7 @@ jobs:
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@a294a61c909bd8a4b563024a2faa28897fd53ebc
+        uses: mikepenz/action-junit-report@74626db7353a25a20a72816467ebf035f674c5f8
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -318,7 +318,7 @@ jobs:
     needs:
       - coverage
       - lint
-    if: ${{ always() && github.repository == 'NHSDigital/mesh-sandbox' && github.event.pull_request.user.login == 'dependabot[bot]' && contains(needs.*.result, 'failure') }}
+    if: ${{ always() && github.repository == 'NHSDigital/mesh-sandbox' && github.actor== 'dependabot[bot]' && contains(needs.*.result, 'failure') }}
     steps:
       - name: Slack Notification
         uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
