@@ -86,8 +86,7 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
 
     install_xml = os.path.join(installer_dir, "auto-install.xml")
     with open(install_xml, "w+", encoding="utf-8") as f:
-        f.write(
-            f"""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+        f.write(f"""<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <AutomatedInstallation langpack="eng">
     <com.izforge.izpack.panels.hello.HelloPanel id="HelloPanel_0"/>
     <com.izforge.izpack.panels.target.TargetPanel id="TargetPanel_1">
@@ -107,8 +106,7 @@ def ensure_client_installed(java_path: str, base_dir: str, version: str):  # pyl
     <com.izforge.izpack.panels.install.InstallPanel id="InstallPanel_7"/>
     <com.izforge.izpack.panels.process.ProcessPanel id="ProcessPanel_8"/>
     <com.izforge.izpack.panels.finish.FinishPanel id="FinishPanel_9"/>
-</AutomatedInstallation>"""
-        )
+</AutomatedInstallation>""")
 
     subprocess.check_call(f"{java_path} -jar {installer_jar} {install_xml}".split(" "))
 

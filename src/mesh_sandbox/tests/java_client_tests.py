@@ -89,10 +89,7 @@ def configure_mailboxes(base_dir: str, mailboxes: list[str]):
     for mailbox in mailboxes:
         mailbox = mailbox.strip().upper()
         mailbox_path = os.path.abspath(f"{base_dir}/data/{mailbox}")
-        root.append(
-            etree.fromstring(
-                dedent(
-                    f"""<Client>
+        root.append(etree.fromstring(dedent(f"""<Client>
                     <ClientIdentity>{mailbox}</ClientIdentity>
                     <ClientAuthentication>password</ClientAuthentication>
                     <MailboxType>MESH</MailboxType>
@@ -101,10 +98,7 @@ def configure_mailboxes(base_dir: str, mailboxes: list[str]):
                     <TransferReport>N</TransferReport>
                     <PollReport>N</PollReport>
                     <SaveSent>Y</SaveSent>
-                </Client>"""
-                )
-            )
-        )
+                </Client>""")))
         shutil.copytree(f"{base_dir}/data/_TEMPLATE", mailbox_path)
 
     root.getroottree().write(java_client_config_path, pretty_print=True)
@@ -127,8 +121,7 @@ def send_message(
         dat_file.write(data)
 
     with open(f"{file_path}.ctl", "w", encoding="utf8") as ctl_file:
-        ctl_file.write(
-            f"""<DTSControl>
+        ctl_file.write(f"""<DTSControl>
 <Version>1.0</Version>
 <AddressType>DTS</AddressType>
 <MessageType>Data</MessageType>
@@ -140,8 +133,7 @@ def send_message(
 <Compress>{'Y' if compress else 'N'}</Compress>
 <AllowChunking>Y</AllowChunking>
 <Encrypted>N</Encrypted>
-</DTSControl>"""
-        )
+</DTSControl>""")
 
     sleep(1.5)  # have to wait as client will not pick up files added < 1 sec ago
     return file_name
