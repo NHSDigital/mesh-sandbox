@@ -23,15 +23,20 @@ jobs:
           ref: ${{ github.head_ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: setup python
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.11'
+          python-version-file: "pyproject.toml"
 
-      - name: Install Poetry
+      - name: setup poetry
+        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
+        with:
+          poetry-version: 2.1.2
+
+      - name: add poetry plugins
         run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+          poetry self add "poetry-dynamic-versioning[plugin]"
+          poetry self add poetry-plugin-export
 
       - name: Export requirements
         run: make export-requirements
