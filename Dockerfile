@@ -2,13 +2,15 @@ FROM python:3.11-slim-bullseye@sha256:53ebfd268fe58ccd405688b3305a7dcad5da03f5e3
 
 WORKDIR /app
 
-COPY ./requirements.txt /requirements.txt
+COPY pyproject.toml poetry.lock /app/
 
 RUN apt-get update \
     && apt-get install curl -yq --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir --upgrade -r /requirements.txt \
+    && pip install --no-cache-dir poetry \
+    && poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --no-root \
     && mkdir -p /tmp/mesh_store
 
 
