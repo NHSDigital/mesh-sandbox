@@ -265,9 +265,9 @@ cryptography==46.0.5 ; python_version >= "3.11" and python_full_version < "3.14.
     --hash=sha256:e9251e3be159d1020c4030bd2e5f84d6a43fe54b6c19c12f51cde9542a2817b2 \
     --hash=sha256:f145bba11b878005c496e93e257c1e88f154d278d2638e6450d17e0f31e558d2 \
     --hash=sha256:fe346b143ff9685e40192a4960938545c699054ba11d4f9029f94751e3f71d87
-fastapi==0.128.6 ; python_version >= "3.11" and python_full_version < "3.14.0" \
-    --hash=sha256:0cb3946557e792d731b26a42b04912f16367e3c3135ea8290f620e234f2b604f \
-    --hash=sha256:bb1c1ef87d6086a7132d0ab60869d6f1ee67283b20fbf84ec0003bd335099509
+fastapi==0.128.7 ; python_version >= "3.11" and python_full_version < "3.14.0" \
+    --hash=sha256:6bd9bd31cb7047465f2d3fa3ba3f33b0870b17d4eaf7cdb36d1576ab060ad662 \
+    --hash=sha256:783c273416995486c155ad2c0e2b45905dedfaf20b9ef8d9f6a9124670639a24
 gunicorn==25.0.3 ; python_version >= "3.11" and python_full_version < "3.14.0" \
     --hash=sha256:aca364c096c81ca11acd4cede0aaeea91ba76ca74e2c0d7f879154db9d890f35 \
     --hash=sha256:b53a7fff1a07b825b962af320554de44ae77a26abfa373711ff3f83d57d3506d
