@@ -140,6 +140,3 @@ check-secrets:
 
 check-secrets-all:
 	scripts/check-secrets.sh unstaged
-
-export-requirements:
-	poetry export --only main -f requirements.txt --output ./requirements.txt
