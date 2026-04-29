@@ -18,7 +18,7 @@ python-dateutil = "^2.8.2"
 cryptography = ">=44.0.1,<47"
 fastapi = "0.136.0"
 gunicorn = ">=21.2,<26.0"
-uvicorn = ">=0.23.2,<0.45.0"
+uvicorn = ">=0.23.2,<0.46.0"
 mesh-client = ">=4.0.1,<6.0.0"
 typing-extensions = ">=4.10.0"
 
