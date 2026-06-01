@@ -14,17 +14,17 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
       - name: setup python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
         with:
           python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
+        uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
         with:
           poetry-version: 2.1.2
 
@@ -33,7 +33,7 @@ jobs:
           poetry self add "poetry-dynamic-versioning[plugin]"
 
       - name: cache virtualenv
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: |
             .venv
@@ -52,7 +52,7 @@ jobs:
 
       - name: setup java
         if: success() || failure()
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: "corretto"
           java-version: "11"
@@ -65,7 +65,7 @@ jobs:
 
       - name: code coverage report
         if: ${{ github.event_name == 'pull_request' }}
-        uses: orgoro/coverage@ca0c362dc1a4f100447309405e6dfea47e251495
+        uses: orgoro/coverage@ca0c362dc1a4f100447309405e6dfea47e251495 # v3.3.1
         with:
           coverageFile: reports/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -73,7 +73,7 @@ jobs:
 
       - name: setup java
         if: github.actor != 'dependabot[bot]' && (success() || failure())
-        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+        uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5.2.0
         with:
           distribution: "corretto"
           java-version: "17"
@@ -98,7 +98,7 @@ jobs:
 
       - name: publish junit reports
         if: success() || failure()
-        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d
+        uses: mikepenz/action-junit-report@3a81627bfac62268172037048872e8ebd4207e6d # v6.4.1
         with:
           check_name: junit reports
           report_paths: reports/junit/*.xml
@@ -116,7 +116,7 @@ jobs:
     if: github.repository == 'NHSDigital/mesh-sandbox'  && github.actor != 'dependabot[bot]' && !contains(github.event.head_commit.message, 'tag release version:')
     steps:
       - name: checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           fetch-depth: 0
 
@@ -126,12 +126,12 @@ jobs:
           find . -type f | xargs chmod g+w
 
       - name: setup python
-        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.06
         with:
           python-version-file: "pyproject.toml"
 
       - name: setup poetry
-        uses: abatilo/actions-poetry@0dd19c9498c3dc8728967849d0d2eae428a8a3d8
+        uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
         with:
           poetry-version: 2.1.2
 
@@ -148,7 +148,7 @@ jobs:
 
       - name: create release
         id: create_release
-        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1
+        uses: actions/create-release@0cb9c9b65d5d1901c1f53e5e66eaf4afd303e70e # v1.1.4
         continue-on-error: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
