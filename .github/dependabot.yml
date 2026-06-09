@@ -10,9 +10,17 @@ updates:
     cooldown:
       default-days: 7
     groups:
-      dependencies:
+      patch-and-minor:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -23,6 +31,14 @@ updates:
     cooldown:
       default-days: 7
     groups:
-      dependencies:
+      patch-and-minor:
         patterns:
           - "*"
+        update-types:
+          - "minor"
+          - "patch"
+      major:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
