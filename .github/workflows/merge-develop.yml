@@ -50,6 +50,13 @@ jobs:
           sudo apt update
           sudo apt-get install unrar -yq
 
+      - name: setup java
+        if: success() || failure()
+        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
+        with:
+          distribution: "corretto"
+          java-version: "11"
+
       - name: start docker containers
         run: make up
 
@@ -63,13 +70,6 @@ jobs:
           coverageFile: reports/coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
           thresholdAll: 0.85
-
-      - name: setup java
-        if: github.actor != 'dependabot[bot]' && (success() || failure())
-        uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5.6.0
-        with:
-          distribution: "corretto"
-          java-version: "17"
 
       - name: prepare sonar reports
         if: success() || failure()
