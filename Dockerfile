@@ -8,7 +8,7 @@ RUN apt-get update \
     && apt-get install curl -yq --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
-    && pip install --no-cache-dir poetry \
+    && pip install --no-cache-dir --only-binary :all: poetry==2.1.2 \
     && poetry config virtualenvs.create false \
     && poetry install --no-interaction --no-ansi --no-root \
     && mkdir -p /tmp/mesh_store
