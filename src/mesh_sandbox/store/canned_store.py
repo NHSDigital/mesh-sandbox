@@ -221,6 +221,9 @@ class CannedStore(Store):
     async def reset_mailbox(self, mailbox_id: str):
         raise NotImplementedError
 
+    async def create_mailbox(self, mailbox_id: str):
+        raise NotImplementedError
+
     async def get_inbox_messages(
         self, mailbox_id: str, predicate: Optional[Callable[[Message], bool]] = None
     ) -> list[Message]:

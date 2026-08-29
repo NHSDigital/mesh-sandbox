@@ -303,6 +303,10 @@ class Messaging:
     async def reset_mailbox(self, mailbox_id: str):
         await self.store.reset_mailbox(mailbox_id=mailbox_id)
 
+    @_IfNotReadonly()
+    async def create_mailbox(self, mailbox_id: str):
+        await self.store.create_mailbox(mailbox_id=mailbox_id)
+
     async def get_chunk(self, message: Message, chunk_number: int) -> Optional[bytes]:
         return await self.store.get_chunk(message=message, chunk_number=chunk_number)
 
