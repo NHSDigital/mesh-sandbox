@@ -49,7 +49,7 @@ def strtobool(val: Any) -> Optional[bool]:
 class EnvConfig:
     env: str = field(default="local")
     build_label: str = field(default="latest")
-    auth_mode: str = field(default="no_auth")
+    auth_mode: str = field(default="none")
     store_mode: str = field(default="canned")
     shared_key: str = field(default="Banana")
     mailboxes_dir: str = field(default="/tmp/mesh_store")

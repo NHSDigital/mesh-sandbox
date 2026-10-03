@@ -55,6 +55,10 @@ class Store(ABC):
         pass
 
     @abstractmethod
+    async def create_mailbox(self, mailbox_id: str):
+        pass
+
+    @abstractmethod
     async def get_inbox_messages(
         self, mailbox_id: str, predicate: Optional[Callable[[Message], bool]] = None
     ) -> list[Message]:
