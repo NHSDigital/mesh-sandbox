@@ -1,6 +1,7 @@
 from dataclasses import fields, is_dataclass
 from datetime import date, datetime
-from typing import Any, Optional, TypeVar, cast, get_args, get_origin
+from types import UnionType
+from typing import Any, Optional, TypeVar, Union, cast, get_args, get_origin
 
 _NoneType = type(None)
 
@@ -9,7 +10,7 @@ def optional_origin_type(original_type: type) -> type:
     """
     if the target type is Optional, this will return the wrapped type
     """
-    if original_type.__class__.__name__ != "_UnionGenericAlias":
+    if get_origin(original_type) not in (Union, UnionType):
         return original_type
     args = get_args(original_type)
     if len(args) != 2:
